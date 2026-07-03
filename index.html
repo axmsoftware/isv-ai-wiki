@@ -1426,14 +1426,15 @@ code {
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
       Supported Projects
     </div>
-    <div class="nav-item" data-section="meter-study" onclick="showSection('meter-study')">
+    <div class="nav-item" data-section="village-metering" onclick="showSection('village-metering')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Village Metering
     </div>
-    <div class="nav-sub" id="nav-sub-meter-study">
-      <div class="nav-sub-item" data-meter-page="problems-today" onclick="showMeterPage('problems-today')">Problems</div>
-      <div class="nav-sub-item" data-meter-page="scope" onclick="showMeterPage('scope')">Village scope</div>
+    <div class="nav-sub" id="nav-sub-village-metering">
       <div class="nav-sub-item" data-meter-page="overview" onclick="showMeterPage('overview')">Overview</div>
+      <div class="nav-sub-item" data-meter-page="problems" onclick="showMeterPage('problems')">Problems</div>
+      <div class="nav-sub-item" data-meter-page="solutions-map" onclick="showMeterPage('solutions-map')">Solutions map</div>
+      <div class="nav-sub-item" data-meter-page="village-scope" onclick="showMeterPage('village-scope')">Village scope</div>
       <div class="nav-sub-item" data-meter-page="vmrs" onclick="showMeterPage('vmrs')">Register checklist</div>
       <div class="nav-sub-item" data-meter-page="vendor-study" onclick="showMeterPage('vendor-study')">Vendor Study</div>
       <div class="nav-sub-item" data-meter-page="openami" onclick="showMeterPage('openami')">OpenAMI</div>
@@ -1517,8 +1518,8 @@ code {
 
       <div class="home-primary-focus">
         <p class="home-primary-eyebrow">Primary endeavor · Tech Comm 2026</p>
-        <h2 class="home-primary-title"><a href="#" onclick="showMeterPage('problems-today');return false">Village Metering</a></h2>
-        <p class="home-primary-desc">Bill each home, cut off non-payers, catch stolen power — without city-scale AMI cost. <a href="#" onclick="showMeterPage('scope');return false">Village scope</a> (who &amp; how many) · <a href="#" onclick="showMeterPage('problems-today');return false">Problems</a> · vendor study.</p>
+        <h2 class="home-primary-title"><a href="#" onclick="showMeterPage('problems');return false">Village Metering</a></h2>
+        <p class="home-primary-desc">Bill each home, cut off non-payers, catch stolen power — without city-scale AMI cost. <a href="#" onclick="showMeterPage('village-scope');return false">Village scope</a> (who &amp; how many) · <a href="#" onclick="showMeterPage('problems');return false">Problems</a> · vendor study.</p>
       </div>
 
       <div class="home-blocks">
@@ -1555,7 +1556,7 @@ code {
             <span class="tag tag-active">Primary</span>
             <span class="project-name">Village Metering</span>
           </div>
-          <div class="project-desc">Prepaid billing, remote disconnect, theft visibility — documented as field problems first, then vendor evidence and open gateway specs. Anchor POCs: SteamaCo, Darway. <a href="#" onclick="showMeterPage('problems-today');return false">Open problems →</a> · <a href="#" onclick="showMeterPage('overview');return false">overview</a></div>
+          <div class="project-desc">Prepaid billing, remote disconnect, theft visibility — documented as field problems first, then vendor evidence and open gateway specs. Anchor POCs: SteamaCo, Darway. <a href="#" onclick="showMeterPage('overview');return false">Overview</a> · <a href="#" onclick="showMeterPage('problems');return false">problems →</a></div>
         </div>
         <div class="project-card">
           <div class="project-card-head">
@@ -1864,7 +1865,7 @@ code {
         <div class="standard-icon">📦</div>
         <div>
           <div class="resource-name">Street Pole EMS — ems-dev</div>
-          <div class="resource-desc"><a href="https://github.com/energy-iot/ems-dev/" target="_blank">ems-dev</a> — Street Pole EMS hardware/firmware; part of the <a href="#" onclick="showMeterPage('problems-today');return false">Village Metering</a> thread.</div>
+          <div class="resource-desc"><a href="https://github.com/energy-iot/ems-dev/" target="_blank">ems-dev</a> — Street Pole EMS hardware/firmware; part of the <a href="#" onclick="showMeterPage('problems');return false">Village Metering</a> thread.</div>
         </div>
       </div>
       <div class="resource-row">
@@ -2082,23 +2083,23 @@ code {
   </div>
 
   <!-- METERING FOCUS -->
-  <div class="section" id="sec-meter-study">
+  <div class="section" id="sec-village-metering">
     <div class="section-header">
       <div>
         <div class="section-title">Village Metering</div>
-        <div class="section-sub" id="meter-study-section-sub">Problems · Village scope · Overview · Vendor study</div>
+        <div class="section-sub" id="meter-study-section-sub">Overview · Problems · Village scope · Vendor study</div>
       </div>
     </div>
-    <div id="content-meter-study">
+    <div id="content-village-metering">
       <div class="notes-embed">
         <div class="notes-embed-toolbar">
-          <span id="meter-study-embed-label">Problems</span>
+          <span id="meter-study-embed-label">Overview</span>
           <div class="notes-embed-toolbar-links">
-            <a id="meter-study-toolbar-standalone" href="meter-problems-today.html" target="_blank" rel="noopener">Full page</a>
+            <a id="meter-study-toolbar-standalone" href="meter-overview.html" target="_blank" rel="noopener">Full page</a>
             <a href="meter-benchmark/northbound-mqtt-v0.1.json" target="_blank" rel="noopener">Northbound JSON</a>
           </div>
         </div>
-        <iframe id="meter-study-frame" title="Village Metering preview" src="meter-problems-today.html?embed=1&v=20260701"></iframe>
+        <iframe id="meter-study-frame" title="Village Metering preview" src="meter-overview.html?embed=1&v=20260701"></iframe>
       </div>
     </div>
   </div>
@@ -2121,7 +2122,7 @@ code {
           <li><strong>Affordable hardware</strong> — legacy meters at $600–$1,500 can exceed generation cost</li>
           <li><strong>Comms that survive rural links</strong> — tokens and keypads when the pole uplink is down</li>
         </ul>
-        <p style="margin-top:0.5rem;font-size:13px;color:var(--text-2)">Full problem → solution map: <a href="#" onclick="showMeterPage('problems-today');return false">Village Metering · Problems</a>.</p>
+        <p style="margin-top:0.5rem;font-size:13px;color:var(--text-2)">Full problem → solution map: <a href="#" onclick="showMeterPage('problems');return false">Village Metering · Problems</a>.</p>
       </div>
       <div class="wiki-body">
         <p>Indexed summaries here; full documents on <a href="https://sattal.cottonspace.com/reports" target="_blank" rel="noopener">Cottonspace</a>, external publishers, or in this wiki. Dev Labs reports sync <strong>live</strong> from <a href="https://github.com/rahulbhargavain/openami-smart-village/tree/main/reports" target="_blank" rel="noopener">openami-smart-village</a>; ISV and external entries come from <code>technical-notes/catalog.json</code>. Each report shows <strong>source · authorship · review</strong> badges — see key below.</p>
@@ -2173,7 +2174,7 @@ code {
 
 <script src="js/tech-notes-catalog.js"></script>
 <script>
-const SECTIONS = ['home','about','supported','notes','tasks','events','meter-study','tech-notes','standards','resources'];
+const SECTIONS = ['home','about','supported','notes','tasks','events','village-metering','tech-notes','standards','resources'];
 const ABOUT_SCROLL_ALIASES = {
   mission: 'about-mission',
   committees: 'about-structure'
@@ -2184,6 +2185,14 @@ const NOTE_GROUPS = {
   'tech-comm': { section: 'notes', defaultNote: 'tech-comm-2026-06-25' },
   'events': { section: 'events', defaultNote: 'open-energy-hackathon-2025' }
 };
+const METER_PAGE_ALIASES = {
+  'problems-today': 'problems',
+  scope: 'village-scope'
+};
+function resolveMeterPageId(id) {
+  if (!id) return 'overview';
+  return METER_PAGE_ALIASES[id] || id;
+}
 const METER_BENCHMARK_PAGES = {
   'overview': {
     title: 'Overview',
@@ -2191,13 +2200,19 @@ const METER_BENCHMARK_PAGES = {
     src: 'meter-overview.html?embed=1&v=20260701',
     standalone: 'meter-overview.html'
   },
-  'problems-today': {
+  'problems': {
     title: 'Problems',
     sub: 'Field needs · prepaid · disconnect · theft · comms',
-    src: 'meter-problems-today.html?embed=1&v=20260701',
+    src: 'meter-problems-today.html?embed=1&v=20260703',
     standalone: 'meter-problems-today.html'
   },
-  'scope': {
+  'solutions-map': {
+    title: 'Solutions map',
+    sub: 'Problem → hardware → software (generic types)',
+    src: 'meter-solutions-map.html?embed=1&v=20260709',
+    standalone: 'meter-solutions-map.html'
+  },
+  'village-scope': {
     title: 'Village scope',
     sub: 'Who we mean · population · HDI · modernization fork',
     src: 'meter-village-scope.html?embed=1&v=20260701',
@@ -2228,7 +2243,7 @@ const METER_BENCHMARK_PAGES = {
     standalone: 'meshems.html'
   }
 };
-let activeMeterPageId = 'problems-today';
+let activeMeterPageId = 'overview';
 const MEETING_NOTES = {
   'tech-comm-2026-06-25': {
     group: 'tech-comm',
@@ -2347,7 +2362,7 @@ function showSection(id, options = {}) {
   document.querySelectorAll('.nav-sub-item').forEach(el => el.classList.remove('active'));
   const main = document.getElementById('main');
   main.classList.toggle('wide', id === 'supported');
-  main.classList.toggle('notes-wide', id === 'notes' || id === 'events' || id === 'meter-study' || id === 'tech-notes' || id === 'tasks');
+  main.classList.toggle('notes-wide', id === 'notes' || id === 'events' || id === 'village-metering' || id === 'tech-notes' || id === 'tasks');
   if (id === 'supported') loadFundedProjects();
   if ((id === 'notes' || id === 'events') && !options.skipNoteRefresh) {
     const noteSection = getNoteSection(activeNoteId);
@@ -2357,7 +2372,7 @@ function showSection(id, options = {}) {
     }
     refreshNotePreview(activeNoteId);
   }
-  if (id === 'meter-study' && !options.skipMeterRefresh) refreshMeterPreview(activeMeterPageId);
+  if (id === 'village-metering' && !options.skipMeterRefresh) refreshMeterPreview(activeMeterPageId);
   if (id === 'tech-notes' && techNotesMetaLoaded) renderTechnicalNotesNav();
   if (id === 'tasks' && window.ISVTasks) ISVTasks.renderTaskPage(ISVTasks.parseTasksHash());
   if (id === 'tech-notes') loadTechnicalNotes();
@@ -2452,11 +2467,12 @@ function bindMeterStudyFrameGuard(frame) {
 }
 
 function showMeterPage(pageId, updateHash = true) {
+  pageId = resolveMeterPageId(pageId);
   if (!METER_BENCHMARK_PAGES[pageId]) return;
   activeMeterPageId = pageId;
-  showSection('meter-study', { skipMeterRefresh: true, skipHash: true });
+  showSection('village-metering', { skipMeterRefresh: true, skipHash: true });
   refreshMeterPreview(pageId);
-  if (updateHash) history.replaceState(null, '', `#meter-study/${pageId}`);
+  if (updateHash) history.replaceState(null, '', `#village-metering/${pageId}`);
 }
 
 function initFromHash() {
@@ -2469,10 +2485,10 @@ function initFromHash() {
     showSection('home', { skipHash: true });
     return;
   }
-  if (raw === 'meter-study' || raw.startsWith('meter-study/')) {
-    const pageId = raw.split('/')[1] || 'problems-today';
+  if (raw === 'village-metering' || raw.startsWith('village-metering/') || raw === 'meter-study' || raw.startsWith('meter-study/')) {
+    const pageId = resolveMeterPageId(raw.split('/')[1]);
     if (METER_BENCHMARK_PAGES[pageId]) showMeterPage(pageId, false);
-    else showMeterPage('problems-today', false);
+    else showMeterPage('overview', false);
     return;
   }
   if (raw === 'tasks' || raw.startsWith('tasks?')) {

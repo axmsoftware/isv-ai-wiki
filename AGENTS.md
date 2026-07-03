@@ -42,9 +42,9 @@ isv-ai-wiki/
 ├── index.html                    # Shell: sidebar, sections, hash routing, registries
 ├── AGENTS.md                     # ← You are here (AI navigation)
 ├── README.md                     # Human quickstart
-├── meter-overview.html           # Village Metering — context, hardware threads, why ISV
-├── meter-vmrs.html               # Register checklist (OBIS · VMRS) + acronym reference
-├── meter-problems-today.html     # Field problems → solutions (default embed)
+├── meter-overview.html           # Village Metering — context, hardware threads (default embed)
+├── meter-problems-today.html     # Field problems → solutions
+├── meter-solutions-map.html      # Visual problem ↔ solution map (SVG)
 ├── meter-village-scope.html      # Village definition · population · HDI (cited)
 ├── meter-vendor-study.html       # Cited vendor benchmark (standalone + embed)
 ├── meter-benchmark/
@@ -120,7 +120,7 @@ In the trust hierarchy below, **ISV-internal** sources (item 5) now live in `isv
 
 Registered sections (`SECTIONS` in `index.html`):
 
-| `home` · `about` · `supported` · `notes` · `tasks` · `events` · `meter-study` · `tech-notes` · `standards` · `data` · `resources`
+| `home` · `about` · `supported` · `notes` · `tasks` · `events` · `village-metering` · `tech-notes` · `standards` · `data` · `resources`
 
 `home` is the Tech Committee working hub. `about` — mission and volunteer structure. `supported` — field-program map (legacy `#funded` → `supported`). Official ISV site: https://smartvillage.ieee.org/
 
@@ -135,12 +135,14 @@ Registered sections (`SECTIONS` in `index.html`):
 | `#funded`, `#field-programs` | Legacy — opens `#supported` |
 | `#tasks` | GitHub Issues — live list from `overview-solutions/isv-ai-wiki` |
 | `#tasks?meeting=metering-2026-05-28` | Filter by meeting label |
-| `#meter-study` | Village Metering — default: problems |
-| `#meter-study/problems-today` | Field problems → solutions (primary entry) |
-| `#meter-study/scope` | Village definition · population · HDI · modernization fork (cited) |
-| `#meter-study/overview` | Why ISV · gateway path · hardware threads |
-| `#meter-study/vmrs` | Register checklist (OBIS · VMRS) |
-| `#meter-study/vendor-study` | Vendor pipeline + technical tables |
+| `#village-metering` | Village Metering — default: overview |
+| `#village-metering/overview` | Why ISV · gateway path · hardware threads (section entry) |
+| `#village-metering/village-scope` | Village definition · population · HDI · modernization fork (cited) |
+| `#village-metering/problems` | Field problems (Problem · Why it hurts) |
+| `#village-metering/solutions-map` | Visual problem ↔ solution diagram · `meter-benchmark/problem-solution-map.json` |
+| `#village-metering/vmrs` | Register checklist (OBIS · VMRS) |
+| `#village-metering/vendor-study` | Vendor pipeline + technical tables |
+| `#meter-study/...` | Legacy — same as `#village-metering/...` (`problems-today` → `problems`, `scope` → `village-scope`) |
 | `#notes/{note-id}` | Tech Comm meeting note (default: `metering-2026-05-28`) |
 | `#events/{note-id}` | In-person event planning (workshops, hackathons; default: `power-africa-2026-workshop-planning`). Legacy `#power-africa/...` still resolves. |
 | `#tech-reports` | Technical reports list |
@@ -154,8 +156,8 @@ Registered sections (`SECTIONS` in `index.html`):
 
 Standalone pages accept `?embed=1` to hide back-navigation chrome (`html.embed` class). The shell loads:
 
-- `meter-problems-today.html?embed=1` (default)
-- `meter-village-scope.html?embed=1` · `meter-overview.html?embed=1` · `meter-vmrs.html?embed=1` · `meter-vendor-study.html?embed=1`
+- `meter-overview.html?embed=1` (default)
+- `meter-problems-today.html?embed=1` · `meter-village-scope.html?embed=1` · `meter-vmrs.html?embed=1` · `meter-vendor-study.html?embed=1`
 - `MEETING_NOTES[noteId].src` (also `?embed=1`)
 
 When **creating** a new note page, copy an existing `tech-comm-*.html`, keep the embed script, and register in `MEETING_NOTES`.
@@ -166,7 +168,7 @@ When **creating** a new note page, copy an existing `tech-comm-*.html`, keep the
 |----------|---------|
 | `SECTIONS` | Top-level nav ids |
 | `MEETING_NOTES` | Note id → `{ group, title, date, src, standalone }` |
-| `METER_BENCHMARK_PAGES` | Page id → `{ title, sub, src, standalone }` for meter-study sub-nav |
+| `METER_BENCHMARK_PAGES` | Page id → `{ title, sub, src, standalone }` for village-metering sub-nav |
 | `NOTE_GROUPS` | `tech-comm` → `notes` section; `events` → `events` section (in-person workshops & hackathons) |
 | `TECH_NOTES_CATALOG_URL` | Points to `technical-notes/catalog.json` |
 
@@ -255,7 +257,7 @@ Answer: *Do we need utility-style AMI, prepaid STS only, or a proprietary mesh p
 
 ### 3. Shortlist with the benchmark (10 min)
 
-Open [`#meter-study`](index.html#meter-study) or `meter-vendor-study.html`:
+Open [`#village-metering`](index.html#village-metering) or `meter-vendor-study.html`:
 
 1. **Vendor contacts** — email two meter OEMs + one platform if relevant.
 2. **Technical benchmark — meters** — filter `STS doc` + `DLMS doc`.

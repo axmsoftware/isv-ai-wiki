@@ -55,12 +55,12 @@ html.embed .back { display: none; }
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#meter-study/vmrs">← Village Metering</a></div>
+  <div class="back"><a href="index.html#village-metering/vmrs">← Village Metering</a></div>
 
   <h1>Register checklist</h1>
   <p class="sub">Minimum meter reads for village billing · OBIS · VMRS v0.1-draft · <span class="tag-draft">NOT a published standard</span></p>
 
-  <p class="lead">Operators need a short list of meter values — kWh used, credit left, tamper flags, disconnect state — not a thousand utility registers. This page names that short list. New to Village Metering? Read <a href="index.html#meter-study/problems-today">Problems to solve</a> first.</p>
+  <p class="lead">Operators need a short list of meter values — kWh used, credit left, tamper flags, disconnect state — not a thousand utility registers. This page names that short list. New to Village Metering? Read <a href="index.html#village-metering/problems">Problems to solve</a> first.</p>
   <p class="lead"><strong>OBIS</strong> (Object Identification System) is how the metering industry names registers — e.g. <code>1.8.0</code> always means cumulative active import energy (kWh). DLMS meters implement OBIS codes internally; vendors disagree on <em>which</em> codes they expose and how, not on what the codes mean.</p>
   <p class="lead"><strong>VMRS</strong> — the <strong>Village Minimum Register Set</strong> — is ISV’s draft shortlist of the OBIS keys a village feeder actually needs: import kWh, remaining credit, tamper, disconnect state, clock, and a handful of metrology reads. It is the register appendix for northbound JSON/MQTT at the gateway — roughly ten keys instead of a utility-scale COSEM ICD or MDMS profile. Operators cite VMRS in procurement; integrators map vendor ICDs to the same checklist; gateways publish a VMRS-shaped payload so one HES or MPM integration survives meter OEM changes.</p>
   <p class="body-text">Machine-readable source: <a href="meter-benchmark/vmrs-registers.json"><code>vmrs-registers.json</code></a> · transport contract: <a href="meter-benchmark/northbound-mqtt-v0.1.json"><code>northbound-mqtt-v0.1.json</code></a>.</p>

@@ -27,6 +27,15 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .compare-tbl td { vertical-align: top; line-height: 1.35; padding: 0.4rem 0.5rem; }
 .callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin-bottom: 0.85rem; font-size: 12px; line-height: 1.45; }
 .callout > strong:first-child { color: var(--teal); }
+.field-notes { font-size: 12px; line-height: 1.5; color: var(--text-2); }
+.field-notes h3 { font-size: 13px; font-weight: 500; color: var(--text); margin: 0.85rem 0 0.35rem; }
+.field-notes h3:first-child { margin-top: 0; }
+.field-notes p { margin: 0 0 0.5rem; max-width: 48rem; }
+.field-notes ul { margin: 0 0 0.5rem 1.1rem; max-width: 48rem; }
+.field-notes li { margin-bottom: 0.25rem; }
+.field-notes .fn-meta { font-size: 11px; color: var(--text-3); margin-bottom: 0.65rem; }
+.field-notes .fn-tag { display: inline-block; font-size: 10px; padding: 0.1rem 0.4rem; border-radius: 4px; background: var(--bg-3); color: var(--text-3); margin-right: 0.35rem; }
+.ps-table td .fn-link { font-size: 11px; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -38,223 +47,229 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#meter-study">← Village Metering</a></div>
+  <div class="back"><a href="index.html#village-metering">← Village Metering</a></div>
 
   <h1>Problems to solve</h1>
   <p class="sub">What village and mini-grid operators need from metering — and how ISV is helping</p>
 
-  <p class="lead">A rural utility with 200 customers cannot run like a city grid with 500,000 meters. Operators still need to <strong>bill fairly</strong>, <strong>cut off non-payers</strong>, and <strong>find stolen power</strong> — without spending more on meters than on solar panels. <a href="index.html#meter-study/scope">Who we mean by “village”</a> · cited population and access context. Below: field problems and practical approaches.</p>
+  <p class="lead">A rural utility with 200 customers cannot run like a city grid with 500,000 meters. Operators still need to <strong>bill fairly</strong>, <strong>cut off non-payers</strong>, and <strong>find stolen power</strong> — without spending more on meters than on solar panels. <a href="index.html#village-metering/village-scope">Who we mean by “village”</a> · <a href="index.html#village-metering/solutions-map">Problem → solution map</a> (visual links).</p>
 
   <div class="ps-path">
     <strong>Simple data path:</strong> Customer pays → credit reaches the meter → meter tracks use → pole box reads the meter → cloud gets one standard JSON report → billing software updates. Payment codes (prepaid tokens) travel on a <em>separate</em> path from meter reads — usually SMS or a keypad — and that is normal.
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="billing">
     <h2>Billing &amp; payment</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-usage">
             <td>Know how much each customer used</td>
             <td>Flat village tariffs hide freeloaders; you cannot bill fairly without a per-home kWh read.</td>
-            <td>Revenue meter at each connection; <a href="index.html#meter-study/vmrs">minimum register checklist</a> starts with cumulative import kWh.</td>
           </tr>
-          <tr>
+          <tr id="prob-prepaid">
             <td>Collect payment before or as energy is used</td>
             <td>Post-paid rural accounts go unpaid; operators need cash flow to fix lines and fuel gensets.</td>
-            <td>Prepaid meters; <a href="index.html#meter-study/vendor-study">vendor study</a> scores token-capable models; <a href="https://github.com/enaccess/micropowermanager" target="_blank" rel="noopener">MicroPowerManager</a> for accounts and mobile money.</td>
           </tr>
-          <tr>
+          <tr id="prob-token-deliver">
             <td>Deliver prepaid credit to the meter</td>
             <td>Customer paid at a shop or on a phone — energy must still reach their meter.</td>
-            <td>20-digit token entry at meter or <strong>customer interface unit</strong> (wall keypad); SMS/USSD vending; industry-standard token format (<abbr title="Standard Transfer Specification">STS</abbr>) or open <a href="https://github.com/enaccess/OpenPAYGO-Token" target="_blank" rel="noopener">OpenPAYGO</a>.</td>
           </tr>
-          <tr>
+          <tr id="prob-balance">
             <td>Show remaining balance</td>
             <td>Households need to know when to buy more; support calls drop when balance is visible locally.</td>
-            <td>CIU display or vendor app; northbound read of credit register where meter exposes it — see <a href="meter-benchmark/vmrs-registers.json">register checklist</a>.</td>
           </tr>
-          <tr>
+          <tr id="prob-token-audit">
             <td>Audit who received which token</td>
             <td>Disputes and fraud investigations need a last-token trail.</td>
-            <td>Vendor-dependent audit register; optional tier in VMRS; vending system logs from operator CRM.</td>
           </tr>
-          <tr>
+          <tr id="prob-oam-revenue">
             <td>Keep the grid funded (O&amp;M revenue)</td>
             <td>Without steady collections, lines stay broken and diesel runs out.</td>
-            <td>Reliable prepaid + at least one <strong>anchor business</strong> on the feeder paying year-round; see <a href="stonehenge-microgrid-topology.html">Circles of Power</a> notes.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="cutoffs">
     <h2>Cutoffs &amp; control</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-disconnect">
             <td>Disconnect non-paying customers</td>
             <td>Physical pole climbs are expensive and dangerous; credit exhausted should mean power off.</td>
-            <td>Internal relay in smart meter; remote disconnect command over meter protocol; register checklist includes disconnect state.</td>
           </tr>
-          <tr>
+          <tr id="prob-reconnect">
             <td>Reconnect after payment</td>
             <td>Truck rolls for reconnect kill revenue; should be automatic once credit is restored.</td>
-            <td>Same relay + token or remote reconnect from billing platform; test in <a href="index.html#meter-study/vendor-study">vendor POC</a> before fleet buy.</td>
           </tr>
-          <tr>
+          <tr id="prob-multi-pole">
             <td>Control several homes from one pole</td>
             <td>Pole-mounted distribution is common; one box can host multiple meters and relays.</td>
-            <td><a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">Street Pole EMS</a> prototype — multiple meters + relays per pole; <a href="index.html#meter-study/meshems">MeshEMS board</a> for lab and pilot builds.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="theft">
     <h2>Theft, leakage &amp; losses</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-tamper">
             <td>Illegal taps and bypasses</td>
             <td>Energy leaves the feeder without passing a meter; honest customers subsidize thieves.</td>
-            <td>Tamper and cover-open alarms on revenue meters; per-customer reads vs feeder total; field patrol triggered by alarms.</td>
           </tr>
-          <tr>
+          <tr id="prob-unmetered">
             <td>Unmetered load on the feeder</td>
             <td>Aggregate feeder meter minus sum of customers reveals hidden use — if you have both reads.</td>
-            <td>Feeder-level CT + customer meters; <a href="index.html#meter-study/openami">OpenAMI</a> telemetry at the edge; pole EMS aggregation.</td>
           </tr>
-          <tr>
+          <tr id="prob-leakage">
             <td>Continuous leakage on low-voltage lines</td>
-            <td>Faulty insulation or equipment draws power 24/7; hard to spot with monthly reads only.</td>
-            <td>Residual-current monitoring at feeder edge; <a href="oseas-2026.html">OSEAS 2026 challenge</a> theme (leakage detection on pole EMS); on-demand power reads for anomaly flags.</td>
+            <td>Faulty insulation or equipment draws power 24/7; hard to spot with monthly reads only. <a class="fn-link" href="#glenn-leakage">Glenn field note ↓</a></td>
           </tr>
-          <tr>
+          <tr id="prob-neutral">
             <td>Neutral imbalance on three-phase feeders</td>
-            <td>Voltage sag, overheated neutrals, unhappy customers — common on village LV networks.</td>
-            <td>Feeder-edge monitoring + alerts; alternate <a href="oseas-2026.html">OSEAS challenge</a> theme (neutral balancing).</td>
+            <td>Voltage sag, overheated neutrals, unhappy customers — common on village LV networks. <a class="fn-link" href="#glenn-neutral">Glenn field note ↓</a></td>
           </tr>
-          <tr>
+          <tr id="prob-meter-disagree">
             <td>Two meters disagree</td>
             <td>Which read do you bill? Drift &gt;5% needs investigation before trusting revenue data.</td>
-            <td>Calibration and install QA; compare against feeder total; field note from India IPP partners.</td>
           </tr>
-          <tr>
+          <tr id="prob-spot-theft">
             <td>Spot theft without expensive utility analytics</td>
             <td>Full utility load-profile databases cost too much for 200 meters.</td>
-            <td>Instantaneous power read when suspicion arises; optional interval reads only if you have an analytics plan; lighter <strong>NILM</strong> (signature disaggregation) explored at <a href="stonehenge-microgrid-topology.html">2025 hackathon</a>.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="glenn-field-notes">
+    <h2>Field notes · Glenn Algie</h2>
+    <p class="fn-meta"><span class="fn-tag">Jul 2026</span> Work in progress on DITRONIX expansion-slot EMS variants — ties to <a href="#prob-neutral">neutral imbalance</a> and <a href="#prob-leakage">leakage</a> above. See also <a href="index.html#village-metering/openami">OpenAMI</a> · <a href="index.html#village-metering/meshems">Street EMS / MeshEMS</a>.</p>
+
+    <div class="field-notes">
+      <h3 id="glenn-neutral">Neutral balance detection</h3>
+      <p>Detect neutral imbalance, surface <strong>analytic insights</strong>, and issue a <strong>call to action</strong> over an <a href="index.html#village-metering/openami">OpenAMI</a> <strong>MQTT subtopic</strong> to rebalance the feeder. Doug and Glenn have this running on the <strong>DITRONIX expansion-slot DTM EMS variant</strong>.</p>
+
+      <h3 id="glenn-leakage">Leakage continuous overwatch</h3>
+      <p>Always-on leakage watch: <strong>insights report</strong> → <strong>isolate</strong> affected segment → <strong>call to action</strong>. Response can be <strong>autonomous</strong> (pole-level control) or escalated as a <strong>service ticket</strong> when human dispatch is safer.</p>
+
+      <h3 id="glenn-assembly-test">Raspberry Pi post-assembly automation test head</h3>
+      <p>Bench rig: Pi drives <strong>all connectors</strong> on assembled EMS board — automated test head, not manual probe dance. Subscribes to <strong>MQTT</strong>, checks payloads against expected results.</p>
+      <ul>
+        <li><strong>~100 tests in ~15 minutes</strong> on assembly line</li>
+        <li><strong>Continuous test loop</strong> while firmware iterates in dev</li>
+        <li><strong>Smoke test</strong> after each EMS assembly before ship</li>
+        <li>Bench UX: <strong>red / green / yellow / blue</strong> sanity-pass indicators for operators</li>
+      </ul>
+
+      <h3 id="glenn-calibration">Calibration test head (planned)</h3>
+      <p>Next bench: precision metering calibration head mated to a <strong>three-phase power-supply cabinet PCB</strong> — metrology validation separate from functional assembly smoke test.</p>
+
+      <h3 id="glenn-esp32">ESP32-P4 expansion-slot module (late Jul 2026)</h3>
+      <p>Plug-and-play expansion card for the DITRONIX slot. Glenn shipping hardware in the <strong>third week of July 2026</strong>. Targets:</p>
+      <ul>
+        <li>Heavy-duty <strong>web server with graphics UX</strong> on-module</li>
+        <li><strong>Dedicated Ethernet port</strong> — QoS can separate MQTT telemetry from browser/UI traffic</li>
+        <li>Low-cost path to <strong>3-port QoS Ethernet</strong> via external switch without starving pole MQTT</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="ps-section" id="visibility">
     <h2>Visibility &amp; operations</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-voltage">
             <td>Voltage problems at the home</td>
             <td>Brownouts damage appliances and hint at overloaded feeders.</td>
-            <td>Voltage register on revenue meter; alarm thresholds in billing or EMS software.</td>
           </tr>
-          <tr>
+          <tr id="prob-instant-power">
             <td>See power use right now</td>
             <td>Theft and overload show up in watts before they show up in monthly kWh.</td>
-            <td>Instantaneous power in register checklist; northbound JSON on change or poll.</td>
           </tr>
-          <tr>
+          <tr id="prob-identity">
             <td>Trust meter time and identity</td>
             <td>Wrong clock corrupts billing periods; wrong serial bills the wrong house.</td>
-            <td>Clock sync at gateway; serial number in every northbound message — <a href="meter-benchmark/northbound-mqtt-v0.1.json">JSON profile v0.1</a>.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="affordability">
     <h2>Affordability</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-meter-cost">
             <td>Meters cost as much as generation</td>
             <td>Legacy prepaid installs at $600–1,500 per home can exceed solar hardware spend.</td>
-            <td>Target ~$58/household pole EMS path vs legacy meter; industry bands $40–110 cited in <a href="index.html#meter-study/vendor-study">vendor study</a>; buy only registers you need.</td>
           </tr>
-          <tr>
+          <tr id="prob-mdms-cost">
             <td>Utility-grade software priced for utilities</td>
             <td>Full billing and MDMS suites assume millions of meters, not hundreds.</td>
-            <td>Open operator tools (<a href="https://github.com/enaccess/micropowermanager" target="_blank" rel="noopener">MPM</a>); minimum cloud data contract instead of full AMI stack — see <a href="index.html#meter-study/overview">overview</a>.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="comms">
     <h2>When communications fail</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-cloud-down">
             <td>Cloud cannot reach meters today</td>
             <td>Rural GPRS, mesh, and pole uplinks fail often; operator still blind to field state.</td>
-            <td>Redundant radio paths (RF mesh + PLC); <a href="tech-comm-2026-05-28-metering-topology.html">May 2026 topology notes</a>; proposed phone-as-relay uplink when pole gateway is down.</td>
           </tr>
-          <tr>
+          <tr id="prob-prepaid-offline">
             <td>Prepaid still works but office does not know</td>
             <td>Meters keep consuming local credit when link is down; CIU may hold stats cloud wants.</td>
-            <td>STS tokens via SMS without live meter feedback; sync CIU or meter when link returns; do not assume always-on cloud reads.</td>
           </tr>
-          <tr>
+          <tr id="prob-vend-down">
             <td>Customer cannot buy credit because network is down</td>
             <td>Token vending should not require the same broken path as scheduled meter reads.</td>
-            <td>Separate SMS/USSD vending channel; local token entry at CIU; <a href="tech-comm-2026-05-28-metering-topology.html">redundant channel table</a>.</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <div class="ps-section">
+  <div class="ps-section" id="integration">
     <h2>Integration &amp; long-term freedom</h2>
     <div class="tbl-wrap">
-      <table class="ps-table">
-        <thead><tr><th>Problem</th><th>Why it hurts</th><th>Approaches we're tracking</th></tr></thead>
+      <table class="ps-table ps-problems">
+        <thead><tr><th>Problem</th><th>Why it hurts</th></tr></thead>
         <tbody>
-          <tr>
+          <tr id="prob-crm">
             <td>Hook billing to mobile money and CRM</td>
             <td>Operators run on M-Pesa and spreadsheets; meter data must land in one place.</td>
-            <td>Northbound REST/MQTT to operator platform; EnAccess MPM; vendor cloud where acceptable — score APIs in <a href="index.html#meter-study/vendor-study">vendor study</a>.</td>
           </tr>
-          <tr>
+          <tr id="prob-protocols">
             <td>Every meter brand speaks a different language</td>
             <td>Swapping vendor means rewriting integrations.</td>
-            <td>Pole <strong>gateway</strong> reads vendor protocol locally, publishes one <a href="meter-benchmark/northbound-mqtt-v0.1.json">JSON/MQTT shape</a> northbound — mixed fleets on one feeder.</td>
           </tr>
-          <tr>
+          <tr id="prob-vendor-exit">
             <td>Vendor exit strands installed meters</td>
             <td>Closed mesh + cloud bundles block migration.</td>
-            <td>Open northbound contract; document gaps in POC matrices; <a href="power-africa-openami-presentation-2025.html">OpenAMI roadmap</a>.</td>
           </tr>
-          <tr>
+          <tr id="prob-inverter-mix">
             <td>Confuse customer meters with solar inverter monitoring</td>
             <td>DER monitoring (generation) is a different job from revenue metering (billing).</td>
-            <td>Separate procurement columns; inverter data via <a href="https://sunspec.org" target="_blank" rel="noopener">SunSpec</a> track — not mixed into prepaid token path.</td>
           </tr>
         </tbody>
       </table>
@@ -263,7 +278,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 
   <div class="callout">
     <strong>Where ISV fits</strong>
-    <p>IEEE Smart Village does not sell meters. The Tech Committee publishes <strong>draft</strong> checklists and test results so operators, integrators, and vendors argue from the same field problems — then cite evidence in <a href="index.html#meter-study/vendor-study">vendor study</a> and anchor pilots (SteamaCo, Darway). See <a href="index.html#meter-study/overview">overview</a> for how ISV fits.</p>
+    <p>IEEE Smart Village does not sell meters. The Tech Committee publishes <strong>draft</strong> checklists and test results so operators, integrators, and vendors argue from the same field problems — then cite evidence in <a href="index.html#village-metering/vendor-study">vendor study</a> and anchor pilots (SteamaCo, Darway). See <a href="index.html#village-metering/overview">overview</a> for how ISV fits.</p>
   </div>
 
   <details>
@@ -326,7 +341,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
         <text x="130" y="392" font-size="8" fill="var(--text-2)">Customer keypad → meter → pole box → operator cloud</text>
         <text x="130" y="404" font-size="7" fill="var(--text-3)">Hardware: Street Pole EMS · MeshEMS · OpenAMI deck (Sep 2025)</text>
       </svg>
-      <p class="landscape-caption">Acronym definitions and register codes: <a href="index.html#meter-study/vmrs">Register checklist (VMRS)</a>. OpenAMI mapping: <a href="power-africa-openami-presentation-2025.html">Power Africa Sep 2025</a>.</p>
+      <p class="landscape-caption">Acronym definitions and register codes: <a href="index.html#village-metering/vmrs">Register checklist (VMRS)</a>. OpenAMI mapping: <a href="power-africa-openami-presentation-2025.html">Power Africa Sep 2025</a>.</p>
     </div>
     <div class="tbl-wrap">
       <table class="compare-tbl">
@@ -345,8 +360,9 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
   </details>
 
   <p class="meter-footer">
-    <a href="index.html#meter-study/overview">Overview</a> ·
-    <a href="index.html#meter-study/vmrs">Register checklist</a> ·
+    <a href="index.html#village-metering/overview">Overview</a> ·
+    <a href="index.html#village-metering/solutions-map">Solutions map</a> ·
+    <a href="index.html#village-metering/vmrs">Register checklist</a> ·
     <a href="meter-benchmark/northbound-mqtt-v0.1.json">northbound JSON</a> ·
     <a href="tech-comm-2026-05-28-metering-topology.html">May 2026 comms notes</a>
   </p>

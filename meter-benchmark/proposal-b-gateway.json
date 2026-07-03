@@ -1,0 +1,100 @@
+{
+  "version": "proto-1",
+  "prototype": "b",
+  "title": "Proposal B · Pole gateway normalization",
+  "subtitle": "DLMS south · VMRS · MQTT north · optional SIP for control",
+  "outOfScope": "STS vending at gateway, IEEE 1547, SunSpec on billing registers",
+  "groups": [
+    { "id": "billing", "label": "Billing & payment", "short": "Billing" },
+    { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },
+    { "id": "visibility", "label": "Visibility & operations", "short": "Visibility" },
+    { "id": "integration", "label": "Integration & long-term freedom", "short": "Integration" }
+  ],
+  "problems": [
+    { "id": "prob-usage", "group": "billing", "label": "Per-home kWh" },
+    { "id": "prob-disconnect", "group": "cutoffs", "label": "Disconnect" },
+    { "id": "prob-reconnect", "group": "cutoffs", "label": "Reconnect" },
+    { "id": "prob-multi-pole", "group": "cutoffs", "label": "Multi-home pole" },
+    { "id": "prob-instant-power", "group": "visibility", "label": "Instant power" },
+    { "id": "prob-identity", "group": "visibility", "label": "Serial & clock" },
+    { "id": "prob-protocols", "group": "integration", "label": "Mixed protocols" },
+    { "id": "prob-vendor-exit", "group": "integration", "label": "Vendor exit" }
+  ],
+  "hardware": [
+    { "id": "meter", "label": "House revenue meter", "short": "Meter" },
+    { "id": "street-ems", "label": "Street EMS gateway", "short": "Street EMS", "desc": "Multitenant pole system (uses MeshEMS board)" },
+    { "id": "mesh", "label": "MeshEMS · DCU", "short": "MeshEMS / DCU", "desc": "Mesh board & data-concentrator" },
+    { "id": "cloud", "label": "Operator cloud host", "short": "Cloud" }
+  ],
+  "softwareKinds": [
+    { "id": "registers", "label": "Registers & telemetry", "short": "Registers" },
+    { "id": "edge", "label": "Edge gateway", "short": "Edge" },
+    { "id": "platform", "label": "Billing platform", "short": "Platform" }
+  ],
+  "software": [
+    {
+      "id": "sw-dlms-client",
+      "label": "DLMS client at gateway",
+      "kind": "edge",
+      "hardware": ["street-ems", "mesh"],
+      "specs": ["DLMS/COSEM", "HDLC", "vendor ICD"],
+      "href": "index.html#village-metering/vendor-study"
+    },
+    {
+      "id": "sw-vmrs",
+      "label": "VMRS register map",
+      "kind": "registers",
+      "hardware": ["street-ems"],
+      "specs": ["VMRS", "OBIS"],
+      "href": "index.html#village-metering/vmrs"
+    },
+    {
+      "id": "sw-mqtt",
+      "label": "Northbound MQTT v0.1",
+      "kind": "registers",
+      "hardware": ["street-ems", "cloud"],
+      "specs": ["MQTT", "JSON envelope"],
+      "href": "meter-benchmark/northbound-mqtt-v0.1.json"
+    },
+    {
+      "id": "sw-sip",
+      "label": "SIP session layer",
+      "kind": "edge",
+      "hardware": ["street-ems", "cloud"],
+      "specs": ["SIP", "auth disconnect"],
+      "href": "meter-vmrs.html"
+    },
+    {
+      "id": "sw-hes",
+      "label": "HES / MPM consumer",
+      "kind": "platform",
+      "hardware": ["cloud"],
+      "specs": ["MQTT subscriber", "MPM optional"],
+      "href": "https://github.com/enaccess/micropowermanager"
+    },
+    {
+      "id": "sw-pole-ems",
+      "label": "Edge EMS & tenant control",
+      "kind": "edge",
+      "hardware": ["street-ems", "mesh"],
+      "specs": ["Street EMS app"],
+      "href": "index.html#village-metering/meshems"
+    }
+  ],
+  "links": [
+    ["prob-usage", "sw-vmrs"],
+    ["prob-usage", "sw-mqtt"],
+    ["prob-disconnect", "sw-sip"],
+    ["prob-disconnect", "sw-dlms-client"],
+    ["prob-reconnect", "sw-sip"],
+    ["prob-multi-pole", "sw-pole-ems"],
+    ["prob-instant-power", "sw-vmrs"],
+    ["prob-instant-power", "sw-mqtt"],
+    ["prob-identity", "sw-vmrs"],
+    ["prob-identity", "sw-mqtt"],
+    ["prob-protocols", "sw-dlms-client"],
+    ["prob-protocols", "sw-mqtt"],
+    ["prob-vendor-exit", "sw-mqtt"],
+    ["prob-vendor-exit", "sw-vmrs"]
+  ]
+}

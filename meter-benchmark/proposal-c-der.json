@@ -1,0 +1,82 @@
+{
+  "version": "proto-1",
+  "prototype": "c",
+  "title": "Proposal C · DER sidecar",
+  "subtitle": "IEEE 1547 · SunSpec — generation track separate from billing",
+  "outOfScope": "STS, MPM prepaid, VMRS on inverter, revenue meter conflation",
+  "groups": [
+    { "id": "billing", "label": "Billing & payment", "short": "Billing" },
+    { "id": "theft", "label": "Theft & losses", "short": "Theft & losses" },
+    { "id": "integration", "label": "Integration & long-term freedom", "short": "Integration" }
+  ],
+  "problems": [
+    { "id": "prob-inverter-mix", "group": "integration", "label": "Inverter vs billing" },
+    { "id": "prob-leakage", "group": "theft", "label": "Line leakage" },
+    { "id": "prob-neutral", "group": "theft", "label": "Neutral imbalance" },
+    { "id": "prob-oam-revenue", "group": "billing", "label": "O&M revenue" }
+  ],
+  "hardware": [
+    { "id": "feeder", "label": "Feeder instrumentation", "short": "Feeder" },
+    { "id": "street-ems", "label": "Street EMS gateway", "short": "Street EMS", "desc": "Feeder aggregator only — no customer OBIS mix" },
+    { "id": "mesh", "label": "MeshEMS · DCU", "short": "MeshEMS / DCU" },
+    { "id": "cloud", "label": "Operator cloud host", "short": "Cloud" }
+  ],
+  "softwareKinds": [
+    { "id": "feeder", "label": "Feeder AMI", "short": "Feeder AMI" },
+    { "id": "edge", "label": "Edge gateway", "short": "Edge" },
+    { "id": "planning", "label": "Planning & architecture", "short": "Planning" }
+  ],
+  "software": [
+    {
+      "id": "sw-sunspec",
+      "label": "SunSpec inverter telemetry",
+      "kind": "feeder",
+      "hardware": ["feeder"],
+      "specs": ["SunSpec", "Modbus"],
+      "href": "index.html#village-metering/vendor-study"
+    },
+    {
+      "id": "sw-1547",
+      "label": "IEEE 1547 policy layer",
+      "kind": "feeder",
+      "hardware": ["feeder", "cloud"],
+      "specs": ["IEEE 1547", "export limits"],
+      "href": null
+    },
+    {
+      "id": "sw-feeder-agg",
+      "label": "Feeder aggregator (no OBIS)",
+      "kind": "edge",
+      "hardware": ["street-ems", "mesh"],
+      "specs": ["isolated register namespace"],
+      "href": "index.html#village-metering/meshems"
+    },
+    {
+      "id": "sw-scope-split",
+      "label": "Billing vs DER scope split",
+      "kind": "planning",
+      "hardware": [],
+      "specs": ["procurement boundary"],
+      "href": "index.html#village-metering/overview"
+    },
+    {
+      "id": "sw-loss-feeder",
+      "label": "Feeder loss analytics",
+      "kind": "feeder",
+      "hardware": ["feeder", "cloud"],
+      "specs": ["neutral · leakage reads"],
+      "href": null
+    }
+  ],
+  "links": [
+    ["prob-inverter-mix", "sw-scope-split"],
+    ["prob-inverter-mix", "sw-feeder-agg"],
+    ["prob-inverter-mix", "sw-sunspec"],
+    ["prob-leakage", "sw-loss-feeder"],
+    ["prob-leakage", "sw-feeder-agg"],
+    ["prob-neutral", "sw-loss-feeder"],
+    ["prob-neutral", "sw-sunspec"],
+    ["prob-oam-revenue", "sw-1547"],
+    ["prob-oam-revenue", "sw-sunspec"]
+  ]
+}
