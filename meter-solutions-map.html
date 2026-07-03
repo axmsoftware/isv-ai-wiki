@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solutions map · Village Metering · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<script src="js/meter-embed.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; }
+.lead { font-size: 14px; margin-bottom: 0.75rem; max-width: 48rem; line-height: 1.5; }
+.map-toolbar { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-bottom: 0.65rem; align-items: center; }
+.map-toolbar-label { font-size: 11px; color: var(--text-3); margin-right: 0.25rem; }
+.map-filter {
+  font-size: 11px; padding: 0.25rem 0.55rem; border-radius: 999px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-2); cursor: pointer; font-family: inherit;
+}
+.map-filter.active { background: var(--green-50); border-color: var(--green); color: var(--green); font-weight: 500; }
+.map-filter[data-tone="billing"].active { background: var(--green-50); border-color: var(--green); color: var(--green); }
+.map-filter[data-tone="cutoffs"].active { background: var(--amber-50); border-color: var(--amber); color: var(--amber); }
+.map-filter[data-tone="theft"].active { background: var(--red-50); border-color: var(--red); color: var(--red); }
+.map-filter[data-tone="visibility"].active { background: var(--teal-50); border-color: var(--teal); color: var(--teal); }
+.map-filter[data-tone="affordability"].active { background: var(--purple-50); border-color: var(--purple); color: var(--purple); }
+.map-filter[data-tone="comms"].active { background: var(--blue-50); border-color: var(--blue); color: var(--blue); }
+.map-filter[data-tone="integration"].active { background: var(--ieee-blue-50); border-color: var(--ieee-blue); color: var(--ieee-blue); }
+.map-hint { font-size: 11px; color: var(--text-3); margin-bottom: 0.5rem; }
+.map-frame {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2);
+  overflow: auto; margin-bottom: 0.75rem;
+}
+.map-frame svg { display: block; min-width: 920px; width: 100%; height: auto; }
+.map-frame .link { fill: none; stroke-width: 1.2; opacity: 0.5; transition: opacity 0.15s, stroke-width 0.15s; pointer-events: none; }
+.map-frame .link-tone-billing { stroke: var(--green); }
+.map-frame .link-tone-cutoffs { stroke: var(--amber); }
+.map-frame .link-tone-theft { stroke: var(--red); }
+.map-frame .link-tone-visibility { stroke: var(--teal); }
+.map-frame .link-tone-affordability { stroke: var(--purple); }
+.map-frame .link-tone-comms { stroke: var(--blue); }
+.map-frame .link-tone-integration { stroke: var(--ieee-blue); }
+.map-frame .link.on { opacity: 0.62; stroke-width: 1.35; }
+.map-frame .link.focus { opacity: 0.95; stroke-width: 1.7; }
+.map-frame .link.dim { opacity: 0.04; }
+.map-frame .link-deploy { fill: none; stroke-width: 1; stroke-dasharray: 3 2; opacity: 0.45; transition: opacity 0.15s, stroke-width 0.15s; pointer-events: none; }
+.map-frame .link-deploy-tone-meter { stroke: var(--amber); }
+.map-frame .link-deploy-tone-ciu { stroke: var(--purple); }
+.map-frame .link-deploy-tone-street-ems { stroke: var(--green); }
+.map-frame .link-deploy-tone-mesh { stroke: var(--teal); }
+.map-frame .link-deploy-tone-feeder { stroke: var(--red); }
+.map-frame .link-deploy-tone-cloud { stroke: var(--blue); }
+.map-frame .link-deploy-tone-scope { stroke: var(--text-3); }
+.map-frame .link-deploy.on { opacity: 0.55; }
+.map-frame .link-deploy.focus { opacity: 0.9; stroke-width: 1.25; stroke-dasharray: none; }
+.map-frame .link-deploy.dim { opacity: 0.03; }
+.map-frame .node-prob, .map-frame .node-sol, .map-frame .node-hw { cursor: pointer; }
+.map-frame .node-prob rect { fill: var(--bg); stroke: var(--border); transition: stroke 0.15s, fill 0.15s; }
+.map-frame .node-prob.on rect { stroke: var(--amber); fill: var(--amber-50); }
+.map-frame .node-prob.dim rect { opacity: 0.35; }
+.map-frame .node-sol rect { fill: var(--bg); stroke: var(--border); transition: stroke 0.15s, fill 0.15s; }
+.map-frame .node-sol.on rect { stroke: var(--green); fill: var(--green-50); }
+.map-frame .node-sol.dim rect { opacity: 0.35; }
+.map-frame .node-hw rect { fill: var(--bg); stroke: var(--border); transition: stroke 0.15s, fill 0.15s; }
+.map-frame .node-hw.on rect { stroke: var(--teal); fill: var(--teal-50); }
+.map-frame .node-hw.dim rect { opacity: 0.35; }
+.map-frame text { font-size: 10px; fill: var(--text); pointer-events: none; }
+.map-frame .sol-sub { font-size: 7px; fill: var(--text-3); }
+.map-frame .node-sol.has-specs rect { height: 26px; }
+.map-frame .node-sol.has-specs text.label { font-size: 9px; }
+.map-proto-banner {
+  font-size: 12px; padding: 0.5rem 0.65rem; border-radius: 8px;
+  border: 1px solid var(--amber); background: var(--amber-50); color: var(--text);
+  margin-bottom: 0.65rem; max-width: 48rem; line-height: 1.45;
+}
+.map-proto-banner strong { font-weight: 600; }
+.map-proto-banner .out { color: var(--text-2); font-size: 11px; margin-top: 0.25rem; }
+.map-proto-nav { font-size: 11px; margin-bottom: 0.65rem; }
+.map-proto-nav a { margin-right: 0.65rem; }
+.map-frame .grp-label { font-size: 9px; fill: var(--text-3); font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+.map-frame .grp-band { stroke: none; transition: opacity 0.15s; }
+.map-frame .grp-band.dim { opacity: 0.1; }
+.map-frame .grp-band-stripe.dim { opacity: 0.15; }
+.map-frame .grp-band-title.dim { opacity: 0.25; }
+.map-frame .grp-band-billing { fill: var(--green-50); }
+.map-frame .grp-band-cutoffs { fill: var(--amber-50); }
+.map-frame .grp-band-theft { fill: var(--red-50); }
+.map-frame .grp-band-visibility { fill: var(--teal-50); }
+.map-frame .grp-band-affordability { fill: var(--purple-50); }
+.map-frame .grp-band-comms { fill: var(--blue-50); }
+.map-frame .grp-band-integration { fill: var(--ieee-blue-50); }
+.map-frame .grp-band-stripe { stroke: none; }
+.map-frame .grp-band-stripe-billing { fill: var(--green); }
+.map-frame .grp-band-stripe-cutoffs { fill: var(--amber); }
+.map-frame .grp-band-stripe-theft { fill: var(--red); }
+.map-frame .grp-band-stripe-visibility { fill: var(--teal); }
+.map-frame .grp-band-stripe-affordability { fill: var(--purple); }
+.map-frame .grp-band-stripe-comms { fill: var(--blue); }
+.map-frame .grp-band-stripe-integration { fill: var(--ieee-blue); }
+.map-frame .grp-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
+.map-frame .grp-band-title-billing { fill: var(--green); }
+.map-frame .grp-band-title-cutoffs { fill: var(--amber); }
+.map-frame .grp-band-title-theft { fill: var(--red); }
+.map-frame .grp-band-title-visibility { fill: var(--teal); }
+.map-frame .grp-band-title-affordability { fill: var(--purple); }
+.map-frame .grp-band-title-comms { fill: var(--blue); }
+.map-frame .grp-band-title-integration { fill: var(--ieee-blue); }
+.map-frame .layer-band { stroke: none; transition: opacity 0.15s; }
+.map-frame .layer-band.dim { opacity: 0.08; }
+.map-frame .layer-band-stripe.dim { opacity: 0.12; }
+.map-frame .layer-band-title.dim { opacity: 0.2; }
+.map-frame .layer-band-meter { fill: var(--amber-50); }
+.map-frame .layer-band-ciu { fill: var(--purple-50); }
+.map-frame .layer-band-street-ems { fill: var(--green-50); }
+.map-frame .layer-band-mesh { fill: var(--teal-50); }
+.map-frame .layer-band-feeder { fill: var(--red-50); }
+.map-frame .layer-band-cloud { fill: var(--blue-50); }
+.map-frame .layer-band-scope { fill: var(--bg-3); }
+.map-frame .layer-band-stripe { stroke: none; }
+.map-frame .layer-band-stripe-meter { fill: var(--amber); }
+.map-frame .layer-band-stripe-ciu { fill: var(--purple); }
+.map-frame .layer-band-stripe-street-ems { fill: var(--green); }
+.map-frame .layer-band-stripe-mesh { fill: var(--teal); }
+.map-frame .layer-band-stripe-feeder { fill: var(--red); }
+.map-frame .layer-band-stripe-cloud { fill: var(--blue); }
+.map-frame .layer-band-stripe-scope { fill: var(--text-3); }
+.map-frame .layer-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
+.map-frame .layer-band-title-meter { fill: var(--amber); }
+.map-frame .layer-band-title-ciu { fill: var(--purple); }
+.map-frame .layer-band-title-street-ems { fill: var(--green); }
+.map-frame .layer-band-title-mesh { fill: var(--teal); }
+.map-frame .layer-band-title-feeder { fill: var(--red); }
+.map-frame .layer-band-title-cloud { fill: var(--blue); }
+.map-frame .sw-band { stroke: none; transition: opacity 0.15s; }
+.map-frame .sw-band.dim { opacity: 0.08; }
+.map-frame .sw-band-stripe.dim { opacity: 0.12; }
+.map-frame .sw-band-title.dim { opacity: 0.2; }
+.map-frame .sw-band-registers { fill: var(--teal-50); }
+.map-frame .sw-band-prepaid { fill: var(--purple-50); }
+.map-frame .sw-band-edge { fill: var(--green-50); }
+.map-frame .sw-band-platform { fill: var(--blue-50); }
+.map-frame .sw-band-feeder { fill: var(--red-50); }
+.map-frame .sw-band-planning { fill: var(--bg-3); }
+.map-frame .sw-band-stripe { stroke: none; }
+.map-frame .sw-band-stripe-registers { fill: var(--teal); }
+.map-frame .sw-band-stripe-prepaid { fill: var(--purple); }
+.map-frame .sw-band-stripe-edge { fill: var(--green); }
+.map-frame .sw-band-stripe-platform { fill: var(--blue); }
+.map-frame .sw-band-stripe-feeder { fill: var(--red); }
+.map-frame .sw-band-stripe-planning { fill: var(--text-3); }
+.map-frame .sw-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
+.map-frame .sw-band-title-registers { fill: var(--teal); }
+.map-frame .sw-band-title-prepaid { fill: var(--purple); }
+.map-frame .sw-band-title-edge { fill: var(--green); }
+.map-frame .sw-band-title-platform { fill: var(--blue); }
+.map-frame .sw-band-title-feeder { fill: var(--red); }
+.map-frame .sw-band-title-planning { fill: var(--text-3); }
+.map-legend { font-size: 11px; color: var(--text-2); line-height: 1.45; margin-bottom: 0.75rem; }
+html.embed .back { display: none; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#village-metering">← Village Metering</a></div>
+
+  <h1 id="map-title">Problem → hardware → software map</h1>
+  <p class="sub" id="map-sub">Field problem · equipment type · software layer (generic types, not brands)</p>
+
+  <div class="map-proto-nav" id="map-proto-nav" hidden></div>
+  <div class="map-proto-banner" id="map-proto-banner" hidden></div>
+
+  <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
+
+  <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
+  <p class="map-hint">Solid = problem category · dashed = hardware type · hover to focus · filter by problem category</p>
+
+  <div class="map-frame" id="map-frame">
+    <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
+  </div>
+
+  <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Standards prototypes (A–D)</a></p>
+
+  <p class="meter-footer">
+    <a href="index.html#village-metering/problems">Problems</a> ·
+    <a href="index.html#village-metering/overview">Overview</a> ·
+    <a href="index.html#village-metering/vmrs">Register checklist</a>
+  </p>
+</div>
+<script>
+(function () {
+  var PARAMS = new URLSearchParams(location.search);
+  var PROTO = (PARAMS.get('proto') || '').toLowerCase();
+  var PROTO_FILES = {
+    a: { file: 'proposal-a-prepaid.json', cache: '20260710a' },
+    b: { file: 'proposal-b-gateway.json', cache: '20260710b' },
+    c: { file: 'proposal-c-der.json', cache: '20260710c' },
+    d: { file: 'proposal-d-openami.json', cache: '20260710d' }
+  };
+  var protoMeta = PROTO_FILES[PROTO] || null;
+  var MAP_URL = protoMeta
+    ? 'meter-benchmark/' + protoMeta.file + '?v=' + protoMeta.cache
+    : 'meter-benchmark/problem-solution-map.json?v=20260709';
+  var PROBLEMS_PAGE = 'index.html#village-metering/problems';
+  var SVG_W = 920;
+  var STRIPE_W = 5;
+  var PAD_TOP = 32;
+  var PAD_BOT = 20;
+  var ROW_H = 22;
+  var ROW_H_SPECS = 28;
+  var GRP_GAP = 8;
+  var HEADER_H = 16;
+  var NODE_W_L = 146;
+  var NODE_W_M = 168;
+  var NODE_W_R = 138;
+  var NODE_H = 18;
+  var NODE_H_SPECS = 26;
+  var PROB_LEFT = STRIPE_W + 6;
+  var PROB_RIGHT = 158;
+  var HW_LEFT = 300;
+  var HW_RIGHT = HW_LEFT + NODE_W_M;
+  var SW_LEFT = 660;
+  var SW_STRIPE_X = SVG_W - STRIPE_W;
+  var HW_BAND_X = HW_LEFT - 4;
+  var MID_PROB_HW = (PROB_RIGHT + HW_LEFT) / 2;
+  var MID_HW_SW = (HW_RIGHT + SW_LEFT) / 2;
+  var MID_DIRECT = (PROB_RIGHT + SW_LEFT) / 2;
+
+  var data = null;
+  var activeGroup = 'all';
+  var hoverId = null;
+  var hoverSide = null;
+  var hoverFrame = null;
+
+  function normalizeData(json) {
+    if (!json.hardware && json.deployLayers) {
+      json.hardware = json.deployLayers.filter(function (h) { return h.id !== 'scope'; });
+    }
+    if (!json.software && json.solutions) {
+      var kindMap = {
+        'sol-vmrs': 'registers', 'sol-northbound': 'registers',
+        'sol-prepaid': 'prepaid',
+        'sol-pole-ems': 'edge', 'sol-comms': 'edge',
+        'sol-mpm': 'platform',
+        'sol-openami': 'feeder',
+        'sol-vendor': 'planning', 'sol-field-qa': 'planning', 'sol-min-scope': 'planning', 'sol-anchor': 'planning'
+      };
+      json.software = json.solutions.map(function (s) {
+        var hw = s.hardware || s.layers || [];
+        hw = hw.filter(function (id) { return id !== 'scope'; });
+        return {
+          id: s.id,
+          label: s.label,
+          kind: s.kind || kindMap[s.id] || 'planning',
+          hardware: hw,
+          href: s.href
+        };
+      });
+    }
+    if (!json.softwareKinds) {
+      json.softwareKinds = [
+        { id: 'registers', label: 'Registers & telemetry', short: 'Registers' },
+        { id: 'prepaid', label: 'Prepaid & tokens', short: 'Prepaid' },
+        { id: 'edge', label: 'Edge gateway', short: 'Edge' },
+        { id: 'platform', label: 'Billing platform', short: 'Platform' },
+        { id: 'feeder', label: 'Feeder AMI', short: 'Feeder AMI' },
+        { id: 'planning', label: 'Planning & architecture', short: 'Planning' }
+      ];
+    }
+    if (!Array.isArray(json.problems)) {
+      throw new Error('map data missing problems array');
+    }
+    if (!Array.isArray(json.software)) {
+      throw new Error('map data missing software array');
+    }
+    if (!Array.isArray(json.hardware)) {
+      throw new Error('map data missing hardware array');
+    }
+    return json;
+  }
+
+  function clearHover() {
+    hoverId = null;
+    hoverSide = null;
+    applyHighlight();
+  }
+
+  function setHover(id, side) {
+    hoverId = id;
+    hoverSide = side;
+    applyHighlight();
+  }
+
+  function bindHoverHandlers() {
+    var frame = document.getElementById('map-frame');
+    if (hoverFrame === frame) return;
+    hoverFrame = frame;
+    frame.addEventListener('mouseover', function (e) {
+      var prob = e.target.closest && e.target.closest('.node-prob');
+      var sw = e.target.closest && e.target.closest('.node-sol');
+      var hw = e.target.closest && e.target.closest('.node-hw');
+      if (prob) setHover(prob.getAttribute('data-id'), 'prob');
+      else if (sw) setHover(sw.getAttribute('data-id'), 'sw');
+      else if (hw) setHover(hw.getAttribute('data-id'), 'hw');
+    });
+    frame.addEventListener('mouseout', function (e) {
+      var from = e.target.closest && (e.target.closest('.node-prob') || e.target.closest('.node-sol') || e.target.closest('.node-hw'));
+      if (!from) return;
+      var to = e.relatedTarget;
+      if (to && frame.contains(to) && (to.closest('.node-prob') || to.closest('.node-sol') || to.closest('.node-hw'))) return;
+      clearHover();
+    });
+    frame.addEventListener('mouseleave', function () { clearHover(); });
+  }
+
+  function el(tag, attrs, parent) {
+    var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
+    if (attrs) Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); });
+    if (parent) parent.appendChild(n);
+    return n;
+  }
+
+  function groupMeta(id) {
+    return data.groups.find(function (g) { return g.id === id; }) || { id: id, label: id, short: id };
+  }
+
+  function hardwareMeta(id) {
+    return data.hardware.find(function (h) { return h.id === id; }) || { id: id, label: id, short: id };
+  }
+
+  function kindMeta(id) {
+    return data.softwareKinds.find(function (k) { return k.id === id; }) || { id: id, label: id, short: id };
+  }
+
+  function softwareById(id) {
+    return data.software.find(function (s) { return s.id === id; });
+  }
+
+  function softwareHardware(sw) {
+    if (!sw) return [];
+    if (sw.hardware && sw.hardware.length) return sw.hardware;
+    return [];
+  }
+
+  function hardwareInUse(software) {
+    var ids = new Set();
+    software.forEach(function (s) {
+      softwareHardware(s).forEach(function (hid) { ids.add(hid); });
+    });
+    return data.hardware.filter(function (h) { return ids.has(h.id); });
+  }
+
+  function buildFilters() {
+    var bar = document.getElementById('map-filters');
+    bar.innerHTML = '<span class="map-toolbar-label">Show</span>';
+    var allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'map-filter active';
+    allBtn.textContent = 'All categories';
+    allBtn.dataset.group = 'all';
+    bar.appendChild(allBtn);
+    data.groups.forEach(function (g) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'map-filter';
+      b.textContent = g.short || g.label;
+      b.dataset.group = g.id;
+      b.dataset.tone = g.id;
+      b.title = g.label;
+      bar.appendChild(b);
+    });
+    bar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.map-filter');
+      if (!btn) return;
+      activeGroup = btn.dataset.group;
+      bar.querySelectorAll('.map-filter').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      hoverId = null;
+      hoverSide = null;
+      render();
+    });
+  }
+
+  function visibleProblems() {
+    if (activeGroup === 'all') return data.problems.slice();
+    return data.problems.filter(function (p) { return p.group === activeGroup; });
+  }
+
+  function visibleProblemIds(set) {
+    visibleProblems().forEach(function (p) { set.add(p.id); });
+  }
+
+  function connectedSoftware(probIds) {
+    var sws = new Set();
+    data.links.forEach(function (pair) {
+      if (probIds.has(pair[0])) sws.add(pair[1]);
+    });
+    return data.software.filter(function (s) { return sws.has(s.id); });
+  }
+
+  function layoutNodes(problems, software) {
+    var probPos = {};
+    var probGroup = {};
+    var groupBands = [];
+    var y = PAD_TOP;
+    var groupOrder = [];
+    problems.forEach(function (p) {
+      if (groupOrder.indexOf(p.group) === -1) groupOrder.push(p.group);
+    });
+    groupOrder.forEach(function (gid, gi) {
+      var gProbs = problems.filter(function (p) { return p.group === gid; });
+      if (!gProbs.length) return;
+      if (gi > 0) y += GRP_GAP;
+      var bandTop = y;
+      y += HEADER_H;
+      gProbs.forEach(function (p) {
+        probPos[p.id] = y + NODE_H / 2;
+        probGroup[p.id] = gid;
+        y += ROW_H;
+      });
+      groupBands.push({ id: gid, label: groupMeta(gid).label, y0: bandTop, y1: y + 2 });
+    });
+    var probHeight = y;
+
+    var hwPos = {};
+    var hwBands = [];
+    var hy = PAD_TOP;
+    var usedHw = hardwareInUse(software);
+    usedHw.forEach(function (hw, hi) {
+      if (hi > 0) hy += GRP_GAP;
+      var bandTop = hy;
+      hy += HEADER_H;
+      hwPos[hw.id] = hy + NODE_H / 2;
+      hy += ROW_H;
+      hwBands.push({ id: hw.id, label: hw.label, y0: bandTop, y1: hy + 2 });
+    });
+
+    var swPos = {};
+    var swBands = [];
+    var sy = PAD_TOP;
+    data.softwareKinds.forEach(function (kind, ki) {
+      var kindSw = software.filter(function (s) { return s.kind === kind.id; });
+      if (!kindSw.length) return;
+      if (ki > 0 && swBands.length) sy += GRP_GAP;
+      var bandTop = sy;
+      sy += HEADER_H;
+      kindSw.forEach(function (s) {
+        var tall = s.specs && s.specs.length;
+        var nh = tall ? NODE_H_SPECS : NODE_H;
+        var rh = tall ? ROW_H_SPECS : ROW_H;
+        swPos[s.id] = sy + nh / 2;
+        sy += rh;
+      });
+      swBands.push({ id: kind.id, label: kind.label, y0: bandTop, y1: sy + 2 });
+    });
+
+    var height = Math.max(probHeight, hy, sy) + PAD_BOT;
+    return {
+      probPos: probPos,
+      probGroup: probGroup,
+      hwPos: hwPos,
+      swPos: swPos,
+      groupBands: groupBands,
+      hwBands: hwBands,
+      swBands: swBands,
+      height: height
+    };
+  }
+
+  function activeBandGroups(hi) {
+    if (hi.all) return null;
+    var gs = new Set();
+    if (hoverSide === 'prob') {
+      var p = data.problems.find(function (x) { return x.id === hoverId; });
+      if (p) gs.add(p.group);
+    } else if (hoverSide === 'sw') {
+      data.links.forEach(function (pair) {
+        if (pair[1] !== hoverId) return;
+        var pr = data.problems.find(function (x) { return x.id === pair[0]; });
+        if (pr) gs.add(pr.group);
+      });
+    } else if (hoverSide === 'hw') {
+      data.software.forEach(function (s) {
+        if (softwareHardware(s).indexOf(hoverId) === -1) return;
+        data.links.forEach(function (pair) {
+          if (pair[1] !== s.id) return;
+          var pr = data.problems.find(function (x) { return x.id === pair[0]; });
+          if (pr) gs.add(pr.group);
+        });
+      });
+    }
+    return gs;
+  }
+
+  function activeHwBands(hi) {
+    if (hi.all) return null;
+    var hs = new Set();
+    if (hoverSide === 'hw') {
+      hs.add(hoverId);
+      return hs;
+    }
+    hi.hws.forEach(function (hid) { hs.add(hid); });
+    return hs;
+  }
+
+  function activeSwBands(hi) {
+    if (hi.all) return null;
+    var ks = new Set();
+    hi.sws.forEach(function (sid) {
+      var s = softwareById(sid);
+      if (s) ks.add(s.kind);
+    });
+    return ks;
+  }
+
+  function highlightSet() {
+    var probs = new Set();
+    var sws = new Set();
+    var hws = new Set();
+    var probHwLinks = new Set();
+    var hwSwLinks = new Set();
+    var directLinks = new Set();
+    if (!hoverId) {
+      return { probs: probs, sws: sws, hws: hws, probHwLinks: probHwLinks, hwSwLinks: hwSwLinks, directLinks: directLinks, all: true };
+    }
+    if (hoverSide === 'prob') {
+      probs.add(hoverId);
+      data.links.forEach(function (pair, i) {
+        if (pair[0] !== hoverId) return;
+        sws.add(pair[1]);
+        var sw = softwareById(pair[1]);
+        var hwList = softwareHardware(sw);
+        if (!hwList.length) {
+          directLinks.add(i);
+          return;
+        }
+        hwList.forEach(function (hid) {
+          hws.add(hid);
+          probHwLinks.add(pair[0] + '::' + hid);
+          hwSwLinks.add(hid + '::' + pair[1]);
+        });
+      });
+    } else if (hoverSide === 'sw') {
+      sws.add(hoverId);
+      data.links.forEach(function (pair, i) {
+        if (pair[1] !== hoverId) return;
+        probs.add(pair[0]);
+        var sw = softwareById(hoverId);
+        var hwList = softwareHardware(sw);
+        if (!hwList.length) directLinks.add(i);
+      });
+      softwareHardware(softwareById(hoverId)).forEach(function (hid) {
+        hws.add(hid);
+        hwSwLinks.add(hid + '::' + hoverId);
+        data.links.forEach(function (pair) {
+          if (pair[1] !== hoverId) return;
+          probHwLinks.add(pair[0] + '::' + hid);
+        });
+      });
+    } else if (hoverSide === 'hw') {
+      hws.add(hoverId);
+      data.software.forEach(function (s) {
+        if (softwareHardware(s).indexOf(hoverId) === -1) return;
+        sws.add(s.id);
+        hwSwLinks.add(hoverId + '::' + s.id);
+        data.links.forEach(function (pair, i) {
+          if (pair[1] !== s.id) return;
+          probs.add(pair[0]);
+          probHwLinks.add(pair[0] + '::' + hoverId);
+          if (!softwareHardware(s).length) directLinks.add(i);
+        });
+      });
+    }
+    return { probs: probs, sws: sws, hws: hws, probHwLinks: probHwLinks, hwSwLinks: hwSwLinks, directLinks: directLinks, all: false };
+  }
+
+  function probHwLinkClass(hi, key, tone) {
+    var state = hi.all ? 'on' : hi.probHwLinks.has(key) ? 'focus' : 'dim';
+    return 'link link-tone-' + tone + ' ' + state;
+  }
+
+  function directLinkClass(hi, idx, tone) {
+    var state = hi.all ? 'on' : hi.directLinks.has(idx) ? 'focus' : 'dim';
+    return 'link link-tone-' + tone + ' link-direct ' + state;
+  }
+
+  function hwSwLinkClass(hi, key, tone) {
+    var state = hi.all ? 'on' : hi.hwSwLinks.has(key) ? 'focus' : 'dim';
+    return 'link-deploy link-deploy-tone-' + tone + ' ' + state;
+  }
+
+  function nodeClass(hi, kind, id) {
+    var base = kind === 'prob' ? 'node-prob' : kind === 'sw' ? 'node-sol' : 'node-hw';
+    if (hi.all) return base;
+    var set = kind === 'prob' ? hi.probs : kind === 'sw' ? hi.sws : hi.hws;
+    return base + (set.has(id) ? ' on' : ' dim');
+  }
+
+  function applyHighlight() {
+    var svg = document.getElementById('map-svg');
+    if (!svg || !svg.firstChild) return;
+    var hi = highlightSet();
+    var bandHi = activeBandGroups(hi);
+    var hwHi = activeHwBands(hi);
+    var swHi = activeSwBands(hi);
+    svg.querySelectorAll('.link:not(.link-deploy)').forEach(function (path) {
+      if (path.classList.contains('link-direct')) {
+        var idx = parseInt(path.getAttribute('data-direct-idx'), 10);
+        var tone = path.getAttribute('data-tone') || 'billing';
+        path.setAttribute('class', directLinkClass(hi, idx, tone));
+        return;
+      }
+      var key = path.getAttribute('data-prob-hw-key');
+      var tone = path.getAttribute('data-tone') || 'billing';
+      path.setAttribute('class', probHwLinkClass(hi, key, tone));
+    });
+    svg.querySelectorAll('.link-deploy').forEach(function (path) {
+      var key = path.getAttribute('data-hw-sw-key');
+      var tone = path.getAttribute('data-tone') || 'meter';
+      path.setAttribute('class', hwSwLinkClass(hi, key, tone));
+    });
+    svg.querySelectorAll('.node-prob').forEach(function (node) {
+      node.setAttribute('class', nodeClass(hi, 'prob', node.getAttribute('data-id')));
+    });
+    svg.querySelectorAll('.node-sol').forEach(function (node) {
+      node.setAttribute('class', nodeClass(hi, 'sw', node.getAttribute('data-id')));
+    });
+    svg.querySelectorAll('.node-hw').forEach(function (node) {
+      node.setAttribute('class', nodeClass(hi, 'hw', node.getAttribute('data-id')));
+    });
+    svg.querySelectorAll('[data-band]').forEach(function (el) {
+      var gid = el.getAttribute('data-band');
+      el.classList.toggle('dim', !!(bandHi && !bandHi.has(gid)));
+    });
+    svg.querySelectorAll('[data-hw-band]').forEach(function (el) {
+      var hid = el.getAttribute('data-hw-band');
+      el.classList.toggle('dim', !!(hwHi && !hwHi.has(hid)));
+    });
+    svg.querySelectorAll('[data-sw-band]').forEach(function (el) {
+      var kid = el.getAttribute('data-sw-band');
+      el.classList.toggle('dim', !!(swHi && !swHi.has(kid)));
+    });
+  }
+
+  function render() {
+    var svg = document.getElementById('map-svg');
+    while (svg.firstChild) svg.removeChild(svg.firstChild);
+
+    var probIds = new Set();
+    visibleProblemIds(probIds);
+    var problems = visibleProblems();
+    var software = activeGroup === 'all'
+      ? data.software.slice()
+      : connectedSoftware(probIds);
+    var layout = layoutNodes(problems, software);
+    svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + layout.height);
+
+    el('text', { class: 'grp-label', x: PROB_LEFT, y: 18 }, svg).textContent = 'Problems';
+    el('text', { class: 'grp-label', x: HW_LEFT + 4, y: 18 }, svg).textContent = 'Associated hardware';
+    el('text', { class: 'grp-label', x: SW_LEFT, y: 18 }, svg).textContent = 'Software';
+
+    var hi = highlightSet();
+    var bandHi = activeBandGroups(hi);
+    var hwHi = activeHwBands(hi);
+    var swHi = activeSwBands(hi);
+
+    var bandLayer = el('g', { class: 'bands' }, svg);
+    layout.groupBands.forEach(function (band) {
+      var dim = bandHi && !bandHi.has(band.id);
+      el('rect', {
+        class: 'grp-band grp-band-' + band.id + (dim ? ' dim' : ''),
+        'data-band': band.id,
+        x: 0, y: band.y0, width: HW_BAND_X + 4, height: band.y1 - band.y0, rx: 6
+      }, bandLayer);
+      el('rect', {
+        class: 'grp-band-stripe grp-band-stripe-' + band.id + (dim ? ' dim' : ''),
+        'data-band': band.id,
+        x: 0, y: band.y0, width: STRIPE_W, height: band.y1 - band.y0, rx: 2
+      }, bandLayer);
+      var title = el('text', {
+        class: 'grp-band-title grp-band-title-' + band.id + (dim ? ' dim' : ''),
+        'data-band': band.id,
+        x: STRIPE_W + 8,
+        y: band.y0 + 11
+      }, bandLayer);
+      title.textContent = band.label;
+    });
+
+    var hwBandLayer = el('g', { class: 'hw-bands' }, svg);
+    layout.hwBands.forEach(function (band) {
+      var dim = hwHi && !hwHi.has(band.id);
+      el('rect', {
+        class: 'layer-band layer-band-' + band.id + (dim ? ' dim' : ''),
+        'data-hw-band': band.id,
+        x: HW_BAND_X, y: band.y0, width: SW_LEFT - HW_BAND_X - 4, height: band.y1 - band.y0, rx: 6
+      }, hwBandLayer);
+      el('rect', {
+        class: 'layer-band-stripe layer-band-stripe-' + band.id + (dim ? ' dim' : ''),
+        'data-hw-band': band.id,
+        x: HW_BAND_X, y: band.y0, width: STRIPE_W, height: band.y1 - band.y0, rx: 2
+      }, hwBandLayer);
+      var htitle = el('text', {
+        class: 'layer-band-title layer-band-title-' + band.id + (dim ? ' dim' : ''),
+        'data-hw-band': band.id,
+        x: HW_BAND_X + STRIPE_W + 4,
+        y: band.y0 + 11
+      }, hwBandLayer);
+      htitle.textContent = band.label;
+    });
+
+    var swBandLayer = el('g', { class: 'sw-bands' }, svg);
+    layout.swBands.forEach(function (band) {
+      var dim = swHi && !swHi.has(band.id);
+      el('rect', {
+        class: 'sw-band sw-band-' + band.id + (dim ? ' dim' : ''),
+        'data-sw-band': band.id,
+        x: HW_RIGHT + 8, y: band.y0, width: SVG_W - HW_RIGHT - 8, height: band.y1 - band.y0, rx: 6
+      }, swBandLayer);
+      el('rect', {
+        class: 'sw-band-stripe sw-band-stripe-' + band.id + (dim ? ' dim' : ''),
+        'data-sw-band': band.id,
+        x: SW_STRIPE_X, y: band.y0, width: STRIPE_W, height: band.y1 - band.y0, rx: 2
+      }, swBandLayer);
+      var stitle = el('text', {
+        class: 'sw-band-title sw-band-title-' + band.id + (dim ? ' dim' : ''),
+        'data-sw-band': band.id,
+        x: HW_RIGHT + 14,
+        y: band.y0 + 11
+      }, swBandLayer);
+      stitle.textContent = band.label;
+    });
+
+    var linkLayer = el('g', { class: 'links' }, svg);
+
+    data.links.forEach(function (pair, i) {
+      if (!probIds.has(pair[0])) return;
+      if (activeGroup !== 'all' && !software.some(function (s) { return s.id === pair[1]; })) return;
+      var yProb = layout.probPos[pair[0]];
+      var sw = softwareById(pair[1]);
+      if (yProb == null || !sw) return;
+      var tone = layout.probGroup[pair[0]] || 'billing';
+      var hwList = softwareHardware(sw);
+      if (!hwList.length) {
+        var ySw = layout.swPos[pair[1]];
+        if (ySw == null) return;
+        el('path', {
+          class: directLinkClass(hi, i, tone),
+          d: 'M' + PROB_RIGHT + ',' + yProb + ' C' + MID_DIRECT + ',' + yProb + ' ' + MID_DIRECT + ',' + ySw + ' ' + SW_LEFT + ',' + ySw,
+          'data-direct-idx': String(i),
+          'data-tone': tone
+        }, linkLayer);
+        return;
+      }
+      hwList.forEach(function (hid) {
+        var yHw = layout.hwPos[hid];
+        if (yHw == null) return;
+        var key = pair[0] + '::' + hid;
+        el('path', {
+          class: probHwLinkClass(hi, key, tone),
+          d: 'M' + PROB_RIGHT + ',' + yProb + ' C' + MID_PROB_HW + ',' + yProb + ' ' + MID_PROB_HW + ',' + yHw + ' ' + HW_LEFT + ',' + yHw,
+          'data-prob-hw-key': key,
+          'data-tone': tone
+        }, linkLayer);
+      });
+    });
+
+    software.forEach(function (s) {
+      var ySw = layout.swPos[s.id];
+      if (ySw == null) return;
+      softwareHardware(s).forEach(function (hid) {
+        var yHw = layout.hwPos[hid];
+        if (yHw == null) return;
+        var key = hid + '::' + s.id;
+        el('path', {
+          class: hwSwLinkClass(hi, key, hid),
+          d: 'M' + HW_RIGHT + ',' + yHw + ' C' + MID_HW_SW + ',' + yHw + ' ' + MID_HW_SW + ',' + ySw + ' ' + SW_LEFT + ',' + ySw,
+          'data-hw-sw-key': key,
+          'data-tone': hid
+        }, linkLayer);
+      });
+    });
+
+    var probLayer = el('g', { class: 'problems' }, svg);
+    problems.forEach(function (p) {
+      var cy = layout.probPos[p.id];
+      var g = el('g', {
+        class: nodeClass(hi, 'prob', p.id),
+        'data-id': p.id
+      }, probLayer);
+      el('rect', { x: PROB_LEFT, y: cy - NODE_H / 2, width: NODE_W_L - STRIPE_W, height: NODE_H, rx: 4 }, g);
+      el('text', { x: PROB_LEFT + 6, y: cy + 3.5 }, g).textContent = p.label;
+      g.addEventListener('click', function () {
+        location.href = PROBLEMS_PAGE + '#' + p.id;
+      });
+    });
+
+    var hwNodeLayer = el('g', { class: 'hardware' }, svg);
+    layout.hwBands.forEach(function (band) {
+      var cy = layout.hwPos[band.id];
+      if (cy == null) return;
+      var meta = hardwareMeta(band.id);
+      var g = el('g', {
+        class: nodeClass(hi, 'hw', band.id),
+        'data-id': band.id
+      }, hwNodeLayer);
+      el('rect', { x: HW_LEFT, y: cy - NODE_H / 2, width: NODE_W_M, height: NODE_H, rx: 4 }, g);
+      el('text', { x: HW_LEFT + 6, y: cy + 3.5 }, g).textContent = meta.short || meta.label;
+    });
+
+    var swLayer = el('g', { class: 'software' }, svg);
+    software.forEach(function (s) {
+      var cy = layout.swPos[s.id];
+      if (cy == null) return;
+      var hasSpecs = s.specs && s.specs.length;
+      var nh = hasSpecs ? NODE_H_SPECS : NODE_H;
+      var g = el('g', {
+        class: nodeClass(hi, 'sw', s.id) + (hasSpecs ? ' has-specs' : ''),
+        'data-id': s.id
+      }, swLayer);
+      el('rect', { x: SW_LEFT, y: cy - nh / 2, width: NODE_W_R, height: nh, rx: 4 }, g);
+      el('text', {
+        class: hasSpecs ? 'label' : '',
+        x: SW_LEFT + 6,
+        y: cy + (hasSpecs ? -2 : 3.5)
+      }, g).textContent = s.label;
+      if (hasSpecs) {
+        el('text', { class: 'sol-sub', x: SW_LEFT + 6, y: cy + 8 }, g).textContent = s.specs.join(' · ');
+      }
+      g.addEventListener('click', function () {
+        if (s.href) location.href = s.href;
+      });
+    });
+
+    bindHoverHandlers();
+  }
+
+  function applyProtoChrome(json) {
+    if (json.title) document.getElementById('map-title').textContent = json.title;
+    if (json.subtitle) document.getElementById('map-sub').textContent = json.subtitle;
+    var dataLink = document.getElementById('map-data-link');
+    if (dataLink && protoMeta) {
+      dataLink.href = 'meter-benchmark/' + protoMeta.file;
+      dataLink.textContent = protoMeta.file;
+    }
+    if (!json.prototype) return;
+    var nav = document.getElementById('map-proto-nav');
+    nav.hidden = false;
+    var links = [
+      { id: 'a', label: 'A · Prepaid' },
+      { id: 'b', label: 'B · Gateway' },
+      { id: 'c', label: 'C · DER' },
+      { id: 'd', label: 'D · OpenAMI' }
+    ];
+    nav.innerHTML = '<strong style="font-size:11px;margin-right:0.35rem">Prototypes:</strong>';
+    links.forEach(function (l) {
+      var a = document.createElement('a');
+      a.href = 'meter-solutions-map.html?proto=' + l.id;
+      a.textContent = l.label;
+      if (l.id === json.prototype) a.style.fontWeight = '600';
+      nav.appendChild(a);
+    });
+    var idx = document.createElement('a');
+    idx.href = 'meter-solutions-map-prototypes.html';
+    idx.textContent = 'All prototypes';
+    nav.appendChild(idx);
+    var full = document.createElement('a');
+    full.href = 'meter-solutions-map.html';
+    full.textContent = 'Full map';
+    nav.appendChild(full);
+    var banner = document.getElementById('map-proto-banner');
+    banner.hidden = false;
+    banner.innerHTML = '<strong>Hypothetical prototype</strong> — subset of problems & standards; main map unchanged.' +
+      (json.outOfScope ? '<div class="out">Out of scope: ' + json.outOfScope + '</div>' : '');
+    var lead = document.getElementById('map-lead');
+    lead.innerHTML = 'Same three columns as full map. Software nodes show <strong>spec tags</strong> (standards / contracts). Solid = problem→hardware · dashed = hardware→software.';
+  }
+
+  fetch(MAP_URL)
+    .then(function (r) { if (!r.ok) throw new Error('map load failed'); return r.json(); })
+    .then(function (json) {
+      data = normalizeData(json);
+      applyProtoChrome(json);
+      buildFilters();
+      render();
+    })
+    .catch(function (err) {
+      console.error('solutions map:', err);
+      document.getElementById('map-frame').innerHTML =
+        '<p style="padding:1rem;font-size:13px;color:var(--text-2)">Could not load map data' +
+        (err && err.message ? ' — ' + err.message : '') +
+        '. Open via HTTP preview or deployed wiki.</p>';
+    });
+})();
+</script>
+</body>
+</html>

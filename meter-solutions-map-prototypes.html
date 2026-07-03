@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Standards prototypes · Village Metering · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 1rem; }
+.lead { font-size: 14px; margin-bottom: 1.25rem; max-width: 48rem; line-height: 1.5; }
+.proto-grid { display: grid; gap: 0.85rem; margin-bottom: 1.25rem; }
+@media (min-width: 640px) { .proto-grid { grid-template-columns: 1fr 1fr; } }
+.proto-card {
+  border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.1rem;
+  background: var(--bg-2); text-decoration: none; color: inherit; display: block;
+  transition: border-color 0.15s;
+}
+.proto-card:hover { border-color: var(--green); }
+.proto-card h2 { font-size: 15px; font-weight: 600; margin-bottom: 0.35rem; color: var(--text); }
+.proto-card .tagline { font-size: 12px; color: var(--text-2); margin-bottom: 0.5rem; }
+.proto-card .specs { font-size: 11px; color: var(--green); font-weight: 500; margin-bottom: 0.35rem; }
+.proto-card .out { font-size: 11px; color: var(--text-3); }
+.proto-card .open { font-size: 11px; margin-top: 0.5rem; color: var(--green); }
+.note { font-size: 12px; color: var(--text-2); max-width: 48rem; line-height: 1.45; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#village-metering/solutions-map">← Full solutions map</a></div>
+
+  <h1>Standards &amp; spec prototypes</h1>
+  <p class="sub">Four hypothetical partial stacks — same Problem → hardware → software layout, scoped subsets</p>
+
+  <p class="lead">Each diagram has its own JSON file. The main map is unchanged. Software nodes carry spec tags (STS, MQTT, IEEE 1547, etc.). Pick the stack that matches the deployment — not all standards on one meter row.</p>
+
+  <div class="proto-grid">
+    <a class="proto-card" href="meter-solutions-map.html?proto=a">
+      <h2>A · Prepaid cash path</h2>
+      <p class="tagline">Token path parallel to pole reads — keypad works when gateway is down</p>
+      <p class="specs">STS · OpenPAYGO · DLMS/COSEM · MPM</p>
+      <p class="out">Out: MQTT primary, IEEE 1547, SIP, feeder AMI</p>
+      <p class="open">Open diagram →</p>
+    </a>
+    <a class="proto-card" href="meter-solutions-map.html?proto=b">
+      <h2>B · Pole gateway normalization</h2>
+      <p class="tagline">One south dialect per OEM, one north contract for operators</p>
+      <p class="specs">DLMS · VMRS · MQTT v0.1 · SIP (control)</p>
+      <p class="out">Out: STS at gateway, IEEE 1547, SunSpec on billing OBIS</p>
+      <p class="open">Open diagram →</p>
+    </a>
+    <a class="proto-card" href="meter-solutions-map.html?proto=c">
+      <h2>C · DER sidecar</h2>
+      <p class="tagline">Generation track separate from customer billing registers</p>
+      <p class="specs">IEEE 1547 · SunSpec · feeder aggregator</p>
+      <p class="out">Out: STS, MPM prepaid, VMRS on inverter</p>
+      <p class="open">Open diagram →</p>
+    </a>
+    <a class="proto-card" href="meter-solutions-map.html?proto=d">
+      <h2>D · OpenAMI feeder slice</h2>
+      <p class="tagline">Loss visibility + pole control without utility MDMS price tag</p>
+      <p class="specs">OpenAMI subset · mesh · MQTT</p>
+      <p class="out">Out: MPM mandatory, STS, full IEEE 2030.5</p>
+      <p class="open">Open diagram →</p>
+    </a>
+  </div>
+
+  <p class="note">JSON sources: <a href="meter-benchmark/proposal-a-prepaid.json">proposal-a-prepaid.json</a> · <a href="meter-benchmark/proposal-b-gateway.json">proposal-b-gateway.json</a> · <a href="meter-benchmark/proposal-c-der.json">proposal-c-der.json</a> · <a href="meter-benchmark/proposal-d-openami.json">proposal-d-openami.json</a></p>
+
+  <p class="meter-footer" style="margin-top:1rem">
+    <a href="meter-solutions-map.html">Full solutions map</a> ·
+    <a href="index.html#village-metering/problems">Problems</a> ·
+    <a href="index.html#village-metering/vmrs">Register checklist</a>
+  </p>
+</div>
+</body>
+</html>

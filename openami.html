@@ -46,7 +46,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#meter-study/openami">← Village Metering</a></div>
+  <div class="back"><a href="index.html#village-metering/openami">← Village Metering</a></div>
 
   <h1>OpenAMI</h1>
   <p class="sub">Hardware thread within ISV Village Metering · EnAccess · Energy IoT · NESL</p>
@@ -57,14 +57,14 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     <p>OpenAMI discussions live on the <strong>OSEA</strong> (Open Source Energy Access) Discord server managed by EnAccess. Join: <a href="https://discord.osea-community.org/" target="_blank" rel="noopener">discord.osea-community.org</a> · <a href="https://enaccess.org/support/community-support/" target="_blank" rel="noopener">how to join ↗</a>. <em>ISV Tech Comm goal: participate more actively</em> — introduce work, answer integration questions, share wiki artifacts.</p>
   </div>
 
-  <p class="body-text">Program overview: <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">enaccess.org/openami</a>. The <a href="index.html#meter-study/meshems">MeshEMS board</a> is aligned hardware for learning that stack in the field — multi-tenant edge metering at the upstream/downstream boundary, documented openly for community operators.</p>
+  <p class="body-text">Program overview: <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">enaccess.org/openami</a>. The <a href="index.html#village-metering/meshems">MeshEMS board</a> is aligned hardware for learning that stack in the field — multi-tenant edge metering at the upstream/downstream boundary, documented openly for community operators.</p>
 
   <h2>Stack layers (working definitions)</h2>
   <table class="stack-table">
     <thead><tr><th>Component</th><th>Role</th><th>Notes</th></tr></thead>
     <tbody>
       <tr><td><strong>OpenEMS</strong> (Energy IoT)</td><td>EMS / edge orchestration</td><td>More urban — grid present; stack can stop at the DCU.</td></tr>
-      <tr><td><strong>MeshEMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#meter-study/meshems">MeshEMS board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">nesl-meshems</a></td></tr>
+      <tr><td><strong>MeshEMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#village-metering/meshems">MeshEMS board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">nesl-meshems</a></td></tr>
       <tr><td><strong>Street Pole EMS</strong></td><td>Pole gateway</td><td><a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a> firmware</td></tr>
       <tr><td><strong>OpenAMI / MQTT</strong></td><td>Actionable telemetry</td><td>Northbound contract — normalize OEM/DLMS to registers operators can bill, vend, and disconnect on; <strong>leakage visible at every layer</strong> of the distribution path</td></tr>
       <tr><td><strong>EnAccess MPM</strong></td><td>Operator backend</td><td>Instead of OpenEMS backend in village deployments</td></tr>
@@ -75,8 +75,8 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
 
   <h2>ISV wiki threads</h2>
   <ul class="link-list">
-    <li><a href="index.html#meter-study/problems-today">Village Metering · Problems</a> · <a href="index.html#meter-study/overview">Overview</a></li>
-    <li><a href="index.html#meter-study/meshems">MeshEMS board</a> — NESL PCB · OpenAMI-aligned hardware</li>
+    <li><a href="index.html#village-metering/overview">Village Metering · Overview</a> · <a href="index.html#village-metering/problems">Problems</a></li>
+    <li><a href="index.html#village-metering/meshems">MeshEMS board</a> — NESL PCB · OpenAMI-aligned hardware</li>
     <li><a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-distribution">25 Jun 2026 notes · MeshEMS board distribution</a></li>
     <li><a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-power">25 Jun 2026 notes · MeshEMS power rails</a></li>
     <li><a href="power-africa-openami-presentation-2025.html">Power Africa OpenAMI deck (Sep 2025)</a></li>

@@ -101,7 +101,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#meter-study/meshems">← Village Metering</a> · <a href="index.html#meter-study/openami">OpenAMI</a></div>
+  <div class="back"><a href="index.html#village-metering/meshems">← Village Metering</a> · <a href="index.html#village-metering/openami">OpenAMI</a></div>
 
   <h1>MeshEMS board</h1>
   <p class="sub">NESL · OpenAMI-aligned · multi-tenant edge metering · workshops &amp; field deployments</p>
@@ -118,7 +118,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <p class="body-text">Living parts list for the NESL 865B MeshEMS / Street-EMS dev kit — components, sources, and workshop kit quantities. Maintained in Google Sheets (view access; request edit from NESL / Energy IoT if you are building kits).</p>
   <p class="body-text"><a href="https://docs.google.com/spreadsheets/d/1AeAUrfL-Fu_j3xsBPjY555B0huxV0nnMtRjkDTFPjTE/edit?usp=sharing" target="_blank" rel="noopener">MeshEMS board BOM (Google Sheets) ↗</a></p>
 
-  <p class="lead">The <strong>MeshEMS board</strong> is an ESP32-based EMS PCB <strong>designed by NESL</strong> in alignment with <strong><a href="index.html#meter-study/openami">OpenAMI</a></strong> — mesh-capable neighborhood-area networking for DCU backhaul when pole-to-pole RF redundancy is needed. OpenAMI metering firmware targets the <strong>NESL 865B</strong>: <a href="https://github.com/energy-iot/meshems-openami-metering" target="_blank" rel="noopener">meshems-openami-metering</a>.</p>
+  <p class="lead">The <strong>MeshEMS board</strong> is an ESP32-based EMS PCB <strong>designed by NESL</strong> in alignment with <strong><a href="index.html#village-metering/openami">OpenAMI</a></strong> — mesh-capable neighborhood-area networking for DCU backhaul when pole-to-pole RF redundancy is needed. OpenAMI metering firmware targets the <strong>NESL 865B</strong>: <a href="https://github.com/energy-iot/meshems-openami-metering" target="_blank" rel="noopener">meshems-openami-metering</a>.</p>
 
   <div class="callout">
     <strong>OpenAMI alignment</strong>
@@ -153,7 +153,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <p class="boundary-meter">← revenue meter / gateway normalization →</p>
 
   <h2 id="ecosystem-cohesion">OpenAMI · OBIS · building in the open</h2>
-  <p class="body-text"><strong><a href="index.html#meter-study/openami">OpenAMI</a></strong> — actionable telemetry and leakage visibility (feeder → branch → customer). <strong><a href="index.html#meter-study/vmrs">OBIS · VMRS</a></strong> — shared register semantics northbound. ISV curates workshop notes, gap matrices, and distribution lists in alignment with EnAccess, Energy IoT, NESL, and field operators.</p>
+  <p class="body-text"><strong><a href="index.html#village-metering/openami">OpenAMI</a></strong> — actionable telemetry and leakage visibility (feeder → branch → customer). <strong><a href="index.html#village-metering/vmrs">OBIS · VMRS</a></strong> — shared register semantics northbound. ISV curates workshop notes, gap matrices, and distribution lists in alignment with EnAccess, Energy IoT, NESL, and field operators.</p>
 
   <h2>Role in the stack</h2>
   <table class="stack-table">
@@ -161,7 +161,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     <tbody>
       <tr><td><strong>Southbound</strong></td><td>DLMS / OEM meter interfaces via gateway firmware; pairs with CircuitSetup and other bench/field meter boards.</td></tr>
       <tr><td><strong>Edge</strong></td><td>ESP32 EMS — mesh NAN between DCUs; optional when a single Street Pole gateway is not enough for feeder coverage.</td></tr>
-      <tr><td><strong>Northbound</strong></td><td>MQTT / JSON registers aligned to <a href="index.html#meter-study/vmrs">OBIS · VMRS</a> — same OpenAMI contract as EnAccess MPM and operator backends.</td></tr>
+      <tr><td><strong>Northbound</strong></td><td>MQTT / JSON registers aligned to <a href="index.html#village-metering/vmrs">OBIS · VMRS</a> — same OpenAMI contract as EnAccess MPM and operator backends.</td></tr>
       <tr><td><strong>Firmware</strong></td><td><a href="https://github.com/energy-iot/meshems-openami-metering" target="_blank" rel="noopener">meshems-openami-metering</a> (865B · OpenAMI) · <a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a> (Street Pole EMS)</td></tr>
     </tbody>
   </table>
@@ -185,8 +185,8 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
 
   <h2>ISV wiki threads</h2>
   <ul class="link-list">
-    <li><a href="index.html#meter-study/openami">OpenAMI hub</a></li>
-    <li><a href="index.html#meter-study/problems-today">Village Metering · Problems</a> · <a href="index.html#meter-study/overview">Overview</a></li>
+    <li><a href="index.html#village-metering/openami">OpenAMI hub</a></li>
+    <li><a href="index.html#village-metering/overview">Village Metering · Overview</a> · <a href="index.html#village-metering/problems">Problems</a></li>
     <li><a href="power-africa-openami-presentation-2025.html">Power Africa OpenAMI deck (Sep 2025)</a></li>
     <li><a href="power-africa-2026-workshop-planning.html">Power Africa 2026 workshop planning</a></li>
     <li><a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-power">25 Jun 2026 · power rails</a> · <a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-distribution">distribution</a></li>

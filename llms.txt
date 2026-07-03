@@ -5,8 +5,10 @@
 ## Docs
 
 - [AGENTS.md](https://isv.wiki/AGENTS.md): Navigation guide for AI assistants — trust hierarchy, file map, contributor rules
-- [Village scope](https://isv.wiki/meter-village-scope.html): ISV operational village definition, global rural population, energy access, HDI, healthy vs unhealthy modernization (cited)
-- [Problems to solve](https://isv.wiki/meter-problems-today.html): Field metering problems and practical approaches for village mini-grids
+- [Overview](https://isv.wiki/index.html#village-metering/overview): Village Metering section entry — why ISV, gateway path, hardware threads
+- [Village scope](https://isv.wiki/index.html#village-metering/village-scope): ISV operational village definition, global rural population, energy access, HDI, healthy vs unhealthy modernization (cited)
+- [Problems to solve](https://isv.wiki/index.html#village-metering/problems): Field metering problems for village mini-grids
+- [Solutions map](https://isv.wiki/index.html#village-metering/solutions-map): Interactive diagram linking problems to ISV-tracked approaches
 - [Meter vendor study](https://isv.wiki/meter-vendor-study.html): Cited vendor benchmark for village mini-grid metering
 - [VMRS registers](https://isv.wiki/meter-benchmark/vmrs-registers.json): Draft Village Minimum Register Set (OBIS shortlist)
 - [Northbound MQTT v0.1](https://isv.wiki/meter-benchmark/northbound-mqtt-v0.1.json): OpenAMI village meter northbound JSON/MQTT profile

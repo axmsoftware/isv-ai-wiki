@@ -1,0 +1,84 @@
+{
+  "version": "proto-1",
+  "prototype": "d",
+  "title": "Proposal D · OpenAMI feeder slice",
+  "subtitle": "OpenAMI subset · mesh · MQTT — loss visibility without full MDMS",
+  "outOfScope": "MPM mandatory, STS, IEEE 2030.5 full stack, utility-scale MDMS",
+  "groups": [
+    { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },
+    { "id": "theft", "label": "Theft & losses", "short": "Theft & losses" },
+    { "id": "comms", "label": "When communications fail", "short": "Comms failure" }
+  ],
+  "problems": [
+    { "id": "prob-unmetered", "group": "theft", "label": "Unmetered load" },
+    { "id": "prob-leakage", "group": "theft", "label": "Line leakage" },
+    { "id": "prob-neutral", "group": "theft", "label": "Neutral imbalance" },
+    { "id": "prob-multi-pole", "group": "cutoffs", "label": "Multi-home pole" },
+    { "id": "prob-cloud-down", "group": "comms", "label": "Cloud unreachable" }
+  ],
+  "hardware": [
+    { "id": "feeder", "label": "Feeder instrumentation", "short": "Feeder" },
+    { "id": "mesh", "label": "MeshEMS · DCU", "short": "MeshEMS / DCU" },
+    { "id": "street-ems", "label": "Street EMS gateway", "short": "Street EMS" },
+    { "id": "cloud", "label": "Operator cloud host", "short": "Cloud" }
+  ],
+  "softwareKinds": [
+    { "id": "feeder", "label": "Feeder AMI", "short": "Feeder AMI" },
+    { "id": "edge", "label": "Edge gateway", "short": "Edge" },
+    { "id": "platform", "label": "Billing platform", "short": "Platform" }
+  ],
+  "software": [
+    {
+      "id": "sw-openami",
+      "label": "OpenAMI telemetry subset",
+      "kind": "feeder",
+      "hardware": ["feeder", "mesh"],
+      "specs": ["OpenAMI", "partial stack"],
+      "href": "index.html#village-metering/openami"
+    },
+    {
+      "id": "sw-mesh-mqtt",
+      "label": "Mesh NAN + MQTT uplink",
+      "kind": "edge",
+      "hardware": ["mesh", "street-ems"],
+      "specs": ["mesh RF", "MQTT"],
+      "href": "tech-comm-2026-05-28-metering-topology.html"
+    },
+    {
+      "id": "sw-pole-control",
+      "label": "Pole tenant control",
+      "kind": "edge",
+      "hardware": ["street-ems"],
+      "specs": ["Street EMS", "multi-tenant"],
+      "href": "index.html#village-metering/meshems"
+    },
+    {
+      "id": "sw-loss-analytics",
+      "label": "Lightweight loss analytics",
+      "kind": "platform",
+      "hardware": ["cloud"],
+      "specs": ["not full MDMS"],
+      "href": null
+    },
+    {
+      "id": "sw-comms-resilience",
+      "label": "Resilient comms design",
+      "kind": "edge",
+      "hardware": ["street-ems", "mesh", "cloud"],
+      "specs": ["store-and-forward", "offline buffer"],
+      "href": "tech-comm-2026-05-28-metering-topology.html"
+    }
+  ],
+  "links": [
+    ["prob-unmetered", "sw-openami"],
+    ["prob-unmetered", "sw-pole-control"],
+    ["prob-leakage", "sw-openami"],
+    ["prob-leakage", "sw-loss-analytics"],
+    ["prob-neutral", "sw-openami"],
+    ["prob-neutral", "sw-loss-analytics"],
+    ["prob-multi-pole", "sw-pole-control"],
+    ["prob-multi-pole", "sw-mesh-mqtt"],
+    ["prob-cloud-down", "sw-comms-resilience"],
+    ["prob-cloud-down", "sw-mesh-mqtt"]
+  ]
+}

@@ -43,15 +43,15 @@ html.embed .subnav-list { font-size: 12px; }
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#meter-study">← Village Metering</a></div>
+  <div class="back"><a href="index.html#village-metering">← Village Metering</a></div>
 
   <h1>Village Metering</h1>
   <p class="sub">ISV Tech Comm primary endeavor · 2026</p>
-  <p class="lead">Mini-grid operators need to <strong>bill each home</strong>, <strong>shut off non-payers</strong>, and <strong>catch stolen power</strong> — without buying a city-scale metering system. This section documents affordable ways to do that. Start with <a href="index.html#meter-study/scope">who we mean by “village”</a> (population, access, HDI context), then <a href="index.html#meter-study/problems-today"><strong>Problems to solve</strong></a>.</p>
+  <p class="lead">Mini-grid operators need to <strong>bill each home</strong>, <strong>shut off non-payers</strong>, and <strong>catch stolen power</strong> — without buying a city-scale metering system. This page orients the Village Metering section. Next: <a href="index.html#village-metering/village-scope">who we mean by “village”</a>, then <a href="index.html#village-metering/problems"><strong>Problems to solve</strong></a>.</p>
 
   <div class="callout">
-    <strong>Start here if you're new</strong>
-    <p><a href="index.html#meter-study/problems-today"><strong>Problems to solve</strong></a> — plain-language list of field needs (prepaid credit, remote disconnect, theft, comms failures) and approaches ISV is tracking. Technical jargon is optional reading below.</p>
+    <strong>Reading path</strong>
+    <p><strong>Overview</strong> (this page) → <a href="index.html#village-metering/village-scope">Village scope</a> → <a href="index.html#village-metering/problems">Problems</a> → vendor study and register checklist below.</p>
   </div>
 
   <h2>Why IEEE · why ISV</h2>
@@ -62,11 +62,11 @@ html.embed .subnav-list { font-size: 12px; }
   <div class="problem-grid">
     <div>
       <strong>Problem → solution map</strong>
-      <p><a href="index.html#meter-study/problems-today">Problems page</a> — billing, cutoffs, theft, affordability, comms — each tied to hardware and software approaches.</p>
+      <p><a href="index.html#village-metering/problems">Problems page</a> — billing, cutoffs, theft, affordability, comms — each tied to hardware and software approaches.</p>
     </div>
     <div>
       <strong>Minimum meter reads</strong>
-      <p><a href="index.html#meter-study/vmrs">Register checklist</a> — ~10 values every village billing case needs (kWh, credit, tamper, disconnect, clock…).</p>
+      <p><a href="index.html#village-metering/vmrs">Register checklist</a> — ~10 values every village billing case needs (kWh, credit, tamper, disconnect, clock…).</p>
     </div>
     <div>
       <strong>One cloud data format</strong>
@@ -74,7 +74,7 @@ html.embed .subnav-list { font-size: 12px; }
     </div>
     <div>
       <strong>Vendor evidence</strong>
-      <p><a href="index.html#meter-study/vendor-study">Vendor study</a> — cited benchmark tables, contacts, and dead ends from public sources.</p>
+      <p><a href="index.html#village-metering/vendor-study">Vendor study</a> — cited benchmark tables, contacts, and dead ends from public sources.</p>
     </div>
   </div>
 
@@ -106,14 +106,14 @@ html.embed .subnav-list { font-size: 12px; }
       <h3>MeshEMS board</h3>
       <ul>
         <li>Lab and pilot PCB for multi-tenant edge metering</li>
-        <li><a href="index.html#meter-study/meshems">Board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">NESL schematic</a></li>
+        <li><a href="index.html#village-metering/meshems">Board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">NESL schematic</a></li>
       </ul>
     </div>
     <div class="dash-card">
       <h3>OpenAMI program</h3>
       <ul>
         <li>Actionable feeder telemetry — leakage, aggregation</li>
-        <li><a href="index.html#meter-study/openami">OpenAMI hub</a> · <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">EnAccess</a></li>
+        <li><a href="index.html#village-metering/openami">OpenAMI hub</a> · <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">EnAccess</a></li>
       </ul>
     </div>
     <div class="dash-card">
@@ -133,7 +133,7 @@ html.embed .subnav-list { font-size: 12px; }
     </div>
     <div>
       <strong>Mixing unlike things</strong>
-      <p>Prepaid tokens, meter reads, inverter monitoring, and cloud format are different layers. One RFP line that says “all protocols” creates impossible bids. See <a href="index.html#meter-study/problems-today">Problems</a> diagram.</p>
+      <p>Prepaid tokens, meter reads, inverter monitoring, and cloud format are different layers. One RFP line that says “all protocols” creates impossible bids. See <a href="index.html#village-metering/problems">Problems</a> diagram.</p>
     </div>
     <div>
       <strong>Closed vendor bundles</strong>
@@ -147,12 +147,12 @@ html.embed .subnav-list { font-size: 12px; }
 
   <h2>Pages in this section</h2>
   <ul class="subnav-list">
-    <li><a href="index.html#meter-study/scope"><strong>Village scope</strong></a> — who we mean by village; population &amp; access stats; HDI; healthy vs unhealthy modernization</li>
-    <li><a href="index.html#meter-study/problems-today"><strong>Problems to solve</strong></a> — start here; field needs and approaches</li>
-    <li><a href="index.html#meter-study/vendor-study"><strong>Vendor study</strong></a> — who supports prepaid, disconnect, protocols (cited)</li>
-    <li><a href="index.html#meter-study/vmrs"><strong>Register checklist</strong></a> — minimum meter reads for billing and control (OBIS · VMRS)</li>
-    <li><a href="index.html#meter-study/openami"><strong>OpenAMI</strong></a> — feeder telemetry and open stack layers</li>
-    <li><a href="index.html#meter-study/meshems"><strong>MeshEMS board</strong></a> — edge metering dev kit</li>
+    <li><a href="index.html#village-metering/village-scope"><strong>Village scope</strong></a> — who we mean by village; population &amp; access stats; HDI; healthy vs unhealthy modernization</li>
+    <li><a href="index.html#village-metering/problems"><strong>Problems to solve</strong></a> — field needs and approaches</li>
+    <li><a href="index.html#village-metering/vendor-study"><strong>Vendor study</strong></a> — who supports prepaid, disconnect, protocols (cited)</li>
+    <li><a href="index.html#village-metering/vmrs"><strong>Register checklist</strong></a> — minimum meter reads for billing and control (OBIS · VMRS)</li>
+    <li><a href="index.html#village-metering/openami"><strong>OpenAMI</strong></a> — feeder telemetry and open stack layers</li>
+    <li><a href="index.html#village-metering/meshems"><strong>MeshEMS board</strong></a> — edge metering dev kit</li>
   </ul>
 
   <h2>Field validation</h2>
