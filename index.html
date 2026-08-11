@@ -1432,6 +1432,7 @@ code {
     </div>
     <div class="nav-sub" id="nav-sub-village-metering">
       <div class="nav-sub-item" data-meter-page="overview" onclick="showMeterPage('overview')">Overview</div>
+      <div class="nav-sub-item" data-meter-page="roadmap" onclick="showMeterPage('roadmap')">Roadmap</div>
       <div class="nav-sub-item" data-meter-page="problems" onclick="showMeterPage('problems')">Problems</div>
       <div class="nav-sub-item" data-meter-page="solutions-map" onclick="showMeterPage('solutions-map')">Solutions map</div>
       <div class="nav-sub-item" data-meter-page="village-scope" onclick="showMeterPage('village-scope')">Village scope</div>
@@ -1762,7 +1763,7 @@ code {
         <div class="standard-icon">📡</div>
         <div>
           <div class="standard-name">OpenADR 2.0 / 3.0 — Automated Demand Response</div>
-          <div class="standard-desc">Open standard for price, event, and load-control signals between utilities (VTN) and customer sites or DER (VEN). Enables demand response, curtailment, and flexible load dispatch — the grid-to-customer complement to IEEE 2030.5 device messaging in microgrid and AMI deployments.</div>
+          <div class="standard-desc">Open standard for price, event, and load-control signals between utilities (VTN) and customer sites or DER (VEN). <strong>Roadmap Phase&nbsp;3</strong> — grid/aggregator programs after interconnection; not year-one village prepaid. Complements IEEE 2030.5 device messaging when those programs exist.</div>
         </div>
       </div>
       <div class="standard-row">
@@ -1780,10 +1781,17 @@ code {
         </div>
       </div>
       <div class="standard-row">
+        <div class="standard-icon">↔️</div>
+        <div>
+          <div class="standard-name">TIA/EIA-485 (RS-485) — Differential Field Bus</div>
+          <div class="standard-desc">Physical-layer multipoint serial bus for noisy, long-run meter and inverter links. Carries Modbus RTU (and often DLMS HDLC) between DIN-rail meters, hybrid inverters, and pole EMS boards — e.g. MeshEMS HW-519 RS-485 master to DDS238 / CHD130 / DDSU666 southbound. Not an application protocol: pairs with Modbus or SunSpec register maps above it.</div>
+        </div>
+      </div>
+      <div class="standard-row">
         <div class="standard-icon">☀️</div>
         <div>
           <div class="standard-name">SunSpec Alliance — Modbus / SunSpec JSON</div>
-          <div class="standard-desc">Device-level models (e.g. Model 1, 11, 213) for inverters, storage, and subpanel metering. OpenAMI MQTT reporting aligns to SunSpec schemas — the common payload pole EMS gateways translate toward regardless of MODBUS, CAN, or RF underneath.</div>
+          <div class="standard-desc">Device-level models (e.g. Model 1, 11, 213) for inverters, storage, and subpanel metering. OpenAMI MQTT reporting aligns to SunSpec schemas — the common payload pole EMS gateways translate toward regardless of Modbus RTU over RS-485, CAN, or RF underneath.</div>
         </div>
       </div>
       <div class="standard-row">
@@ -1845,6 +1853,20 @@ code {
         <div>
           <div class="resource-name">OpenAMI — ISV hub</div>
           <div class="resource-desc"><a href="#" onclick="showMeterPage('openami');return false">Open in Village Metering</a> · actionable energy telemetry, stack layers, <a href="https://discord.osea-community.org/" target="_blank" rel="noopener">OSEA Discord</a> · <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">enaccess.org/openami</a>.</div>
+        </div>
+      </div>
+      <div class="resource-row">
+        <div class="standard-icon">🗺️</div>
+        <div>
+          <div class="resource-name">Village Metering · Roadmap</div>
+          <div class="resource-desc"><a href="#" onclick="showMeterPage('roadmap');return false">Three phases</a> — installed-base interop · microgrid core · grid connectivity. Phase&nbsp;1 includes ThunderCloud open under EarthSpark.</div>
+        </div>
+      </div>
+      <div class="resource-row">
+        <div class="standard-icon">☁️</div>
+        <div>
+          <div class="resource-name">EarthSpark · ThunderCloud</div>
+          <div class="resource-desc"><a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a> — open operator app (ThunderCloud / GroundBolt), Apache-2.0 · <strong>developer preview</strong> · Phase&nbsp;1 on <a href="#" onclick="showMeterPage('roadmap');return false">roadmap</a> · org <a href="https://github.com/EarthSpark" target="_blank" rel="noopener">EarthSpark</a>.</div>
         </div>
       </div>
       <div class="resource-row">
@@ -2197,8 +2219,14 @@ const METER_BENCHMARK_PAGES = {
   'overview': {
     title: 'Overview',
     sub: 'Why ISV · gateway path · hardware threads',
-    src: 'meter-overview.html?embed=1&v=20260701',
+    src: 'meter-overview.html?embed=1&v=20260811',
     standalone: 'meter-overview.html'
+  },
+  'roadmap': {
+    title: 'Roadmap',
+    sub: 'Phase 1 installed-base · Phase 2 microgrid core · Phase 3 grid connect',
+    src: 'meter-roadmap.html?embed=1&v=20260811',
+    standalone: 'meter-roadmap.html'
   },
   'problems': {
     title: 'Problems',
@@ -2233,7 +2261,7 @@ const METER_BENCHMARK_PAGES = {
   'openami': {
     title: 'OpenAMI',
     sub: 'Actionable telemetry · leakage visibility · stack · Discord',
-    src: 'openami.html?embed=1&v=20260629',
+    src: 'openami.html?embed=1&v=20260811',
     standalone: 'openami.html'
   },
   'meshems': {

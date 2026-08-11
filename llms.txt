@@ -6,6 +6,7 @@
 
 - [AGENTS.md](https://isv.wiki/AGENTS.md): Navigation guide for AI assistants — trust hierarchy, file map, contributor rules
 - [Overview](https://isv.wiki/index.html#village-metering/overview): Village Metering section entry — why ISV, gateway path, hardware threads
+- [Roadmap](https://isv.wiki/index.html#village-metering/roadmap): Three-phase development plan — installed-base interop, microgrid core, grid connectivity (ThunderCloud Phase 1 note)
 - [Village scope](https://isv.wiki/index.html#village-metering/village-scope): ISV operational village definition, global rural population, energy access, HDI, healthy vs unhealthy modernization (cited)
 - [Problems to solve](https://isv.wiki/index.html#village-metering/problems): Field metering problems for village mini-grids
 - [Solutions map](https://isv.wiki/index.html#village-metering/solutions-map): Interactive diagram linking problems to ISV-tracked approaches

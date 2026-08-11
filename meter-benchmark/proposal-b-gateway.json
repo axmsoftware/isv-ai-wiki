@@ -2,7 +2,7 @@
   "version": "proto-1",
   "prototype": "b",
   "title": "Proposal B · Pole gateway normalization",
-  "subtitle": "DLMS south · VMRS · MQTT north · optional SIP for control",
+  "subtitle": "DLMS south · VMRS · MQTT north · optional IETF SIP (RFC 3261) for control dialogs",
   "outOfScope": "STS vending at gateway, IEEE 1547, SunSpec on billing registers",
   "groups": [
     { "id": "billing", "label": "Billing & payment", "short": "Billing" },
@@ -58,11 +58,11 @@
     },
     {
       "id": "sw-sip",
-      "label": "SIP session layer",
+      "label": "SIP (RFC 3261) control dialogs",
       "kind": "edge",
       "hardware": ["street-ems", "cloud"],
-      "specs": ["SIP", "auth disconnect"],
-      "href": "meter-vmrs.html"
+      "specs": ["IETF SIP", "INVITE/BYE", "Call-ID ↔ MQTT"],
+      "href": "meter-benchmark/northbound-mqtt-v0.1.json"
     },
     {
       "id": "sw-hes",

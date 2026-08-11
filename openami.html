@@ -63,18 +63,20 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <table class="stack-table">
     <thead><tr><th>Component</th><th>Role</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><strong>OpenEMS</strong> (Energy IoT)</td><td>EMS / edge orchestration</td><td>More urban — grid present; stack can stop at the DCU.</td></tr>
-      <tr><td><strong>MeshEMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#village-metering/meshems">MeshEMS board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">nesl-meshems</a></td></tr>
-      <tr><td><strong>Street Pole EMS</strong></td><td>Pole gateway</td><td><a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a> firmware</td></tr>
-      <tr><td><strong>OpenAMI / MQTT</strong></td><td>Actionable telemetry</td><td>Northbound contract — normalize OEM/DLMS to registers operators can bill, vend, and disconnect on; <strong>leakage visible at every layer</strong> of the distribution path</td></tr>
-      <tr><td><strong>EnAccess MPM</strong></td><td>Operator backend</td><td>Instead of OpenEMS backend in village deployments</td></tr>
-      <tr><td><strong>OpenAMI geo model</strong></td><td>Asset topology</td><td>Maps feeder → branch → meter so loss can be compared at each point in the system</td></tr>
-      <tr><td class="out-of-scope"><strong>OpenADR</strong></td><td class="out-of-scope">Price signals</td><td class="out-of-scope">Utility pricing server — not village prepaid priority</td></tr>
+      <tr><td><strong>OpenEMS</strong> (Energy IoT)</td><td>EMS / edge orchestration</td><td>More urban — grid present; stack can stop at the DCU. Often Phase&nbsp;2–3 depending on site.</td></tr>
+      <tr><td><strong>MeshEMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#village-metering/meshems">MeshEMS board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">nesl-meshems</a> · Phase&nbsp;2</td></tr>
+      <tr><td><strong>Street Pole EMS</strong></td><td>Pole gateway</td><td><a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a> firmware · Phase&nbsp;2</td></tr>
+      <tr><td><strong>OpenAMI / MQTT</strong></td><td>Actionable telemetry</td><td>Northbound contract — normalize OEM/DLMS to registers operators can bill, vend, and disconnect on; <strong>leakage visible at every layer</strong> · Phase&nbsp;2 (Phase&nbsp;1 feeds it)</td></tr>
+      <tr><td><strong>EnAccess MPM</strong></td><td>Operator backend</td><td>Village backend option · Phase&nbsp;1–2</td></tr>
+      <tr><td><strong>EarthSpark ThunderCloud</strong></td><td>Operator backend (open)</td><td>ThunderCloud / GroundBolt — <a href="index.html#village-metering/roadmap">Phase&nbsp;1 roadmap</a> · <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a> (dev preview)</td></tr>
+      <tr><td><strong>OpenAMI geo model</strong></td><td>Asset topology</td><td>Maps feeder → branch → meter so loss can be compared at each point · Phase&nbsp;2</td></tr>
+      <tr><td><strong>OpenADR</strong></td><td>Price / DR signals</td><td><strong>Phase&nbsp;3</strong> — utility VTN/VEN programs after grid/aggregator arrival; not year-one prepaid</td></tr>
     </tbody>
   </table>
 
   <h2>ISV wiki threads</h2>
   <ul class="link-list">
+    <li><a href="index.html#village-metering/roadmap">Development roadmap</a> — Phase&nbsp;1 installed-base · Phase&nbsp;2 microgrid core · Phase&nbsp;3 grid connect</li>
     <li><a href="index.html#village-metering/overview">Village Metering · Overview</a> · <a href="index.html#village-metering/problems">Problems</a></li>
     <li><a href="index.html#village-metering/meshems">MeshEMS board</a> — NESL PCB · OpenAMI-aligned hardware</li>
     <li><a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-distribution">25 Jun 2026 notes · MeshEMS board distribution</a></li>
@@ -88,6 +90,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     <li><a href="https://enaccess.org/openami/" target="_blank" rel="noopener">EnAccess · OpenAMI</a></li>
     <li><a href="https://discord.osea-community.org/" target="_blank" rel="noopener">OSEA Discord</a></li>
     <li><a href="https://github.com/enaccess/micropowermanager" target="_blank" rel="noopener">MicroPowerManager</a></li>
+    <li><a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">EarthSpark · ThunderCloud</a> (Phase&nbsp;1 · developer preview)</li>
     <li><a href="https://github.com/rahulbhargavain/openami-smart-village" target="_blank" rel="noopener">openami-smart-village</a> (Dev Labs reports)</li>
   </ul>
 </div>
