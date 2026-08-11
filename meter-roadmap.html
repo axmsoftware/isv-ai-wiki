@@ -70,7 +70,13 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
 
   <div class="callout">
     <strong>Discipline</strong>
-    <p><strong>Phase 1</strong> keeps operators billing on gear that already exists. <strong>Phase 2</strong> builds the open mini-grid core (Street-EMS / OpenAMI). <strong>Phase 3</strong> adds grid-arrival and aggregator paths (2030.5, OpenADR, 1547). PAC workshops ≈ Phase&nbsp;1 + a thin Phase&nbsp;2 slice.</p>
+    <p><strong>Phase 1</strong> keeps operators billing on gear that already exists. <strong>Phase 2</strong> builds the open mini-grid core (Street-EMS / OpenAMI). <strong>Phase 3</strong> adds grid-arrival and aggregator paths (2030.5, OpenADR, 1547). PAC workshops ≈ Phase&nbsp;1 + a thin Phase&nbsp;2 slice. Maps:
+      <a href="meter-tc20-review.html">TC2.0 review</a> ·
+      <a href="meter-tc20-review.html?host=full">TC2.0 + cloud</a> ·
+      phase filter <a href="meter-solutions-map.html?phase=1">P1</a> ·
+      <a href="meter-solutions-map.html?phase=2">P2</a> ·
+      <a href="meter-solutions-map.html?phase=3">P3</a>
+      (also on <a href="meter-overview.html#solutions-map">Overview</a>).</p>
   </div>
 
   <div class="phase-grid">
@@ -136,20 +142,39 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     </tbody>
   </table>
 
-  <h3 id="thundercloud">Update · ThunderCloud open under EarthSpark</h3>
+  <h3 id="thundercloud">Update · ThunderCloud 2.0 open under EarthSpark</h3>
   <div class="callout callout-warn">
-    <strong>Status (Aug 2026) — developer preview, not production</strong>
-    <p>EarthSpark published ThunderCloud (and related repos) for open development. The public <code>main</code> branch is being restored to a stable, releasable build after a large modernization. Upstream README: <strong>not for live customer metering or billing</strong> until that milestone lands. Source: OSEA Discord development channel (Jul–Aug 2026) · <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a> (Apache-2.0).</p>
+    <strong>Status (31 Jul 2026 news) — open source, not plug-and-play</strong>
+    <p>EarthSpark published <strong>ThunderCloud&nbsp;2.0</strong> under Apache-2.0 as a <em>pre-production foundation</em>, not a drop-in for live basestations. Field fleets still run <strong>TC1.x</strong> managed SaaS — open-sourcing does not interrupt them. Hub: <a href="https://www.sparkmeter.io/open-source.html" target="_blank" rel="noopener">sparkmeter.io/open-source</a> · news: <a href="https://www.sparkmeter.io/news" target="_blank" rel="noopener">sparkmeter.io/news</a> · code: <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a>.</p>
   </div>
 
-  <p class="body-text">ThunderCloud (cloud deploy) / GroundBolt (base-station deploy) is the open lineage of the SparkMeter operator application. Tristan (SparkMeter co-founder; ThunderCloud engineer) and EarthSpark describe the public work as follows — paraphrased from OSEA Discord, not a formal EarthSpark release note:</p>
+  <p class="body-text">Why it matters for Phase&nbsp;1: Sep&nbsp;2025 EarthSpark took over SparkMeter EM ops (~1M people on the meters). Jul&nbsp;2026 open stack removes single-vendor soft-lock for operators who can self-host later, while managed path stays for everyone else. Full write-up + diagrams: <a href="meter-tc20-review.html">TC2.0 comprehensive review</a>.</p>
+
+  <h4>Two paths (same product line)</h4>
   <ul class="repo-list">
-    <li><strong>1.x (not released as open “stable”)</strong> — Python&nbsp;2; tight coupling to historical SparkMeter centralized services; hard to maintain in the open.</li>
-    <li><strong>2.0 modernization (public now)</strong> — Python&nbsp;3; dependency upgrades; Chef → Ansible; Salesforce/Consul/databags → encrypted GitOps; Postgres upgrade; RabbitMQ/Celery and mmonit removed; build pipelines workable in public.</li>
-    <li><strong>Near-term goal</strong> — get <code>main</code> to a <em>stable, releasable</em> ThunderCloud someone could run in production; <em>then</em> add the decade of deferred features. Current focus called out in Discord: Ansible converge from scratch (finish/merge half-done PRs); SymmetricDS container CI so sync can be tested without the full ThunderCloud stack.</li>
-    <li><strong>Open design question (community)</strong> — meter control today behaves like a soft-loop / digital-twin drift repair (desired state in DB → driver/SparkNet HTTP → observe → repair), not a hard request→correlated response job ID. Correlation / in-flight job semantics under discussion on OSEA.</li>
+    <li><strong>Managed</strong> — EarthSpark SaaS + supported basestations; no action required for current customers. Production improvements stay on this path first.</li>
+    <li><strong>Self-managed</strong> — run GroundBolt (site) and/or ThunderCloud (cloud) yourself; mix-and-match (your basestation + their cloud, their basestation + your cloud, or both). Terms of service for self-host still forthcoming per news.</li>
   </ul>
-  <p class="body-text">Credits called out publicly: EarthSpark team, Tristan, OpenAMI groundwork and lobbying, A2EI support, EnAccess/OSEA coordination. ISV maps this under <strong>Phase&nbsp;1</strong> — open operator software for the installed mini-grid base — complementary to MPM and to Phase&nbsp;2 Street-EMS / OpenAMI MQTT.</p>
+
+  <h4>What open-source actually shipped</h4>
+  <ul class="repo-list">
+    <li><strong>TC2.0 app</strong> — same codebase as GroundBolt (on-site) and ThunderCloud (cloud); modernized off TC1.x internals that were hard to run outside EarthSpark.</li>
+    <li><strong>SparkNet-HTTP</strong> — direct meter/gateway communications; TC2.0 uses it natively, but operators can use it <em>outside</em> ThunderCloud too (vendor-exit / alternate HES path).</li>
+    <li><strong>meter-driver-spec</strong> — vendor-neutral HTTP/SSE (+ optional gRPC) driver contract so other OEMs can plug the same basestation later.</li>
+    <li><strong>SymmetricDS</strong> — continuous ground ↔ cloud DB sync (basestation and cloud are not the same process).</li>
+    <li><strong>Ansible</strong> — GroundBolt bootstrap / converge (Chef era ended).</li>
+  </ul>
+
+  <h4>Encryption keys (asset control)</h4>
+  <p class="body-text">For operators who want meter crypto outside EarthSpark hosting: (1) leave keys with EarthSpark, (2) escrow copy at A2EI (Access to Energy gGmbH), or (3) take keys directly. Mis-handling keys can brick meters — treat as ops risk, not a checkbox.</p>
+
+  <h4>Community / engineering notes (OSEA Discord + GitHub)</h4>
+  <ul class="repo-list">
+    <li><strong>Near-term goal</strong> — stable releasable <code>main</code> (Ansible from-scratch converge; SymmetricDS container CI) before decade of deferred product features.</li>
+    <li><strong>Control-loop question</strong> — desired-state drift repair via SparkNet-HTTP today; hard request→job-ID correlation still under community discussion.</li>
+    <li>Credits called out publicly: EarthSpark, Tristan, OpenAMI groundwork, A2EI, EnAccess/OSEA.</li>
+  </ul>
+  <p class="body-text">ISV maps TC2.0 under <strong>Phase&nbsp;1</strong> — open operator software for the installed SparkMeter base — complementary to MPM and to Phase&nbsp;2 Street-EMS / OpenAMI MQTT (not a substitute for those).</p>
 
   <h3>EarthSpark repos (Phase 1 watch list)</h3>
   <ul class="repo-list">

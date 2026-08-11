@@ -1,97 +1,272 @@
 {
   "version": "proto-1",
   "prototype": "a",
-  "title": "Proposal A · Prepaid cash path",
-  "subtitle": "STS · OpenPAYGO · MPM — token path parallel to pole reads",
+  "title": "Proposal A \u00b7 Prepaid cash path",
+  "subtitle": "STS \u00b7 OpenPAYGO \u00b7 MPM \u2014 token path parallel to pole reads",
   "outOfScope": "MQTT northbound primary, IEEE 1547, IETF SIP (RFC 3261) control dialogs, feeder AMI",
   "groups": [
-    { "id": "billing", "label": "Billing & payment", "short": "Billing" },
-    { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },
-    { "id": "comms", "label": "When communications fail", "short": "Comms failure" },
-    { "id": "integration", "label": "Integration & long-term freedom", "short": "Integration" }
+    {
+      "id": "billing",
+      "label": "Billing & payment",
+      "short": "Billing"
+    },
+    {
+      "id": "cutoffs",
+      "label": "Cutoffs & control",
+      "short": "Cutoffs"
+    },
+    {
+      "id": "comms",
+      "label": "When communications fail",
+      "short": "Comms failure"
+    },
+    {
+      "id": "integration",
+      "label": "Integration & long-term freedom",
+      "short": "Integration"
+    }
   ],
   "problems": [
-    { "id": "prob-prepaid", "group": "billing", "label": "Collect before use" },
-    { "id": "prob-token-deliver", "group": "billing", "label": "Deliver credit" },
-    { "id": "prob-balance", "group": "billing", "label": "Show balance" },
-    { "id": "prob-token-audit", "group": "billing", "label": "Token audit" },
-    { "id": "prob-disconnect", "group": "cutoffs", "label": "Disconnect" },
-    { "id": "prob-reconnect", "group": "cutoffs", "label": "Reconnect" },
-    { "id": "prob-prepaid-offline", "group": "comms", "label": "Prepaid offline" },
-    { "id": "prob-vend-down", "group": "comms", "label": "Vending down" },
-    { "id": "prob-crm", "group": "integration", "label": "Mobile money CRM" }
+    {
+      "id": "prob-prepaid",
+      "group": "billing",
+      "label": "Collect before use"
+    },
+    {
+      "id": "prob-token-deliver",
+      "group": "billing",
+      "label": "Deliver credit"
+    },
+    {
+      "id": "prob-balance",
+      "group": "billing",
+      "label": "Show balance"
+    },
+    {
+      "id": "prob-token-audit",
+      "group": "billing",
+      "label": "Token audit"
+    },
+    {
+      "id": "prob-disconnect",
+      "group": "cutoffs",
+      "label": "Disconnect"
+    },
+    {
+      "id": "prob-reconnect",
+      "group": "cutoffs",
+      "label": "Reconnect"
+    },
+    {
+      "id": "prob-prepaid-offline",
+      "group": "comms",
+      "label": "Prepaid offline"
+    },
+    {
+      "id": "prob-vend-down",
+      "group": "comms",
+      "label": "Vending down"
+    },
+    {
+      "id": "prob-crm",
+      "group": "integration",
+      "label": "Mobile money CRM"
+    }
   ],
   "hardware": [
-    { "id": "meter", "label": "House revenue meter", "short": "Meter" },
-    { "id": "ciu", "label": "CIU · keypad", "short": "CIU" },
-    { "id": "cloud", "label": "Operator cloud host", "short": "Cloud" }
+    {
+      "id": "meter",
+      "label": "House revenue meter",
+      "short": "Meter"
+    },
+    {
+      "id": "ciu",
+      "label": "CIU \u00b7 keypad",
+      "short": "CIU"
+    },
+    {
+      "id": "cloud",
+      "label": "Operator cloud host",
+      "short": "Cloud"
+    }
   ],
   "softwareKinds": [
-    { "id": "registers", "label": "Registers & telemetry", "short": "Registers" },
-    { "id": "prepaid", "label": "Prepaid & tokens", "short": "Prepaid" },
-    { "id": "platform", "label": "Billing platform", "short": "Platform" }
+    {
+      "id": "registers",
+      "label": "Registers & telemetry",
+      "short": "Registers"
+    },
+    {
+      "id": "prepaid",
+      "label": "Prepaid & tokens",
+      "short": "Prepaid"
+    },
+    {
+      "id": "platform",
+      "label": "Billing platform",
+      "short": "Platform"
+    }
   ],
   "software": [
     {
       "id": "sw-dlms-credit",
       "label": "Meter credit registers",
       "kind": "registers",
-      "hardware": ["meter"],
-      "specs": ["DLMS/COSEM", "OBIS", "VMRS tier B"],
-      "href": "index.html#village-metering/vmrs"
+      "hardware": [
+        "meter"
+      ],
+      "specs": [
+        "DLMS/COSEM",
+        "OBIS",
+        "VMRS tier B"
+      ],
+      "href": "index.html#village-metering/vmrs",
+      "phase": [
+        1
+      ]
     },
     {
       "id": "sw-sts",
       "label": "STS token entry",
       "kind": "prepaid",
-      "hardware": ["ciu", "meter"],
-      "specs": ["IEC 62055 STS"],
-      "href": "meter-vmrs.html"
+      "hardware": [
+        "ciu",
+        "meter"
+      ],
+      "specs": [
+        "IEC 62055 STS"
+      ],
+      "href": "meter-vmrs.html",
+      "phase": [
+        1
+      ]
     },
     {
       "id": "sw-openpaygo",
       "label": "OpenPAYGO alternative",
       "kind": "prepaid",
-      "hardware": ["ciu"],
-      "specs": ["OpenPAYGO"],
-      "href": "https://github.com/enaccess/OpenPAYGO-Token"
+      "hardware": [
+        "ciu"
+      ],
+      "specs": [
+        "OpenPAYGO"
+      ],
+      "href": "https://github.com/enaccess/OpenPAYGO-Token",
+      "phase": [
+        1
+      ]
     },
     {
       "id": "sw-mpm",
       "label": "MPM operator stack",
       "kind": "platform",
-      "hardware": ["cloud"],
-      "specs": ["MPM", "mobile money"],
-      "href": "https://github.com/enaccess/micropowermanager"
+      "hardware": [
+        "cloud"
+      ],
+      "specs": [
+        "MPM",
+        "mobile money"
+      ],
+      "href": "https://github.com/enaccess/micropowermanager",
+      "phase": [
+        1
+      ]
     },
     {
       "id": "sw-sms-vend",
       "label": "SMS / USSD delivery",
       "kind": "prepaid",
-      "hardware": ["cloud"],
-      "specs": ["carrier SMS", "USSD"],
-      "href": null
+      "hardware": [
+        "cloud"
+      ],
+      "specs": [
+        "carrier SMS",
+        "USSD"
+      ],
+      "href": null,
+      "phase": [
+        1
+      ]
     }
   ],
   "links": [
-    ["prob-prepaid", "sw-sts"],
-    ["prob-prepaid", "sw-openpaygo"],
-    ["prob-prepaid", "sw-mpm"],
-    ["prob-token-deliver", "sw-sms-vend"],
-    ["prob-token-deliver", "sw-sts"],
-    ["prob-token-deliver", "sw-mpm"],
-    ["prob-balance", "sw-dlms-credit"],
-    ["prob-balance", "sw-sts"],
-    ["prob-token-audit", "sw-sts"],
-    ["prob-token-audit", "sw-dlms-credit"],
-    ["prob-disconnect", "sw-dlms-credit"],
-    ["prob-disconnect", "sw-sts"],
-    ["prob-reconnect", "sw-sts"],
-    ["prob-reconnect", "sw-openpaygo"],
-    ["prob-prepaid-offline", "sw-sts"],
-    ["prob-prepaid-offline", "sw-openpaygo"],
-    ["prob-vend-down", "sw-sms-vend"],
-    ["prob-vend-down", "sw-mpm"],
-    ["prob-crm", "sw-mpm"]
-  ]
+    [
+      "prob-prepaid",
+      "sw-sts"
+    ],
+    [
+      "prob-prepaid",
+      "sw-openpaygo"
+    ],
+    [
+      "prob-prepaid",
+      "sw-mpm"
+    ],
+    [
+      "prob-token-deliver",
+      "sw-sms-vend"
+    ],
+    [
+      "prob-token-deliver",
+      "sw-sts"
+    ],
+    [
+      "prob-token-deliver",
+      "sw-mpm"
+    ],
+    [
+      "prob-balance",
+      "sw-dlms-credit"
+    ],
+    [
+      "prob-balance",
+      "sw-sts"
+    ],
+    [
+      "prob-token-audit",
+      "sw-sts"
+    ],
+    [
+      "prob-token-audit",
+      "sw-dlms-credit"
+    ],
+    [
+      "prob-disconnect",
+      "sw-dlms-credit"
+    ],
+    [
+      "prob-disconnect",
+      "sw-sts"
+    ],
+    [
+      "prob-reconnect",
+      "sw-sts"
+    ],
+    [
+      "prob-reconnect",
+      "sw-openpaygo"
+    ],
+    [
+      "prob-prepaid-offline",
+      "sw-sts"
+    ],
+    [
+      "prob-prepaid-offline",
+      "sw-openpaygo"
+    ],
+    [
+      "prob-vend-down",
+      "sw-sms-vend"
+    ],
+    [
+      "prob-vend-down",
+      "sw-mpm"
+    ],
+    [
+      "prob-crm",
+      "sw-mpm"
+    ]
+  ],
+  "roadmapPhase": 1,
+  "roadmapPhaseLabel": "Installed-base interop (prepaid / STS)"
 }

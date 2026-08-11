@@ -9,16 +9,21 @@
   if (params.get('embed') !== '1') return;
 
   document.documentElement.classList.add('embed');
+  if (params.get('panel') === '1') document.documentElement.classList.add('panel');
 
   var PAGE_ALIASES = {
-    'problems-today': 'problems',
+    'problems-today': 'overview',
+    problems: 'overview',
+    'solutions-map': 'overview',
+    'tc20-stack': 'tc20-review',
+    'village-topology': 'tc20-review',
     scope: 'village-scope'
   };
 
   var PAGE_BY_ID = {
     overview: 'meter-overview.html',
-    problems: 'meter-problems-today.html',
-    'solutions-map': 'meter-solutions-map.html',
+    roadmap: 'meter-roadmap.html',
+    'tc20-review': 'meter-tc20-review.html',
     'village-scope': 'meter-village-scope.html',
     vmrs: 'meter-vmrs.html',
     'vendor-study': 'meter-vendor-study.html',
@@ -29,20 +34,36 @@
   var ID_BY_FILE = Object.keys(PAGE_BY_ID).reduce(function (acc, id) {
     acc[PAGE_BY_ID[id]] = id;
     return acc;
-  }, {});
+  }, {
+    'meter-problems-today.html': 'overview',
+    'meter-solutions-map.html': 'overview',
+    'meter-tc20-stack.html': 'tc20-review',
+    'meter-village-topology.html': 'tc20-review'
+  });
 
   function resolvePageId(id) {
     if (!id) return 'overview';
     return PAGE_ALIASES[id] || id;
   }
 
-  function parentMeterNav(pageId) {
-    if (window.parent === window) return false;
-    if (typeof window.parent.showMeterPage === 'function') {
-      window.parent.showMeterPage(resolvePageId(pageId));
-      return true;
+  function findWikiParent() {
+    var w = window;
+    while (w.parent && w.parent !== w) {
+      try {
+        if (typeof w.parent.showMeterPage === 'function') return w.parent;
+      } catch (e) {
+        break;
+      }
+      w = w.parent;
     }
-    return false;
+    return null;
+  }
+
+  function parentMeterNav(pageId) {
+    var wiki = findWikiParent();
+    if (!wiki) return false;
+    wiki.showMeterPage(resolvePageId(pageId));
+    return true;
   }
 
   function meterSrc(pageId) {
@@ -65,8 +86,9 @@
 
     if (href === 'index.html' || href === './index.html' || href === '../index.html') {
       e.preventDefault();
-      if (window.parent !== window && typeof window.parent.showSection === 'function') {
-        window.parent.showSection('home');
+      var wiki = findWikiParent();
+      if (wiki && typeof wiki.showSection === 'function') {
+        wiki.showSection('home');
       } else {
         a.target = '_top';
         location.href = href;
@@ -79,7 +101,7 @@
       var file = fileMatch[1].replace(/^\.\//, '');
       var base = file.split('/').pop();
       var pageId = ID_BY_FILE[base];
-      if (pageId && window.parent !== window) {
+      if (pageId && findWikiParent()) {
         e.preventDefault();
         if (!parentMeterNav(pageId)) location.href = meterSrc(pageId);
       }

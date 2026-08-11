@@ -43,49 +43,64 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
   </button>
 </div>
 <div class="wrap">
-  <div class="back"><a href="index.html#village-metering/solutions-map">← Full solutions map</a></div>
+  <div class="back"><a href="index.html#village-metering/overview">← Overview</a></div>
 
   <h1>Standards &amp; spec prototypes</h1>
-  <p class="sub">Four hypothetical partial stacks — same Problem → hardware → software layout, scoped subsets</p>
+  <p class="sub">TC2.0 stack (recommended) + optional dense graph + four hypothetical standards slices</p>
 
-  <p class="lead">Each diagram has its own JSON file. The main map is unchanged. Software nodes carry spec tags (STS, MQTT, IEEE 1547, etc.). Pick the stack that matches the deployment — not all standards on one meter row.</p>
+  <p class="lead">TC2.0 is shown as a <strong>layer stack</strong> (field → driver → GroundBolt → optional cloud) — easier than the old edge graph. A–D stay hypothetical standards slices on the <a href="index.html#village-metering/roadmap">three-phase roadmap</a>.</p>
 
   <div class="proto-grid">
+    <a class="proto-card" href="meter-tc20-review.html">
+      <h2>TC2.0 · Review (recommended)</h2>
+      <p class="tagline"><strong>Phase 1</strong> — stack + village diagrams · GroundBolt / ThunderCloud</p>
+      <p class="specs">Meters · gateway · SparkNet-HTTP · GroundBolt · optional cloud</p>
+      <p class="out">Toggle: Site only · Site + cloud</p>
+      <p class="open">Open review →</p>
+    </a>
+    <a class="proto-card" href="meter-solutions-map.html?proto=tc20">
+      <h2>TC2.0 · Classic edge graph</h2>
+      <p class="tagline"><strong>Phase 1</strong> — dense problem → hardware → software (legacy layout)</p>
+      <p class="specs">Same data, many edges</p>
+      <p class="out">Use stack view unless you need the old diagram</p>
+      <p class="open">Open classic graph →</p>
+    </a>
     <a class="proto-card" href="meter-solutions-map.html?proto=a">
       <h2>A · Prepaid cash path</h2>
-      <p class="tagline">Token path parallel to pole reads — keypad works when gateway is down</p>
+      <p class="tagline"><strong>Phase 1</strong> — token path parallel to pole reads; keypad works when gateway is down</p>
       <p class="specs">STS · OpenPAYGO · DLMS/COSEM · MPM</p>
       <p class="out">Out: MQTT primary, IEEE 1547, IETF SIP (RFC 3261), feeder AMI</p>
       <p class="open">Open diagram →</p>
     </a>
     <a class="proto-card" href="meter-solutions-map.html?proto=b">
       <h2>B · Pole gateway normalization</h2>
-      <p class="tagline">One south dialect per OEM, one north contract for operators</p>
+      <p class="tagline"><strong>Phase 1→2</strong> — one south dialect per OEM, one north contract for operators</p>
       <p class="specs">DLMS · VMRS · MQTT v0.1 · IETF SIP RFC 3261 (control dialogs)</p>
       <p class="out">Out: STS at gateway, IEEE 1547, SunSpec on billing OBIS</p>
       <p class="open">Open diagram →</p>
     </a>
     <a class="proto-card" href="meter-solutions-map.html?proto=c">
       <h2>C · DER sidecar</h2>
-      <p class="tagline">Generation track separate from customer billing registers</p>
+      <p class="tagline"><strong>Phase 3</strong> — generation track separate from customer billing registers</p>
       <p class="specs">IEEE 1547 · SunSpec · feeder aggregator</p>
       <p class="out">Out: STS, MPM prepaid, VMRS on inverter</p>
       <p class="open">Open diagram →</p>
     </a>
     <a class="proto-card" href="meter-solutions-map.html?proto=d">
       <h2>D · OpenAMI feeder slice</h2>
-      <p class="tagline">Loss visibility + pole control without utility MDMS price tag</p>
+      <p class="tagline"><strong>Phase 2</strong> — loss visibility + pole control without utility MDMS price tag</p>
       <p class="specs">OpenAMI subset · mesh · MQTT</p>
       <p class="out">Out: MPM mandatory, STS, full IEEE 2030.5</p>
       <p class="open">Open diagram →</p>
     </a>
   </div>
 
-  <p class="note">JSON sources: <a href="meter-benchmark/proposal-a-prepaid.json">proposal-a-prepaid.json</a> · <a href="meter-benchmark/proposal-b-gateway.json">proposal-b-gateway.json</a> · <a href="meter-benchmark/proposal-c-der.json">proposal-c-der.json</a> · <a href="meter-benchmark/proposal-d-openami.json">proposal-d-openami.json</a></p>
+  <p class="note">JSON sources: <a href="meter-benchmark/proposal-tc20.json">proposal-tc20.json</a> · <a href="meter-benchmark/proposal-a-prepaid.json">proposal-a-prepaid.json</a> · <a href="meter-benchmark/proposal-b-gateway.json">proposal-b-gateway.json</a> · <a href="meter-benchmark/proposal-c-der.json">proposal-c-der.json</a> · <a href="meter-benchmark/proposal-d-openami.json">proposal-d-openami.json</a> · Full map phase filter: <a href="meter-solutions-map.html?phase=1">P1</a> · <a href="meter-solutions-map.html?phase=2">P2</a> · <a href="meter-solutions-map.html?phase=3">P3</a></p>
 
   <p class="meter-footer" style="margin-top:1rem">
-    <a href="meter-solutions-map.html">Full solutions map</a> ·
-    <a href="index.html#village-metering/problems">Problems</a> ·
+    <a href="meter-overview.html#solutions-map">Overview · solutions map</a> ·
+    <a href="index.html#village-metering/roadmap">Roadmap</a> ·
+    <a href="index.html#village-metering/overview">Overview</a> ·
     <a href="index.html#village-metering/vmrs">Register checklist</a>
   </p>
 </div>

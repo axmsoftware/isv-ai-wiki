@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 860 700" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ThunderCloud 2.0 stack, control down, readings up">
+  <style>
+    text { font-family: "DM Sans", system-ui, sans-serif; }
+    .cloud-only { display: none; }
+    svg.show-cloud .cloud-only { display: block; }
+        .need-hl .node rect { opacity: 0.25; }
+    .need-hl .node.hit rect { opacity: 1; stroke-width: 2; }
+    .need-hl .node.hit text { opacity: 1; }
+    .need-hl .node text { opacity: 0.35; }
+  </style>
+
+  <g id="key-top">
+    <rect x="12" y="8" width="836" height="32" rx="6" fill="rgba(0,0,0,0.03)" stroke="rgba(0,0,0,0.06)"/>
+    <path d="M32 27 L41 13 L23 13 Z" fill="#3B6D11"/>
+    <text x="50" y="28" font-size="11" fill="#3B6D11" font-weight="600">Control down</text>
+    <text x="148" y="28" font-size="10" fill="#666">enable / disable / config / balance</text>
+    <path d="M400 13 L409 27 L391 27 Z" fill="#175CD3"/>
+    <text x="418" y="28" font-size="11" fill="#175CD3" font-weight="600">Readings up</text>
+    <text x="510" y="28" font-size="10" fill="#666">kWh / power / voltage / state / SSE</text>
+  </g>
+<text class="cloud-only" x="20" y="62" fill="#9a9990" font-size="11">L6 - CLOUD / OPS</text>
+  <text class="cloud-only" x="20" y="172" fill="#9a9990" font-size="11">L5 - SYNC</text>
+  <text x="20" y="262" fill="#9a9990" font-size="11">L4 - ON-SITE APP  (installer hub)</text>
+  <text x="20" y="352" fill="#9a9990" font-size="11">L3 - DRIVER</text>
+  <text x="20" y="442" fill="#9a9990" font-size="11">L2 - GATEWAY / MESH</text>
+  <text x="20" y="532" fill="#9a9990" font-size="11">L1 - FIELD GEAR</text>
+  <text x="20" y="668" fill="#9a9990" font-size="11">Commission field to GroundBolt first. Cloud optional.</text>
+
+  <rect class="cloud-only" x="12" y="70" width="836" height="78" rx="6" fill="rgba(23,92,211,0.04)" stroke="rgba(23,92,211,0.12)"/>
+  <rect class="cloud-only" x="12" y="180" width="836" height="58" rx="6" fill="rgba(186,117,23,0.05)" stroke="rgba(186,117,23,0.15)"/>
+  <rect x="12" y="270" width="836" height="58" rx="6" fill="rgba(59,109,17,0.06)" stroke="rgba(59,109,17,0.2)"/>
+  <rect x="12" y="360" width="836" height="58" rx="6" fill="rgba(15,110,86,0.05)" stroke="rgba(15,110,86,0.15)"/>
+  <rect x="12" y="450" width="836" height="58" rx="6" fill="rgba(186,117,23,0.05)" stroke="rgba(186,117,23,0.15)"/>
+  <rect x="12" y="540" width="836" height="58" rx="6" fill="rgba(0,0,0,0.03)" stroke="rgba(0,0,0,0.06)"/>
+
+  <g id="l6" class="cloud-only">
+    <g class="node" data-needs="billing crm offline">
+      <rect x="220" y="82" width="200" height="44" rx="6" fill="#EFF8FF" stroke="#175CD3"/>
+      <text x="320" y="102" text-anchor="middle" font-size="12" font-weight="600">ThunderCloud</text>
+      <text x="320" y="116" text-anchor="middle" font-size="9" fill="#666">remote ops / CRM</text>
+    </g>
+    <g class="node" data-needs="billing crm">
+      <rect x="450" y="82" width="150" height="44" rx="6" fill="#EFF8FF" stroke="#175CD3"/>
+      <text x="525" y="102" text-anchor="middle" font-size="12" font-weight="600">Managed SaaS</text>
+      <text x="525" y="116" text-anchor="middle" font-size="9" fill="#666">EarthSpark host</text>
+    </g>
+    <g class="node" data-needs="exit">
+      <rect x="630" y="82" width="100" height="44" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+      <text x="680" y="102" text-anchor="middle" font-size="12" font-weight="600">Meter keys</text>
+      <text x="680" y="116" text-anchor="middle" font-size="9" fill="#666">hold / escrow</text>
+    </g>
+    <g class="node" data-needs="exit">
+      <rect x="750" y="82" width="80" height="44" rx="6" fill="#f7f6f3" stroke="#ccc"/>
+      <text x="790" y="102" text-anchor="middle" font-size="12" font-weight="600">Ansible</text>
+      <text x="790" y="116" text-anchor="middle" font-size="9" fill="#666">bootstrap</text>
+    </g>
+  </g>
+
+  <g id="l5" class="cloud-only">
+    <g class="node" data-needs="offline">
+      <rect x="220" y="187" width="200" height="44" rx="6" fill="#FAEEDA" stroke="#BA7517"/>
+      <text x="320" y="207" text-anchor="middle" font-size="12" font-weight="600">SymmetricDS</text>
+      <text x="320" y="221" text-anchor="middle" font-size="9" fill="#666">site / cloud DB sync</text>
+    </g>
+  </g>
+
+  <g id="l4">
+    <g class="node" data-needs="billing cutoffs visibility tamper offline exit">
+      <rect x="220" y="277" width="200" height="44" rx="6" fill="#EAF3DE" stroke="#3B6D11" stroke-width="1.75"/>
+      <text x="320" y="297" text-anchor="middle" font-size="12" font-weight="600">GroundBolt</text>
+      <text x="320" y="311" text-anchor="middle" font-size="9" fill="#666">site UI + Postgres</text>
+    </g>
+    <g class="node site-ops" data-needs="exit">
+      <rect x="450" y="277" width="120" height="44" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+      <text x="510" y="297" text-anchor="middle" font-size="12" font-weight="600">Meter keys</text>
+      <text x="510" y="311" text-anchor="middle" font-size="9" fill="#666">asset control</text>
+    </g>
+    <g class="node site-ops" data-needs="exit">
+      <rect x="590" y="277" width="120" height="44" rx="6" fill="#f7f6f3" stroke="#ccc"/>
+      <text x="650" y="297" text-anchor="middle" font-size="12" font-weight="600">Ansible</text>
+      <text x="650" y="311" text-anchor="middle" font-size="9" fill="#666">bootstrap</text>
+    </g>
+  </g>
+
+  <g id="l3">
+    <g class="node" data-needs="billing cutoffs visibility tamper identity interop">
+      <rect x="220" y="367" width="200" height="44" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+      <text x="320" y="387" text-anchor="middle" font-size="12" font-weight="600">SparkNet-HTTP</text>
+      <text x="320" y="401" text-anchor="middle" font-size="9" fill="#666">cmd out / SSE in</text>
+    </g>
+    <g class="node" data-needs="interop identity">
+      <rect x="450" y="367" width="200" height="44" rx="6" fill="#E1F5EE" stroke="#0F6E56"/>
+      <text x="550" y="387" text-anchor="middle" font-size="12" font-weight="600">meter-driver-spec</text>
+      <text x="550" y="401" text-anchor="middle" font-size="9" fill="#666">open contract</text>
+    </g>
+  </g>
+
+  <g id="l2">
+    <g class="node" data-needs="billing cutoffs visibility">
+      <rect x="220" y="457" width="200" height="44" rx="6" fill="#FAEEDA" stroke="#BA7517"/>
+      <text x="320" y="477" text-anchor="middle" font-size="12" font-weight="600">SparkNet RF / Firefly</text>
+      <text x="320" y="491" text-anchor="middle" font-size="9" fill="#666">mesh + serial gateway</text>
+    </g>
+    <g class="node" data-needs="billing cutoffs visibility">
+      <rect x="450" y="457" width="160" height="44" rx="6" fill="#FAEEDA" stroke="#BA7517"/>
+      <text x="530" y="477" text-anchor="middle" font-size="12" font-weight="600">Gateway host</text>
+      <text x="530" y="491" text-anchor="middle" font-size="9" fill="#666">USB / serial</text>
+    </g>
+  </g>
+
+  <g id="l1">
+    <g class="node" data-needs="billing cutoffs visibility tamper identity exit">
+      <rect x="220" y="547" width="200" height="44" rx="6" fill="#f7f6f3" stroke="#888"/>
+      <text x="320" y="567" text-anchor="middle" font-size="12" font-weight="600">SM meter</text>
+      <text x="320" y="581" text-anchor="middle" font-size="9" fill="#666">measures / cuts / reports</text>
+    </g>
+    <g class="node" data-needs="billing">
+      <rect x="450" y="547" width="160" height="44" rx="6" fill="#EEEDFE" stroke="#534AB7"/>
+      <text x="530" y="567" text-anchor="middle" font-size="12" font-weight="600">CIU</text>
+      <text x="530" y="581" text-anchor="middle" font-size="9" fill="#666">keypad / balance</text>
+    </g>
+  </g>
+
+  <g id="spine-control" fill="none" stroke-width="2.25" stroke-linecap="square">
+    <g class="cloud-only">
+      <path d="M308 126 L308 187" stroke="#3B6D11"/>
+      <path d="M308 156.5 L314 145 L302 145 Z" fill="#3B6D11" stroke="none"/>
+      <path d="M308 231 L308 277" stroke="#BA7517"/>
+      <path d="M308 254 L314 242.5 L302 242.5 Z" fill="#BA7517" stroke="none"/>
+      <text x="296" y="258" text-anchor="end" font-size="9" fill="#BA7517">sync</text>
+    </g>
+    <path d="M308 321 L308 367" stroke="#3B6D11"/>
+    <path d="M308 344 L314 332.5 L302 332.5 Z" fill="#3B6D11" stroke="none"/>
+    <text x="296" y="348" text-anchor="end" font-size="9" fill="#3B6D11">cmd</text>
+    <path d="M308 411 L308 457" stroke="#3B6D11"/>
+    <path d="M308 434 L314 422.5 L302 422.5 Z" fill="#3B6D11" stroke="none"/>
+    <text x="296" y="438" text-anchor="end" font-size="9" fill="#3B6D11">cmd</text>
+    <path d="M308 501 L308 547" stroke="#BA7517"/>
+    <path d="M308 524 L314 512.5 L302 512.5 Z" fill="#BA7517" stroke="none"/>
+    <text x="296" y="528" text-anchor="end" font-size="9" fill="#BA7517">RF</text>
+  </g>
+
+  <g id="spine-readings" fill="none" stroke-width="2.25" stroke-linecap="square">
+    <path d="M332 547 L332 501" stroke="#175CD3"/>
+    <path d="M332 524 L338 535.5 L326 535.5 Z" fill="#175CD3" stroke="none"/>
+    <text x="344" y="528" font-size="9" fill="#175CD3">reading</text>
+    <path d="M332 457 L332 411" stroke="#175CD3"/>
+    <path d="M332 434 L338 445.5 L326 445.5 Z" fill="#175CD3" stroke="none"/>
+    <text x="344" y="438" font-size="9" fill="#175CD3">SSE</text>
+    <path d="M332 367 L332 321" stroke="#175CD3"/>
+    <path d="M332 344 L338 355.5 L326 355.5 Z" fill="#175CD3" stroke="none"/>
+    <text x="344" y="348" font-size="9" fill="#175CD3">to app</text>
+    <g class="cloud-only">
+      <path d="M332 277 L332 231" stroke="#BA7517"/>
+      <path d="M332 254 L338 265.5 L326 265.5 Z" fill="#BA7517" stroke="none"/>
+      <path d="M332 187 L332 126" stroke="#175CD3"/>
+      <path d="M332 156.5 L338 168 L326 168 Z" fill="#175CD3" stroke="none"/>
+      <text x="344" y="160" font-size="9" fill="#175CD3">remote</text>
+    </g>
+  </g>
+
+  <g id="ciu-local" fill="none">
+    <path d="M420 569 L450 569" stroke="#534AB7" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="435" y="562" text-anchor="middle" font-size="9" fill="#534AB7">local</text>
+  </g>
+</svg>

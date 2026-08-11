@@ -1,6 +1,14 @@
 {
-  "version": "0.4",
+  "version": "0.5",
   "problemsPage": "meter-problems-today.html",
+  "roadmap": {
+    "href": "index.html#village-metering/roadmap",
+    "phases": [
+      { "id": 1, "short": "Phase 1", "label": "Installed-base interop" },
+      { "id": 2, "short": "Phase 2", "label": "Next-gen microgrid core" },
+      { "id": 3, "short": "Phase 3", "label": "Next-gen grid connectivity" }
+    ]
+  },
   "groups": [
     { "id": "billing", "label": "Billing & payment", "short": "Billing" },
     { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },
@@ -56,17 +64,19 @@
     { "id": "planning", "label": "Planning & architecture", "short": "Planning" }
   ],
   "software": [
-    { "id": "sol-vmrs", "label": "Billing register model", "kind": "registers", "hardware": ["meter", "street-ems", "cloud"], "href": "index.html#village-metering/vmrs" },
-    { "id": "sol-prepaid", "label": "Prepaid & token delivery", "kind": "prepaid", "hardware": ["meter", "ciu", "cloud"], "href": "https://github.com/enaccess/OpenPAYGO-Token" },
-    { "id": "sol-mpm", "label": "Operator billing platform", "kind": "platform", "hardware": ["cloud"], "href": "https://github.com/enaccess/micropowermanager" },
-    { "id": "sol-pole-ems", "label": "Edge EMS & tenant control", "kind": "edge", "hardware": ["street-ems", "mesh"], "href": "index.html#village-metering/meshems" },
-    { "id": "sol-northbound", "label": "Northbound telemetry contract", "kind": "registers", "hardware": ["street-ems", "cloud"], "href": "meter-benchmark/northbound-mqtt-v0.1.json" },
-    { "id": "sol-openami", "label": "Feeder AMI telemetry stack", "kind": "feeder", "hardware": ["feeder", "street-ems", "mesh"], "href": "index.html#village-metering/openami" },
-    { "id": "sol-comms", "label": "Resilient comms design", "kind": "edge", "hardware": ["street-ems", "mesh", "cloud"], "href": "tech-comm-2026-05-28-metering-topology.html" },
-    { "id": "sol-vendor", "label": "Vendor & protocol study", "kind": "planning", "hardware": [], "href": "index.html#village-metering/vendor-study" },
-    { "id": "sol-field-qa", "label": "Field QA & reconciliation", "kind": "planning", "hardware": ["street-ems", "cloud"], "href": null },
-    { "id": "sol-min-scope", "label": "Deployment scope definition", "kind": "planning", "hardware": [], "href": "index.html#village-metering/overview" },
-    { "id": "sol-anchor", "label": "Revenue & tariff model", "kind": "planning", "hardware": ["cloud"], "href": "stonehenge-microgrid-topology.html" }
+    { "id": "sol-vmrs", "label": "Billing register model", "kind": "registers", "hardware": ["meter", "street-ems", "cloud"], "phase": [1, 2], "href": "index.html#village-metering/vmrs" },
+    { "id": "sol-prepaid", "label": "Prepaid & token delivery", "kind": "prepaid", "hardware": ["meter", "ciu", "cloud"], "phase": [1], "href": "https://github.com/enaccess/OpenPAYGO-Token" },
+    { "id": "sol-mpm", "label": "Operator billing platform", "kind": "platform", "hardware": ["cloud"], "phase": [1, 2], "href": "https://github.com/enaccess/micropowermanager" },
+    { "id": "sol-thundercloud", "label": "ThunderCloud / GroundBolt", "kind": "platform", "hardware": ["cloud"], "phase": [1], "href": "index.html#village-metering/roadmap" },
+    { "id": "sol-pole-ems", "label": "Edge EMS & tenant control", "kind": "edge", "hardware": ["street-ems", "mesh"], "phase": [2], "href": "index.html#village-metering/meshems" },
+    { "id": "sol-northbound", "label": "Northbound telemetry contract", "kind": "registers", "hardware": ["street-ems", "cloud"], "phase": [2], "href": "meter-benchmark/northbound-mqtt-v0.1.json" },
+    { "id": "sol-openami", "label": "Feeder AMI telemetry stack", "kind": "feeder", "hardware": ["feeder", "street-ems", "mesh"], "phase": [2], "href": "index.html#village-metering/openami" },
+    { "id": "sol-comms", "label": "Resilient comms design", "kind": "edge", "hardware": ["street-ems", "mesh", "cloud"], "phase": [1, 2], "href": "tech-comm-2026-05-28-metering-topology.html" },
+    { "id": "sol-vendor", "label": "Vendor & protocol study", "kind": "planning", "hardware": [], "phase": [1], "href": "index.html#village-metering/vendor-study" },
+    { "id": "sol-field-qa", "label": "Field QA & reconciliation", "kind": "planning", "hardware": ["street-ems", "cloud"], "phase": [1, 2], "href": null },
+    { "id": "sol-min-scope", "label": "Deployment scope definition", "kind": "planning", "hardware": [], "phase": [1, 2], "href": "index.html#village-metering/overview" },
+    { "id": "sol-anchor", "label": "Revenue & tariff model", "kind": "planning", "hardware": ["cloud"], "phase": [1], "href": "stonehenge-microgrid-topology.html" },
+    { "id": "sol-grid-connect", "label": "Grid / aggregator connectivity", "kind": "planning", "hardware": ["cloud"], "phase": [3], "href": "index.html#village-metering/roadmap" }
   ],
   "links": [
     ["prob-usage", "sol-vmrs"],
@@ -97,8 +107,10 @@
     ["prob-vend-down", "sol-prepaid"],
     ["prob-vend-down", "sol-comms"],
     ["prob-crm", "sol-mpm"],
+    ["prob-crm", "sol-thundercloud"],
     ["prob-crm", "sol-northbound"],
     ["prob-mdms-cost", "sol-mpm"],
+    ["prob-mdms-cost", "sol-thundercloud"],
     ["prob-mdms-cost", "sol-min-scope"],
     ["prob-multi-pole", "sol-pole-ems"],
     ["prob-protocols", "sol-pole-ems"],
@@ -112,6 +124,7 @@
     ["prob-vendor-exit", "sol-northbound"],
     ["prob-vendor-exit", "sol-vendor"],
     ["prob-inverter-mix", "sol-min-scope"],
+    ["prob-inverter-mix", "sol-grid-connect"],
     ["prob-cloud-down", "sol-comms"],
     ["prob-meter-disagree", "sol-field-qa"],
     ["prob-spot-theft", "sol-field-qa"],

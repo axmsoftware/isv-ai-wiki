@@ -1433,8 +1433,7 @@ code {
     <div class="nav-sub" id="nav-sub-village-metering">
       <div class="nav-sub-item" data-meter-page="overview" onclick="showMeterPage('overview')">Overview</div>
       <div class="nav-sub-item" data-meter-page="roadmap" onclick="showMeterPage('roadmap')">Roadmap</div>
-      <div class="nav-sub-item" data-meter-page="problems" onclick="showMeterPage('problems')">Problems</div>
-      <div class="nav-sub-item" data-meter-page="solutions-map" onclick="showMeterPage('solutions-map')">Solutions map</div>
+      <div class="nav-sub-item" data-meter-page="tc20-review" onclick="showMeterPage('tc20-review')">TC2.0 review</div>
       <div class="nav-sub-item" data-meter-page="village-scope" onclick="showMeterPage('village-scope')">Village scope</div>
       <div class="nav-sub-item" data-meter-page="vmrs" onclick="showMeterPage('vmrs')">Register checklist</div>
       <div class="nav-sub-item" data-meter-page="vendor-study" onclick="showMeterPage('vendor-study')">Vendor Study</div>
@@ -1519,8 +1518,8 @@ code {
 
       <div class="home-primary-focus">
         <p class="home-primary-eyebrow">Primary endeavor · Tech Comm 2026</p>
-        <h2 class="home-primary-title"><a href="#" onclick="showMeterPage('problems');return false">Village Metering</a></h2>
-        <p class="home-primary-desc">Bill each home, cut off non-payers, catch stolen power — without city-scale AMI cost. <a href="#" onclick="showMeterPage('village-scope');return false">Village scope</a> (who &amp; how many) · <a href="#" onclick="showMeterPage('problems');return false">Problems</a> · vendor study.</p>
+        <h2 class="home-primary-title"><a href="#" onclick="showMeterPage('overview');return false">Village Metering</a></h2>
+        <p class="home-primary-desc">Bill each home, cut off non-payers, catch stolen power — without city-scale AMI cost. <a href="#" onclick="showMeterPage('overview');return false">Overview</a> · <a href="#" onclick="showMeterPage('village-scope');return false">Village scope</a> · <a href="#" onclick="showMeterPage('tc20-review');return false">TC2.0 review</a>.</p>
       </div>
 
       <div class="home-blocks">
@@ -1557,7 +1556,7 @@ code {
             <span class="tag tag-active">Primary</span>
             <span class="project-name">Village Metering</span>
           </div>
-          <div class="project-desc">Prepaid billing, remote disconnect, theft visibility — documented as field problems first, then vendor evidence and open gateway specs. Anchor POCs: SteamaCo, Darway. <a href="#" onclick="showMeterPage('overview');return false">Overview</a> · <a href="#" onclick="showMeterPage('problems');return false">problems →</a></div>
+          <div class="project-desc">Prepaid billing, remote disconnect, theft visibility — documented as field problems first, then vendor evidence and open gateway specs. Anchor POCs: SteamaCo, Darway. <a href="#" onclick="showMeterPage('overview');return false">Overview →</a></div>
         </div>
         <div class="project-card">
           <div class="project-card-head">
@@ -1887,7 +1886,7 @@ code {
         <div class="standard-icon">📦</div>
         <div>
           <div class="resource-name">Street Pole EMS — ems-dev</div>
-          <div class="resource-desc"><a href="https://github.com/energy-iot/ems-dev/" target="_blank">ems-dev</a> — Street Pole EMS hardware/firmware; part of the <a href="#" onclick="showMeterPage('problems');return false">Village Metering</a> thread.</div>
+          <div class="resource-desc"><a href="https://github.com/energy-iot/ems-dev/" target="_blank">ems-dev</a> — Street Pole EMS hardware/firmware; part of the <a href="#" onclick="showMeterPage('overview');return false">Village Metering</a> thread.</div>
         </div>
       </div>
       <div class="resource-row">
@@ -2144,7 +2143,7 @@ code {
           <li><strong>Affordable hardware</strong> — legacy meters at $600–$1,500 can exceed generation cost</li>
           <li><strong>Comms that survive rural links</strong> — tokens and keypads when the pole uplink is down</li>
         </ul>
-        <p style="margin-top:0.5rem;font-size:13px;color:var(--text-2)">Full problem → solution map: <a href="#" onclick="showMeterPage('problems');return false">Village Metering · Problems</a>.</p>
+        <p style="margin-top:0.5rem;font-size:13px;color:var(--text-2)">Full problem → solution map: <a href="#" onclick="showMeterPage('overview');return false">Village Metering · Overview</a>.</p>
       </div>
       <div class="wiki-body">
         <p>Indexed summaries here; full documents on <a href="https://sattal.cottonspace.com/reports" target="_blank" rel="noopener">Cottonspace</a>, external publishers, or in this wiki. Dev Labs reports sync <strong>live</strong> from <a href="https://github.com/rahulbhargavain/openami-smart-village/tree/main/reports" target="_blank" rel="noopener">openami-smart-village</a>; ISV and external entries come from <code>technical-notes/catalog.json</code>. Each report shows <strong>source · authorship · review</strong> badges — see key below.</p>
@@ -2208,7 +2207,11 @@ const NOTE_GROUPS = {
   'events': { section: 'events', defaultNote: 'open-energy-hackathon-2025' }
 };
 const METER_PAGE_ALIASES = {
-  'problems-today': 'problems',
+  'problems-today': 'overview',
+  problems: 'overview',
+  'solutions-map': 'overview',
+  'tc20-stack': 'tc20-review',
+  'village-topology': 'tc20-review',
   scope: 'village-scope'
 };
 function resolveMeterPageId(id) {
@@ -2218,27 +2221,21 @@ function resolveMeterPageId(id) {
 const METER_BENCHMARK_PAGES = {
   'overview': {
     title: 'Overview',
-    sub: 'Why ISV · gateway path · hardware threads',
-    src: 'meter-overview.html?embed=1&v=20260811',
+    sub: 'Solutions map · tender pitfalls · what ISV publishes',
+    src: 'meter-overview.html?embed=1&v=20260812b',
     standalone: 'meter-overview.html'
   },
   'roadmap': {
     title: 'Roadmap',
     sub: 'Phase 1 installed-base · Phase 2 microgrid core · Phase 3 grid connect',
-    src: 'meter-roadmap.html?embed=1&v=20260811',
+    src: 'meter-roadmap.html?embed=1&v=20260811c',
     standalone: 'meter-roadmap.html'
   },
-  'problems': {
-    title: 'Problems',
-    sub: 'Field needs · prepaid · disconnect · theft · comms',
-    src: 'meter-problems-today.html?embed=1&v=20260703',
-    standalone: 'meter-problems-today.html'
-  },
-  'solutions-map': {
-    title: 'Solutions map',
-    sub: 'Problem → hardware → software (generic types)',
-    src: 'meter-solutions-map.html?embed=1&v=20260709',
-    standalone: 'meter-solutions-map.html'
+  'tc20-review': {
+    title: 'TC2.0 review',
+    sub: 'Ideal architecture · stack + village · EarthSpark links',
+    src: 'meter-tc20-review.html?embed=1&v=20260811e',
+    standalone: 'meter-tc20-review.html'
   },
   'village-scope': {
     title: 'Village scope',
@@ -2255,7 +2252,7 @@ const METER_BENCHMARK_PAGES = {
   'vendor-study': {
     title: 'Vendor Study',
     sub: 'Protocol benchmark · outreach pipeline · contacts',
-    src: 'meter-vendor-study.html?embed=1&v=20260629',
+    src: 'meter-vendor-study.html?embed=1&v=20260812b',
     standalone: 'meter-vendor-study.html'
   },
   'openami': {
@@ -2286,7 +2283,7 @@ const MEETING_NOTES = {
     title: 'Metering & comms topology',
     date: '28 May 2026',
     sub: 'STS · SMS · DLMS · redundant NAN · CIU/phone relay',
-    src: 'tech-comm-2026-05-28-metering-topology.html?embed=1&v=20260629',
+    src: 'tech-comm-2026-05-28-metering-topology.html?embed=1&v=20260811',
     standalone: 'tech-comm-2026-05-28-metering-topology.html',
     diagramSvg: 'technical-notes/diagrams/metering-topology.svg',
     diagramGuide: 'technical-notes/diagrams/editing-guide.html'

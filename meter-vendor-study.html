@@ -54,10 +54,26 @@ ul, ol { padding-left: 1.25rem; margin-bottom: 1rem; }
 .contact-cell { font-size: 11px; line-height: 1.45; min-width: 180px; }
 .contact-cell a { word-break: break-all; }
 .contact-isv { color: var(--amber); font-size: 10px; }
-.tbl-wrap { overflow-x: auto; margin-bottom: 1.25rem; border: 1px solid var(--border); border-radius: 10px; }
-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 860px; }
+.tbl-wrap {
+  overflow: auto;
+  max-height: min(70vh, 42rem);
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+}
+table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; min-width: 860px; }
 th, td { border-bottom: 1px solid var(--border); padding: 0.5rem 0.6rem; text-align: left; vertical-align: top; }
-th { background: var(--bg-2); font-weight: 500; font-size: 11px; white-space: nowrap; }
+th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-2);
+  font-weight: 500;
+  font-size: 11px;
+  white-space: nowrap;
+  box-shadow: 0 1px 0 var(--border);
+}
 tr:last-child td { border-bottom: 0; }
 td code { font-family: var(--mono); font-size: 10px; }
 .val-doc { color: var(--green); font-weight: 500; }
@@ -105,22 +121,22 @@ html.embed h1 { font-size: 20px; }
 <div class="wrap">
   <div class="back"><a href="index.html#village-metering/vendor-study">← Village Metering</a></div>
   <h1>Vendor Study</h1>
-  <p class="sub">Jun 2026 · pipeline + protocol benchmark · citations required</p>
+  <p class="sub">Aug 2026 · pipeline + protocol benchmark · citations required · SparkMeter / EarthSpark TC2.0 refresh</p>
 
-  <p class="lead">Living comparison for village-meter procurement: cited protocol scores, outreach status, and contacts. Target northbound contract: <a href="meter-benchmark/northbound-mqtt-v0.1.json">northbound MQTT v0.1</a> + <a href="index.html#village-metering/vmrs">VMRS</a>. Web/datasheet pass only — nothing marked <code>tested</code>.</p>
+  <p class="lead">Living comparison for village-meter procurement: cited protocol scores, outreach status, and contacts. Target northbound contract: <a href="meter-benchmark/northbound-mqtt-v0.1.json">northbound MQTT v0.1</a> + <a href="index.html#village-metering/vmrs">VMRS</a>. Web/datasheet pass only — nothing marked <code>tested</code>. SparkMeter / EarthSpark detail also on <a href="index.html#village-metering/tc20-review">TC2.0 review</a>.</p>
 
   <div class="study-map">
-    <div><strong>1 · Protocol benchmark</strong> — DLMS, STS, VMRS, and northbound APIs from datasheets and public docs (<code>doc</code> / <code>claim</code> / <code>no</code> / <code>—</code>). Grouped by vendor role; do not compare SunSpec inverter rows to STS meter rows.</div>
+    <div><strong>1 · Protocol benchmark</strong> — DLMS, STS, VMRS, and northbound APIs from datasheets and public docs (<code>doc</code> / <code>claim</code> / <code>interop</code> / <code>no</code> / <code>—</code>). Grouped by vendor role; do not compare SunSpec inverter rows to STS meter rows.</div>
     <div><strong>2 · Outreach pipeline</strong> — brochures, pricing, field references, and ISV follow-up history. Operational, not proof of interoperability.</div>
     <div><strong>3 · Directory &amp; context</strong> — full contact directory, generation-side DER notes, industry cost bands, and bibliography (expand below).</div>
   </div>
 
   <details>
     <summary>Method · scoring legend · known gaps</summary>
-    <p style="font-size:12px;color:var(--text-2);margin:0.5rem 0">8 industry + 20 vendor-primary + 3 ISV sources (51 citations). Cells: <code>doc</code> / <code>claim</code> / <code>no</code> / <code>—</code>. VMRS = documented OBIS export, not full ICD. Confidence T0–T3.</p>
+    <p style="font-size:12px;color:var(--text-2);margin:0.5rem 0">8 industry + 22 vendor-primary + 3 ISV sources (53 citations). Cells: <code>doc</code> = datasheet/spec cites the protocol · <code>claim</code> = marketing claim without ICD · <code>interop</code> = <em>HES/platform</em> claims it can talk standard DLMS to third-party meters (not that the vendor’s own meters publish an open DLMS ICD) · <code>no</code> / <code>—</code>. VMRS = documented OBIS export, not full ICD. Confidence T0–T3.</p>
     <div class="callout callout-warn" style="margin:0.5rem 0 0">
       <strong>Gaps this pass</strong>
-      <p>No public API for SteamaCo Nimbus or SparkMeter ThunderCloud. Inhemeter DLMS docs partner-gated. Rare published $/meter pricing.</p>
+      <p>No public developer API for SteamaCo Nimbus or live <strong>TC1.x</strong> ThunderCloud SaaS. SparkMeter field meters stay on proprietary SparkNet RF (not DLMS). TC2.0 (Jul&nbsp;2026, Apache-2.0) is open source but pre-production — not a drop-in for every live basestation. Inhemeter DLMS docs partner-gated. Rare published $/meter pricing.</p>
     </div>
   </details>
 
@@ -218,23 +234,23 @@ html.embed h1 { font-size: 20px; }
           <td><span class="pill pill-amber">partner</span></td>
           <td><code>platform</code> + SaaS <span class="src"><a href="#s23">[23]</a></span></td>
           <td>T1–T2</td>
-          <td class="note-cell">Claims DLMS/COSEM interoperable HES/MDMS <span class="src"><a href="#s3">[3]</a></span>; Savi STS + mobile money <span class="src"><a href="#s2">[2]</a></span></td>
+          <td class="note-cell"><code>interop</code> = Nimbus marketed as DLMS/COSEM-<em>interoperable HES/MDMS</em> (third-party meters) <span class="src"><a href="#s3">[3]</a></span> — not an open Savi meter ICD. Savi STS + mobile money <span class="src"><a href="#s2">[2]</a></span>; Donsun-supplied meters <span class="src"><a href="#s6">[6]</a></span></td>
         </tr>
         <tr>
-          <td><strong>SparkMeter</strong></td>
+          <td><strong>SparkMeter</strong><br><span style="font-size:11px;color:var(--text-3)">ops: EarthSpark</span></td>
           <td class="bench-role">full-stack</td>
-          <td>ThunderCloud + mesh meters</td>
-          <td class="val-no">no public</td>
+          <td>SM meters + CIU · Firefly · GroundBolt · ThunderCloud</td>
+          <td class="val-no">no DLMS</td>
           <td class="val-unknown">—</td>
           <td class="val-unknown">—</td>
           <td class="val-na">N/A</td>
           <td class="val-na">N/A</td>
-          <td>Proprietary RF mesh; low-bandwidth IP uplink <span class="src"><a href="#s9">[9]</a><a href="#s13">[13]</a></span></td>
-          <td>ThunderCloud (proprietary)</td>
-          <td><span class="pill pill-amber">closed</span></td>
+          <td>SparkNet RF NAN (Firefly); SparkNet-HTTP at site <span class="src"><a href="#s52">[52]</a><a href="#s9">[9]</a></span></td>
+          <td>Field: <strong>TC1.x</strong> managed SaaS. Open path: <strong>TC2.0</strong> GroundBolt ± ThunderCloud (Apache-2.0, Jul&nbsp;2026) <span class="src"><a href="#s52">[52]</a><a href="#s53">[53]</a></span></td>
+          <td><span class="pill pill-amber">opening</span></td>
           <td><code>$40–110</code> band <span class="src"><a href="#s22">[22]</a></span></td>
           <td>T2</td>
-          <td class="note-cell">EFC lists ~$80 MSR — single data point, not verified quote <span class="src"><a href="#s9">[9]</a></span></td>
+          <td class="note-cell">Sep&nbsp;2025 EarthSpark took EM ops (~1M people on meters) <span class="src"><a href="#s53">[53]</a></span>. Meters stay proprietary SparkNet — not utility DLMS. Soft-lock easing via open HES/site stack, not via open meter wire. Detail: <a href="index.html#village-metering/tc20-review">TC2.0 review</a></td>
         </tr>
         <tr>
           <td><strong>Okra</strong></td>
@@ -325,14 +341,14 @@ html.embed h1 { font-size: 20px; }
           <td class="note-cell">Not a revenue meter — edge controller + cloud OS</td>
         </tr>
         <tr>
-          <td><strong>SparkMeter</strong></td>
-          <td>ThunderCloud + RF mesh meters</td>
+          <td><strong>SparkMeter</strong> / EarthSpark</td>
+          <td>SM meters + Firefly + GroundBolt + ThunderCloud (TC1.x field · TC2.0 open)</td>
           <td class="role">full-stack</td>
-          <td><span class="pill pill-red">—</span></td>
-          <td><span class="pill pill-amber">partial</span> <span class="src"><a href="#s9">[9]</a></span></td>
-          <td><span class="pill pill-red">quote only</span> <span class="src"><a href="#s13">[13]</a></span></td>
-          <td class="note-cell">22 countries per EFC profile; Haiti, Kenya, Tanzania listed <span class="src"><a href="#s9">[9]</a></span></td>
-          <td class="note-cell">Proprietary mesh + cloud; no public DLMS spec found <span class="src"><a href="#s9">[9]</a></span></td>
+          <td><span class="pill pill-amber">partial</span> <span class="src"><a href="#s52">[52]</a></span></td>
+          <td><span class="pill pill-green">Yes</span> <span class="src"><a href="#s52">[52]</a><a href="#s9">[9]</a></span></td>
+          <td><span class="pill pill-amber">quote form</span> <span class="src"><a href="#s13">[13]</a></span></td>
+          <td class="note-cell">~1M people on meters after EarthSpark ops takeover (Sep&nbsp;2025) <span class="src"><a href="#s53">[53]</a></span>; EFC lists 22 countries historically <span class="src"><a href="#s9">[9]</a></span></td>
+          <td class="note-cell">TC2.0 Apache-2.0 hub + GitHub (Jul&nbsp;2026) — pre-production; live fleets still TC1.x SaaS. SparkNet RF stays proprietary. ISV Phase&nbsp;1 map: <a href="index.html#village-metering/tc20-review">TC2.0 review</a></td>
         </tr>
         <tr>
           <td><strong>Inhemeter</strong></td>
@@ -429,14 +445,14 @@ html.embed h1 { font-size: 20px; }
           <td class="src"><a href="#s33">[33]</a><a href="#s49">[49]</a></td>
         </tr>
         <tr>
-          <td><strong>SparkMeter</strong></td>
-          <td><a href="https://www.sparkmeter.io" target="_blank" rel="noopener">sparkmeter.io</a></td>
+          <td><strong>SparkMeter</strong> / EarthSpark</td>
+          <td><a href="https://www.sparkmeter.io" target="_blank" rel="noopener">sparkmeter.io</a> · <a href="https://www.sparkmeter.io/open-source.html" target="_blank" rel="noopener">open-source hub</a></td>
           <td class="contact-cell"><a href="mailto:contact@sparkmeter.io">contact@sparkmeter.io</a> (general)<br><a href="mailto:support@sparkmeter.io">support@sparkmeter.io</a> (customers)</td>
-          <td class="contact-cell">Washington DC area (EFC lists HQ)</td>
-          <td><a href="https://www.sparkmeter.io/company/request-a-quote" target="_blank" rel="noopener">Request quote</a></td>
+          <td class="contact-cell">Washington DC area (EFC lists HQ); ops under EarthSpark since Sep&nbsp;2025</td>
+          <td><a href="https://www.sparkmeter.io/company/request-a-quote" target="_blank" rel="noopener">Request quote</a> · <a href="https://github.com/EarthSpark" target="_blank" rel="noopener">github.com/EarthSpark</a></td>
           <td class="val-unknown">—</td>
-          <td class="note-cell">Quote/demo via web form; ThunderCloud login separate</td>
-          <td class="src"><a href="#s34">[34]</a><a href="#s13">[13]</a></td>
+          <td class="note-cell">TC1.x ThunderCloud login separate from TC2.0 repos. Open stack: GroundBolt / ThunderCloud Apache-2.0 — not plug-and-play for every live site.</td>
+          <td class="src"><a href="#s34">[34]</a><a href="#s52">[52]</a><a href="#s53">[53]</a></td>
         </tr>
         <tr>
           <td><strong>Inhemeter</strong></td>
@@ -653,8 +669,9 @@ html.embed h1 { font-size: 20px; }
   <h3 style="font-size:14px;margin:1rem 0 0.5rem">Key findings</h3>
   <ul>
     <li><strong>Donsun + SteamaCo link verified:</strong> SteamaCo’s product page states Savi meters are “provided by Donsun Shenzhen” <span class="src"><a href="#s6">[6]</a></span> — same hardware family ISV is evaluating.</li>
+    <li><strong>SteamaCo <code>interop</code> ≠ open meter:</strong> Nimbus markets a DLMS/COSEM-<em>interoperable HES/MDMS</em> that can ingest third-party meters <span class="src"><a href="#s3">[3]</a></span>. Savi still ships as a closed partner stack (STS + mesh/PLC/GPRS). Score is HES-side claim, not a public Savi ICD.</li>
     <li><strong>DLMS + STS often co-exist</strong> on West Africa / China utility meters (Donsun, Inhemeter, Calin, Mojec) per datasheets — but <em>key hierarchies differ</em> from OEM stacks (see Tech Comm topology notes).</li>
-    <li><strong>SparkMeter</strong> is a proprietary mesh + ThunderCloud stack in public materials; no DLMS interoperability documentation found <span class="src"><a href="#s9">[9]</a><a href="#s13">[13]</a></span>.</li>
+    <li><strong>SparkMeter / EarthSpark (Aug&nbsp;2026 refresh):</strong> Sep&nbsp;2025 EarthSpark took SparkMeter EM ops (~1M people on meters). Jul&nbsp;2026 <strong>TC2.0</strong> open-sourced (Apache-2.0) — GroundBolt (site) ± ThunderCloud (cloud), SparkNet-HTTP, meter-driver-spec. Field fleets still mostly <strong>TC1.x</strong> managed SaaS; TC2.0 is pre-production. SparkNet RF meters remain proprietary (no public DLMS). Soft-lock eases on the <em>HES/site software</em>, not by opening the meter wire. Hub <span class="src"><a href="#s52">[52]</a></span> · news <span class="src"><a href="#s53">[53]</a></span> · ISV write-up <a href="index.html#village-metering/tc20-review">TC2.0 review</a>.</li>
     <li><strong>IEEE 2030.5</strong> appears on grid-tied DER gateways (Enphase utility client) — not on village prepaid meters. Do not score 2030.5 at the meter row.</li>
     <li><strong>SunSpec</strong> is documented for Enphase SunSpec-700 Modbus and Victron’s integration with SunSpec inverters — not for Donsun/Inhemeter revenue meters.</li>
   </ul>
@@ -713,10 +730,13 @@ html.embed h1 { font-size: 20px; }
     <li id="s49"><span class="tag">ISV</span> ISV DokuWiki — <a href="https://wiki.smartvillage.ieee.org/home:technologies:monitor:newsunroad" target="_blank" rel="noopener">New Sun Road monitor notes</a> (ISV-internal contact)</li>
     <li id="s50"><span class="tag">I</span> LinkedIn — <a href="https://www.linkedin.com/company/shijiazhuang-kelin-electric-co." target="_blank" rel="noopener">Shijiazhuang Kelin Electric</a> (ke1911@kldcop.com — not on vendor homepage this pass)</li>
     <li id="s51"><span class="tag">V</span> Deye — <a href="https://www.deyeinverter.com/contact/" target="_blank" rel="noopener">Contact page</a> (market@deye.com.cn)</li>
+    <li id="s52"><span class="tag">V</span> SparkMeter / EarthSpark — <a href="https://www.sparkmeter.io/open-source.html" target="_blank" rel="noopener">Open-source hub</a> (TC2.0 / GroundBolt / ThunderCloud framing) · code <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a></li>
+    <li id="s53"><span class="tag">V</span> SparkMeter / EarthSpark — <a href="https://www.sparkmeter.io/news" target="_blank" rel="noopener">News</a> (Sep&nbsp;2025 EM ops takeover; Jul&nbsp;2026 TC2.0 open release posts)</li>
   </ol>
   </details>
 
   <p class="meter-footer">
+    <a href="index.html#village-metering/tc20-review">TC2.0 review</a> ·
     <a href="tech-comm-2026-05-28-metering-topology.html">May 2026 notes</a>
   </p>
 </div>
