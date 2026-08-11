@@ -16,12 +16,13 @@
     "includes": [
       "Normalized VMRS register payloads from edge gateway to operator HES",
       "MQTT topic layout and JSON envelope",
-      "Session Information Protocol (SIP) hooks for Glenn Algie DER-market sessions"
+      "Correlation hooks to IETF Session Initiation Protocol (SIP, RFC 3261) dialogs for control-plane admission"
     ],
     "excludes": [
       "Full DLMS/COSEM object model on the wire",
       "Utility MDMS business semantics",
-      "STS key management (separate STSA/KMC track)"
+      "STS key management (separate STSA/KMC track)",
+      "Normative SIP message syntax — use RFC 3261 / related IETF SIP specs"
     ]
   },
   "mqtt": {
@@ -35,7 +36,6 @@
     "topics": {
       "telemetry": "{topicRoot}/meter/{meterSerial}/telemetry",
       "event": "{topicRoot}/meter/{meterSerial}/event",
-      "session": "{topicRoot}/session/{sessionId}",
       "command": "{topicRoot}/meter/{meterSerial}/command"
     }
   },
@@ -54,7 +54,7 @@
       "feederId": "feeder-north-paravur-01",
       "gatewayId": "pole-ems-0042",
       "meterSerial": "DS1000-88421",
-      "sessionId": "sip-7f3a9c2e",
+      "sipCallId": "f81d4fae-7dec-11d0-a765-00a0c91e6bf6@pole-ems-0042",
       "registers": [
         { "obis": "1.8.0", "value": 1842.5, "unit": "kWh", "quality": "good" },
         { "obis": "96.8.0", "value": 12.4, "unit": "kWh", "quality": "good" },
@@ -63,14 +63,20 @@
     }
   },
   "sip": {
-    "name": "Session Information Protocol",
-    "owner": "Glenn Algie / ISV Tech Comm",
-    "purpose": "Establish authenticated sessions between meters, gateways, and market participants so energy trades and disconnect commands are theft-resistant in decentralized DER markets.",
-    "northboundRole": "Optional sessionId on telemetry and mandatory session handshake on command topics before relay/disconnect or settlement actions.",
-    "sessionHandshake": {
-      "topic": "{topicRoot}/session/{sessionId}",
-      "fields": ["sessionId", "participants", "feederScope", "validFrom", "validTo", "signature"]
+    "name": "Session Initiation Protocol",
+    "standard": "IETF RFC 3261 (SIP) and related RFCs (e.g. dialog, identity, TLS transport)",
+    "roleInOpenAMI": "Control-plane session setup — INVITE / ACK / BYE (and related methods) establish and tear down authenticated dialogs among gateways, policy servers, and market participants. MQTT carries VMRS telemetry and actuator commands; it does not replace SIP signaling.",
+    "openAMIUse": [
+      "Admit a feeder or tenant into a DER / settlement / disconnect-authorized dialog before privileged commands",
+      "Bind MQTT telemetry and command topics to an active SIP dialog via Call-ID (and dialog tags when needed)",
+      "End authorization cleanly with BYE so orphaned disconnect or trade rights do not linger"
+    ],
+    "mqttCorrelation": {
+      "optionalField": "sipCallId",
+      "mapsTo": "SIP Call-ID header of the controlling dialog",
+      "commandGate": "Relay, disconnect, reconnect, and settlement commands SHOULD require an active SIP dialog; telemetry MAY omit sipCallId when no dialog is in force"
     },
-    "note": "SIP spec text is evolving — this JSON profile reserves session hooks; update when Glenn publishes SIP v0.1 normative doc."
+    "transports": "SIP over UDP/TCP/TLS or SIP over WebSocket — operator choice; not carried inside the MQTT JSON envelope",
+    "note": "OpenAMI does not redefine SIP. This profile only states how northbound MQTT correlates to IETF SIP dialogs for village / mini-grid control. Contact Tech Comm (Glenn Algie / NESL Street-EMS track) for reference dialog flows."
   }
 }

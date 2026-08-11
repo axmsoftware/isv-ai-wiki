@@ -43,13 +43,14 @@ isv-ai-wiki/
 ├── AGENTS.md                     # ← You are here (AI navigation)
 ├── README.md                     # Human quickstart
 ├── meter-overview.html           # Village Metering — context, hardware threads (default embed)
+├── meter-roadmap.html            # Three-phase development roadmap (+ ThunderCloud Phase 1 note)
 ├── meter-problems-today.html     # Field problems → solutions
 ├── meter-solutions-map.html      # Visual problem ↔ solution map (SVG)
 ├── meter-village-scope.html      # Village definition · population · HDI (cited)
 ├── meter-vendor-study.html       # Cited vendor benchmark (standalone + embed)
 ├── meter-benchmark/
 │   ├── vmrs-registers.json       # Machine-readable VMRS register set v0.1
-│   └── northbound-mqtt-v0.1.json # Northbound JSON/MQTT profile + SIP hooks
+│   └── northbound-mqtt-v0.1.json # Northbound JSON/MQTT profile + IETF SIP (RFC 3261) dialog correlation
 ├── tech-comm-*-*.html            # Meeting note pages (?embed=1 in iframe)
 ├── power-africa-openami-presentation-2025.html  # OpenAMI deck @ PowerAfrica Sep 2025
 ├── open-energy-hackathon-2025.html  # 2025 Open Energy Hackathon summary (Circles of Power)
@@ -137,6 +138,7 @@ Registered sections (`SECTIONS` in `index.html`):
 | `#tasks?meeting=metering-2026-05-28` | Filter by meeting label |
 | `#village-metering` | Village Metering — default: overview |
 | `#village-metering/overview` | Why ISV · gateway path · hardware threads (section entry) |
+| `#village-metering/roadmap` | Three-phase development roadmap (installed-base · microgrid core · grid connect) |
 | `#village-metering/village-scope` | Village definition · population · HDI · modernization fork (cited) |
 | `#village-metering/problems` | Field problems (Problem · Why it hurts) |
 | `#village-metering/solutions-map` | Visual problem ↔ solution diagram · `meter-benchmark/problem-solution-map.json` |
@@ -218,9 +220,10 @@ The study uses a **three-layer stack** (field / edge / cloud). The most **versat
 | Benchmark | When it applies |
 |-----------|-----------------|
 | **SunSpec** | Inverter / DER monitoring (Victron, Enphase), not cheap STS keypad meters. |
-| **IEEE 2030.5** | Grid-facing DER gateways and utility programs — rarely the village prepaid meter. |
-| **Modbus RTU/TCP** | EMS, hybrid inverters, Stellar Edge — generation and control, not STS token paths. |
-| **SIP (Session Information Protocol)** | Glenn Algie / Tech Comm — authenticated sessions for theft-resistant DER markets; hooks in northbound MQTT v0.1, not SunSpec/VoIP SIP. |
+| **IEEE 2030.5** | Phase 3 — grid-facing DER gateways and utility programs — rarely the village prepaid meter. |
+| **OpenADR** | Phase 3 — utility/aggregator demand-response price/events (VTN/VEN); deferred until grid/aggregator counterpart exists. |
+| **Modbus RTU/TCP** | Phase 1–2 — EMS, hybrid inverters, Stellar Edge, DIN meters — generation/feeder and control, not STS token paths. |
+| **SIP (Session Initiation Protocol)** | IETF RFC 3261 — optional Phase 2 control-plane dialogs; OpenAMI MQTT may correlate via `sipCallId`. Not a register map. |
 
 ### Northbound profile location
 

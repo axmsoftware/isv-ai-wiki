@@ -3,7 +3,7 @@
   "prototype": "a",
   "title": "Proposal A · Prepaid cash path",
   "subtitle": "STS · OpenPAYGO · MPM — token path parallel to pole reads",
-  "outOfScope": "MQTT northbound primary, IEEE 1547, SIP, feeder AMI",
+  "outOfScope": "MQTT northbound primary, IEEE 1547, IETF SIP (RFC 3261) control dialogs, feeder AMI",
   "groups": [
     { "id": "billing", "label": "Billing & payment", "short": "Billing" },
     { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },

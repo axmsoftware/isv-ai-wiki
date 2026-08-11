@@ -128,9 +128,9 @@ html.embed .back { display: none; }
 }</pre>
 
   <details>
-    <summary>POC playbook · SIP</summary>
+    <summary>POC playbook · SIP (RFC 3261)</summary>
     <p style="font-size:12px;color:var(--text-2);margin:0.5rem 0"><strong>POC ask:</strong> one feeder, 10–30 meters, <code>northbound-mqtt-v0.1</code> on schedule, STS vending unchanged, ICD gap matrix published. Ask vendor for DLMS/AMI engineer — not sales@.</p>
-    <p style="font-size:12px;color:var(--text-2)"><strong>SIP</strong> (Glenn Algie): Session Information Protocol for authenticated disconnect/market sessions above MQTT — not VoIP SIP, not SunSpec.</p>
+    <p style="font-size:12px;color:var(--text-2)"><strong>SIP</strong> = IETF <strong>Session Initiation Protocol</strong> (<a href="https://datatracker.ietf.org/doc/html/rfc3261" target="_blank" rel="noopener">RFC 3261</a>). OpenAMI uses it for control-plane dialogs (admit tenant / authorize disconnect or settlement), then correlates MQTT telemetry and commands with the SIP <code>Call-ID</code> (<code>sipCallId</code> in the northbound JSON). MQTT does not replace SIP; SIP does not replace OBIS/VMRS registers. Street-EMS / Tech Comm reference flows: see <a href="meter-benchmark/northbound-mqtt-v0.1.json"><code>northbound-mqtt-v0.1.json</code></a> → <code>sip</code>.</p>
   </details>
 
   <details>
