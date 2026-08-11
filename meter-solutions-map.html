@@ -33,6 +33,16 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-filter[data-tone="affordability"].active { background: var(--purple-50); border-color: var(--purple); color: var(--purple); }
 .map-filter[data-tone="comms"].active { background: var(--blue-50); border-color: var(--blue); color: var(--blue); }
 .map-filter[data-tone="integration"].active { background: var(--ieee-blue-50); border-color: var(--ieee-blue); color: var(--ieee-blue); }
+.map-filter[data-tone="phase1"].active { background: var(--green-50); border-color: var(--green); color: var(--green); }
+.map-filter[data-tone="phase2"].active { background: var(--teal-50); border-color: var(--teal); color: var(--teal); }
+.map-filter[data-tone="phase3"].active { background: var(--ieee-blue-50); border-color: var(--ieee-blue); color: var(--ieee-blue); }
+.map-toolbar + .map-toolbar { margin-top: -0.25rem; }
+.map-roadmap-note {
+  font-size: 12px; padding: 0.5rem 0.65rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  margin-bottom: 0.65rem; max-width: 48rem; line-height: 1.45; color: var(--text-2);
+}
+.map-roadmap-note strong { color: var(--text); font-weight: 500; }
 .map-hint { font-size: 11px; color: var(--text-3); margin-bottom: 0.5rem; }
 .map-frame {
   border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2);
@@ -58,6 +68,8 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .link-deploy-tone-feeder { stroke: var(--red); }
 .map-frame .link-deploy-tone-cloud { stroke: var(--blue); }
 .map-frame .link-deploy-tone-scope { stroke: var(--text-3); }
+.map-frame .link-deploy-tone-gateway { stroke: var(--teal); }
+.map-frame .link-deploy-tone-groundbolt { stroke: var(--green); }
 .map-frame .link-deploy.on { opacity: 0.55; }
 .map-frame .link-deploy.focus { opacity: 0.9; stroke-width: 1.25; stroke-dasharray: none; }
 .map-frame .link-deploy.dim { opacity: 0.03; }
@@ -123,6 +135,8 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-feeder { fill: var(--red-50); }
 .map-frame .layer-band-cloud { fill: var(--blue-50); }
 .map-frame .layer-band-scope { fill: var(--bg-3); }
+.map-frame .layer-band-gateway { fill: var(--teal-50); }
+.map-frame .layer-band-groundbolt { fill: var(--green-50); }
 .map-frame .layer-band-stripe { stroke: none; }
 .map-frame .layer-band-stripe-meter { fill: var(--amber); }
 .map-frame .layer-band-stripe-ciu { fill: var(--purple); }
@@ -131,6 +145,8 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-stripe-feeder { fill: var(--red); }
 .map-frame .layer-band-stripe-cloud { fill: var(--blue); }
 .map-frame .layer-band-stripe-scope { fill: var(--text-3); }
+.map-frame .layer-band-stripe-gateway { fill: var(--teal); }
+.map-frame .layer-band-stripe-groundbolt { fill: var(--green); }
 .map-frame .layer-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
 .map-frame .layer-band-title-meter { fill: var(--amber); }
 .map-frame .layer-band-title-ciu { fill: var(--purple); }
@@ -138,6 +154,8 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-title-mesh { fill: var(--teal); }
 .map-frame .layer-band-title-feeder { fill: var(--red); }
 .map-frame .layer-band-title-cloud { fill: var(--blue); }
+.map-frame .layer-band-title-gateway { fill: var(--teal); }
+.map-frame .layer-band-title-groundbolt { fill: var(--green); }
 .map-frame .sw-band { stroke: none; transition: opacity 0.15s; }
 .map-frame .sw-band.dim { opacity: 0.08; }
 .map-frame .sw-band-stripe.dim { opacity: 0.12; }
@@ -148,6 +166,9 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-platform { fill: var(--blue-50); }
 .map-frame .sw-band-feeder { fill: var(--red-50); }
 .map-frame .sw-band-planning { fill: var(--bg-3); }
+.map-frame .sw-band-driver { fill: var(--teal-50); }
+.map-frame .sw-band-sync { fill: var(--amber-50, #fff7e6); }
+.map-frame .sw-band-ops { fill: var(--bg-3); }
 .map-frame .sw-band-stripe { stroke: none; }
 .map-frame .sw-band-stripe-registers { fill: var(--teal); }
 .map-frame .sw-band-stripe-prepaid { fill: var(--purple); }
@@ -155,6 +176,9 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-stripe-platform { fill: var(--blue); }
 .map-frame .sw-band-stripe-feeder { fill: var(--red); }
 .map-frame .sw-band-stripe-planning { fill: var(--text-3); }
+.map-frame .sw-band-stripe-driver { fill: var(--teal); }
+.map-frame .sw-band-stripe-sync { fill: var(--amber); }
+.map-frame .sw-band-stripe-ops { fill: var(--text-3); }
 .map-frame .sw-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
 .map-frame .sw-band-title-registers { fill: var(--teal); }
 .map-frame .sw-band-title-prepaid { fill: var(--purple); }
@@ -162,8 +186,19 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-title-platform { fill: var(--blue); }
 .map-frame .sw-band-title-feeder { fill: var(--red); }
 .map-frame .sw-band-title-planning { fill: var(--text-3); }
+.map-frame .sw-band-title-driver { fill: var(--teal); }
+.map-frame .sw-band-title-sync { fill: var(--amber); }
+.map-frame .sw-band-title-ops { fill: var(--text-3); }
 .map-legend { font-size: 11px; color: var(--text-2); line-height: 1.45; margin-bottom: 0.75rem; }
 html.embed .back { display: none; }
+html.embed.panel .isv-topbar { display: none; }
+html.embed.panel .wrap { padding: 0.5rem 0.75rem 0.75rem; max-width: none; }
+html.embed.panel h1 { font-size: 15px; margin-bottom: 0.15rem; }
+html.embed.panel .sub { display: none; }
+html.embed.panel .lead { font-size: 12px; margin-bottom: 0.5rem; }
+html.embed.panel .map-roadmap-note { font-size: 11px; padding: 0.4rem 0.55rem; }
+html.embed.panel .map-legend { margin-bottom: 0.35rem; }
+html.embed.panel .meter-footer { display: none; }
 </style>
 </head>
 <body>
@@ -185,17 +220,32 @@ html.embed .back { display: none; }
 
   <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
 
+  <div class="map-roadmap-note" id="map-roadmap-note">
+    <strong>Roadmap phases</strong> tag software nodes —
+    <strong>1</strong> installed-base interop ·
+    <strong>2</strong> microgrid core ·
+    <strong>3</strong> grid connectivity.
+    Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
+    <span id="map-tc20-entry"> · SparkMeter / TC2.0:
+      <a href="meter-tc20-review.html">TC2.0 review</a> ·
+      <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
+    </span>
+  </div>
+
+  <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
+  <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
   <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
-  <p class="map-hint">Solid = problem category · dashed = hardware type · hover to focus · filter by problem category</p>
+  <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
 
   <div class="map-frame" id="map-frame">
     <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
   </div>
 
-  <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Standards prototypes (A–D)</a></p>
+  <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links / <code>phase</code> tags there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Prototypes (TC2.0 · A–D)</a> · <a href="index.html#village-metering/roadmap">Roadmap</a></p>
 
   <p class="meter-footer">
-    <a href="index.html#village-metering/problems">Problems</a> ·
+    <a href="index.html#village-metering/overview">Overview</a> ·
+    <a href="index.html#village-metering/roadmap">Roadmap</a> ·
     <a href="index.html#village-metering/overview">Overview</a> ·
     <a href="index.html#village-metering/vmrs">Register checklist</a>
   </p>
@@ -204,17 +254,20 @@ html.embed .back { display: none; }
 (function () {
   var PARAMS = new URLSearchParams(location.search);
   var PROTO = (PARAMS.get('proto') || '').toLowerCase();
+  var PHASE_PARAM = (PARAMS.get('phase') || '').trim();
+  var HOST_PARAM = (PARAMS.get('host') || '').toLowerCase().trim();
   var PROTO_FILES = {
-    a: { file: 'proposal-a-prepaid.json', cache: '20260710a' },
-    b: { file: 'proposal-b-gateway.json', cache: '20260710b' },
-    c: { file: 'proposal-c-der.json', cache: '20260710c' },
-    d: { file: 'proposal-d-openami.json', cache: '20260710d' }
+    a: { file: 'proposal-a-prepaid.json', cache: '20260811a' },
+    b: { file: 'proposal-b-gateway.json', cache: '20260811b' },
+    c: { file: 'proposal-c-der.json', cache: '20260811c' },
+    d: { file: 'proposal-d-openami.json', cache: '20260811d' },
+    tc20: { file: 'proposal-tc20.json', cache: '20260811tc20d' }
   };
   var protoMeta = PROTO_FILES[PROTO] || null;
   var MAP_URL = protoMeta
     ? 'meter-benchmark/' + protoMeta.file + '?v=' + protoMeta.cache
-    : 'meter-benchmark/problem-solution-map.json?v=20260709';
-  var PROBLEMS_PAGE = 'index.html#village-metering/problems';
+    : 'meter-benchmark/problem-solution-map.json?v=20260811';
+  var PROBLEMS_PAGE = 'index.html#village-metering/overview';
   var SVG_W = 920;
   var STRIPE_W = 5;
   var PAD_TOP = 32;
@@ -241,6 +294,9 @@ html.embed .back { display: none; }
 
   var data = null;
   var activeGroup = 'all';
+  var activePhase = 'all';
+  var activeHost = 'full';
+  var mapJsonMeta = null;
   var hoverId = null;
   var hoverSide = null;
   var hoverFrame = null;
@@ -266,7 +322,9 @@ html.embed .back { display: none; }
           label: s.label,
           kind: s.kind || kindMap[s.id] || 'planning',
           hardware: hw,
-          href: s.href
+          href: s.href,
+          specs: s.specs,
+          phase: s.phase
         };
       });
     }
@@ -280,6 +338,19 @@ html.embed .back { display: none; }
         { id: 'planning', label: 'Planning & architecture', short: 'Planning' }
       ];
     }
+    if (!json.roadmap) {
+      json.roadmap = {
+        href: 'index.html#village-metering/roadmap',
+        phases: [
+          { id: 1, short: 'Phase 1', label: 'Installed-base interop' },
+          { id: 2, short: 'Phase 2', label: 'Next-gen microgrid core' },
+          { id: 3, short: 'Phase 3', label: 'Next-gen grid connectivity' }
+        ]
+      };
+    }
+    json.software.forEach(function (s) {
+      s.phase = normalizePhaseList(s.phase);
+    });
     if (!Array.isArray(json.problems)) {
       throw new Error('map data missing problems array');
     }
@@ -326,6 +397,33 @@ html.embed .back { display: none; }
     frame.addEventListener('mouseleave', function () { clearHover(); });
   }
 
+  function normalizePhaseList(phase) {
+    if (Array.isArray(phase)) {
+      return phase.map(Number).filter(function (n) { return n === 1 || n === 2 || n === 3; });
+    }
+    if (phase === 1 || phase === 2 || phase === 3) return [phase];
+    if (phase === '1' || phase === '2' || phase === '3') return [Number(phase)];
+    return [];
+  }
+
+  function softwarePhases(sw) {
+    return (sw && sw.phase) ? sw.phase : [];
+  }
+
+  function phaseLabel(sw) {
+    var ps = softwarePhases(sw);
+    if (!ps.length) return '';
+    return ps.map(function (n) { return 'P' + n; }).join('·');
+  }
+
+  function softwareSubline(sw) {
+    var bits = [];
+    var pl = phaseLabel(sw);
+    if (pl) bits.push(pl);
+    if (sw.specs && sw.specs.length) bits.push(sw.specs.join(' · '));
+    return bits.join(' · ');
+  }
+
   function el(tag, attrs, parent) {
     var n = document.createElementNS('http://www.w3.org/2000/svg', tag);
     if (attrs) Object.keys(attrs).forEach(function (k) { n.setAttribute(k, attrs[k]); });
@@ -351,8 +449,63 @@ html.embed .back { display: none; }
 
   function softwareHardware(sw) {
     if (!sw) return [];
-    if (sw.hardware && sw.hardware.length) return sw.hardware;
-    return [];
+    var hw = (sw.hardware && sw.hardware.length) ? sw.hardware.slice() : [];
+    if (activeHost === 'ground') {
+      hw = hw.filter(function (id) { return id !== 'cloud'; });
+    }
+    return hw;
+  }
+
+  function itemHostModes(item) {
+    if (!item) return ['full', 'ground'];
+    if (Array.isArray(item.hostModes) && item.hostModes.length) return item.hostModes;
+    return ['full', 'ground'];
+  }
+
+  function matchesHost(item) {
+    return itemHostModes(item).indexOf(activeHost) !== -1;
+  }
+
+  function softwareMatchingHost(list) {
+    if (!data.hostViews || !data.hostViews.length) return list.slice();
+    return list.filter(matchesHost);
+  }
+
+  function syncHostUrl() {
+    try {
+      var u = new URL(location.href);
+      if (activeHost === 'ground') u.searchParams.set('host', 'ground');
+      else u.searchParams.delete('host');
+      history.replaceState(null, '', u.pathname + u.search + u.hash);
+    } catch (e) { /* ignore */ }
+  }
+
+  function applyHostChrome() {
+    if (!mapJsonMeta) return;
+    var titleEl = document.getElementById('map-title');
+    var subEl = document.getElementById('map-sub');
+    var banner = document.getElementById('map-proto-banner');
+    if (activeHost === 'ground') {
+      if (titleEl && mapJsonMeta.titleGround) titleEl.textContent = mapJsonMeta.titleGround;
+      if (subEl && mapJsonMeta.subtitleGround) subEl.textContent = mapJsonMeta.subtitleGround;
+    } else {
+      if (titleEl && mapJsonMeta.title) titleEl.textContent = mapJsonMeta.title;
+      if (subEl && mapJsonMeta.subtitle) subEl.textContent = mapJsonMeta.subtitle;
+    }
+    if (banner && !banner.hidden && mapJsonMeta.prototype === 'tc20') {
+      var scope = activeHost === 'ground' && mapJsonMeta.outOfScopeGround
+        ? mapJsonMeta.outOfScopeGround
+        : mapJsonMeta.outOfScope;
+      var hostLine = activeHost === 'ground'
+        ? '<strong>GroundBolt-only view</strong> — no cloud host, no SymmetricDS, no managed SaaS. Site keeps billing/cutoffs on local stack.'
+        : '<strong>TC2.0 Full Graph slice</strong> — EarthSpark open stack only (SparkMeter meters · GroundBolt · SparkNet-HTTP · SymmetricDS · optional self-host cloud). Field today still TC1.x managed; this map is the open 2.0 path.';
+      banner.innerHTML = hostLine +
+        (mapJsonMeta.roadmapPhase ? '<div class="out">Roadmap: Phase ' + mapJsonMeta.roadmapPhase +
+          (mapJsonMeta.roadmapPhaseLabel ? ' — ' + mapJsonMeta.roadmapPhaseLabel : '') +
+          ' · <a href="index.html#village-metering/roadmap">full roadmap</a>' +
+          ' · <a href="https://www.sparkmeter.io/news" target="_blank" rel="noopener">sparkmeter.io/news</a></div>' : '') +
+        (scope ? '<div class="out">Out of scope: ' + scope + '</div>' : '');
+    }
   }
 
   function hardwareInUse(software) {
@@ -360,12 +513,105 @@ html.embed .back { display: none; }
     software.forEach(function (s) {
       softwareHardware(s).forEach(function (hid) { ids.add(hid); });
     });
-    return data.hardware.filter(function (h) { return ids.has(h.id); });
+    return data.hardware.filter(function (h) {
+      if (!ids.has(h.id)) return false;
+      return matchesHost(h);
+    });
+  }
+
+  function buildPhaseFilters() {
+    var bar = document.getElementById('map-phase-filters');
+    if (!bar) return;
+    var phases = (data.roadmap && data.roadmap.phases) || [
+      { id: 1, short: 'Phase 1', label: 'Installed-base interop' },
+      { id: 2, short: 'Phase 2', label: 'Next-gen microgrid core' },
+      { id: 3, short: 'Phase 3', label: 'Next-gen grid connectivity' }
+    ];
+    bar.innerHTML = '<span class="map-toolbar-label">Roadmap</span>';
+    var allBtn = document.createElement('button');
+    allBtn.type = 'button';
+    allBtn.className = 'map-filter' + (activePhase === 'all' ? ' active' : '');
+    allBtn.textContent = 'All phases';
+    allBtn.dataset.phase = 'all';
+    bar.appendChild(allBtn);
+    phases.forEach(function (p) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'map-filter' + (String(activePhase) === String(p.id) ? ' active' : '');
+      b.textContent = p.short || ('Phase ' + p.id);
+      b.dataset.phase = String(p.id);
+      b.dataset.tone = 'phase' + p.id;
+      b.title = p.label || b.textContent;
+      bar.appendChild(b);
+    });
+    var road = document.createElement('a');
+    road.href = (data.roadmap && data.roadmap.href) || 'index.html#village-metering/roadmap';
+    road.textContent = 'Roadmap →';
+    road.style.fontSize = '11px';
+    road.style.marginLeft = '0.35rem';
+    bar.appendChild(road);
+    bar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.map-filter');
+      if (!btn || !btn.dataset.phase) return;
+      activePhase = btn.dataset.phase;
+      bar.querySelectorAll('.map-filter').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      hoverId = null;
+      hoverSide = null;
+      render();
+    });
+  }
+
+  function buildHostFilters() {
+    var bar = document.getElementById('map-host-filters');
+    if (!bar) return;
+    var views = data.hostViews;
+    var hint = document.getElementById('map-hint');
+    var tcEntry = document.getElementById('map-tc20-entry');
+    if (!views || !views.length) {
+      bar.hidden = true;
+      bar.innerHTML = '';
+      if (hint) {
+        hint.textContent = 'Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus';
+      }
+      if (tcEntry) tcEntry.hidden = false;
+      return;
+    }
+    bar.hidden = false;
+    if (tcEntry) tcEntry.hidden = true;
+    if (hint) {
+      hint.textContent = 'Phase filter narrows software · Hosting toggles Full stack vs GroundBolt-only (no cloud) · category filter narrows problem groups · hover to focus';
+    }
+    bar.innerHTML = '<span class="map-toolbar-label">Hosting</span>';
+    views.forEach(function (v) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'map-filter' + (activeHost === v.id ? ' active' : '');
+      b.textContent = v.short || v.label;
+      b.dataset.host = v.id;
+      b.title = v.label || v.short;
+      if (v.id === 'ground') b.dataset.tone = 'phase1';
+      bar.appendChild(b);
+    });
+    bar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.map-filter');
+      if (!btn || !btn.dataset.host) return;
+      activeHost = btn.dataset.host;
+      bar.querySelectorAll('.map-filter').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      hoverId = null;
+      hoverSide = null;
+      syncHostUrl();
+      applyHostChrome();
+      render();
+    });
   }
 
   function buildFilters() {
     var bar = document.getElementById('map-filters');
-    bar.innerHTML = '<span class="map-toolbar-label">Show</span>';
+    bar.innerHTML = '<span class="map-toolbar-label">Category</span>';
     var allBtn = document.createElement('button');
     allBtn.type = 'button';
     allBtn.className = 'map-filter active';
@@ -384,7 +630,7 @@ html.embed .back { display: none; }
     });
     bar.addEventListener('click', function (e) {
       var btn = e.target.closest('.map-filter');
-      if (!btn) return;
+      if (!btn || !btn.dataset.group) return;
       activeGroup = btn.dataset.group;
       bar.querySelectorAll('.map-filter').forEach(function (b) {
         b.classList.toggle('active', b === btn);
@@ -395,13 +641,9 @@ html.embed .back { display: none; }
     });
   }
 
-  function visibleProblems() {
+  function visibleProblemsByGroup() {
     if (activeGroup === 'all') return data.problems.slice();
     return data.problems.filter(function (p) { return p.group === activeGroup; });
-  }
-
-  function visibleProblemIds(set) {
-    visibleProblems().forEach(function (p) { set.add(p.id); });
   }
 
   function connectedSoftware(probIds) {
@@ -410,6 +652,56 @@ html.embed .back { display: none; }
       if (probIds.has(pair[0])) sws.add(pair[1]);
     });
     return data.software.filter(function (s) { return sws.has(s.id); });
+  }
+
+  function connectedProblems(swIds) {
+    var probs = new Set();
+    data.links.forEach(function (pair) {
+      if (swIds.has(pair[1])) probs.add(pair[0]);
+    });
+    return data.problems.filter(function (p) {
+      if (!probs.has(p.id)) return false;
+      if (activeGroup !== 'all' && p.group !== activeGroup) return false;
+      return true;
+    });
+  }
+
+  function softwareMatchingPhase(list) {
+    if (activePhase === 'all') return list.slice();
+    var n = Number(activePhase);
+    return list.filter(function (s) {
+      return softwarePhases(s).indexOf(n) !== -1;
+    });
+  }
+
+  function visibleSlice() {
+    var groupProbs = visibleProblemsByGroup().filter(matchesHost);
+    var groupProbIds = new Set(groupProbs.map(function (p) { return p.id; }));
+    var software;
+    var problems;
+    if (activePhase === 'all') {
+      problems = groupProbs;
+      software = activeGroup === 'all'
+        ? softwareMatchingHost(data.software)
+        : softwareMatchingHost(connectedSoftware(groupProbIds));
+    } else {
+      software = softwareMatchingHost(softwareMatchingPhase(data.software));
+      if (activeGroup !== 'all') {
+        var allowed = new Set(connectedSoftware(groupProbIds).map(function (s) { return s.id; }));
+        software = software.filter(function (s) { return allowed.has(s.id); });
+      }
+      var swIds = new Set(software.map(function (s) { return s.id; }));
+      problems = connectedProblems(swIds).filter(matchesHost);
+    }
+    if (activeHost !== 'full' || activePhase !== 'all') {
+      var keepSw = new Set(software.map(function (s) { return s.id; }));
+      problems = problems.filter(function (p) {
+        return data.links.some(function (pair) {
+          return pair[0] === p.id && keepSw.has(pair[1]);
+        });
+      });
+    }
+    return { problems: problems, software: software };
   }
 
   function layoutNodes(problems, software) {
@@ -459,7 +751,7 @@ html.embed .back { display: none; }
       var bandTop = sy;
       sy += HEADER_H;
       kindSw.forEach(function (s) {
-        var tall = s.specs && s.specs.length;
+        var tall = !!softwareSubline(s);
         var nh = tall ? NODE_H_SPECS : NODE_H;
         var rh = tall ? ROW_H_SPECS : ROW_H;
         swPos[s.id] = sy + nh / 2;
@@ -660,12 +952,10 @@ html.embed .back { display: none; }
     var svg = document.getElementById('map-svg');
     while (svg.firstChild) svg.removeChild(svg.firstChild);
 
-    var probIds = new Set();
-    visibleProblemIds(probIds);
-    var problems = visibleProblems();
-    var software = activeGroup === 'all'
-      ? data.software.slice()
-      : connectedSoftware(probIds);
+    var slice = visibleSlice();
+    var problems = slice.problems;
+    var software = slice.software;
+    var probIds = new Set(problems.map(function (p) { return p.id; }));
     var layout = layoutNodes(problems, software);
     svg.setAttribute('viewBox', '0 0 ' + SVG_W + ' ' + layout.height);
 
@@ -804,7 +1094,7 @@ html.embed .back { display: none; }
       el('rect', { x: PROB_LEFT, y: cy - NODE_H / 2, width: NODE_W_L - STRIPE_W, height: NODE_H, rx: 4 }, g);
       el('text', { x: PROB_LEFT + 6, y: cy + 3.5 }, g).textContent = p.label;
       g.addEventListener('click', function () {
-        location.href = PROBLEMS_PAGE + '#' + p.id;
+        location.href = PROBLEMS_PAGE + '#problems';
       });
     });
 
@@ -825,20 +1115,21 @@ html.embed .back { display: none; }
     software.forEach(function (s) {
       var cy = layout.swPos[s.id];
       if (cy == null) return;
-      var hasSpecs = s.specs && s.specs.length;
-      var nh = hasSpecs ? NODE_H_SPECS : NODE_H;
+      var sub = softwareSubline(s);
+      var hasSub = !!sub;
+      var nh = hasSub ? NODE_H_SPECS : NODE_H;
       var g = el('g', {
-        class: nodeClass(hi, 'sw', s.id) + (hasSpecs ? ' has-specs' : ''),
+        class: nodeClass(hi, 'sw', s.id) + (hasSub ? ' has-specs' : ''),
         'data-id': s.id
       }, swLayer);
       el('rect', { x: SW_LEFT, y: cy - nh / 2, width: NODE_W_R, height: nh, rx: 4 }, g);
       el('text', {
-        class: hasSpecs ? 'label' : '',
+        class: hasSub ? 'label' : '',
         x: SW_LEFT + 6,
-        y: cy + (hasSpecs ? -2 : 3.5)
+        y: cy + (hasSub ? -2 : 3.5)
       }, g).textContent = s.label;
-      if (hasSpecs) {
-        el('text', { class: 'sol-sub', x: SW_LEFT + 6, y: cy + 8 }, g).textContent = s.specs.join(' · ');
+      if (hasSub) {
+        el('text', { class: 'sol-sub', x: SW_LEFT + 6, y: cy + 8 }, g).textContent = sub;
       }
       g.addEventListener('click', function () {
         if (s.href) location.href = s.href;
@@ -849,6 +1140,7 @@ html.embed .back { display: none; }
   }
 
   function applyProtoChrome(json) {
+    mapJsonMeta = json;
     if (json.title) document.getElementById('map-title').textContent = json.title;
     if (json.subtitle) document.getElementById('map-sub').textContent = json.subtitle;
     var dataLink = document.getElementById('map-data-link');
@@ -860,6 +1152,7 @@ html.embed .back { display: none; }
     var nav = document.getElementById('map-proto-nav');
     nav.hidden = false;
     var links = [
+      { id: 'tc20', label: 'TC2.0' },
       { id: 'a', label: 'A · Prepaid' },
       { id: 'b', label: 'B · Gateway' },
       { id: 'c', label: 'C · DER' },
@@ -883,10 +1176,27 @@ html.embed .back { display: none; }
     nav.appendChild(full);
     var banner = document.getElementById('map-proto-banner');
     banner.hidden = false;
-    banner.innerHTML = '<strong>Hypothetical prototype</strong> — subset of problems & standards; main map unchanged.' +
-      (json.outOfScope ? '<div class="out">Out of scope: ' + json.outOfScope + '</div>' : '');
+    var isTc20 = json.prototype === 'tc20';
     var lead = document.getElementById('map-lead');
-    lead.innerHTML = 'Same three columns as full map. Software nodes show <strong>spec tags</strong> (standards / contracts). Solid = problem→hardware · dashed = hardware→software.';
+    lead.innerHTML = isTc20
+      ? 'Full Graph layout, <strong>TC2.0 connections only</strong>. Use <strong>Hosting</strong> filter for GroundBolt-only (no cloud). Solid = problem→hardware · dashed = hardware→software. Story view paused.'
+      : 'Same three columns as full map. Software nodes show <strong>roadmap phase</strong> (P1–P3) and <strong>spec tags</strong>. Solid = problem→hardware · dashed = hardware→software.';
+    var note = document.getElementById('map-roadmap-note');
+    if (note && json.roadmapPhase) {
+      note.innerHTML = '<strong>' + (isTc20 ? 'TC2.0 aligned to Phase ' : 'Prototype aligned to Phase ') + json.roadmapPhase + '</strong>' +
+        (json.roadmapPhaseLabel ? ' (' + json.roadmapPhaseLabel + ')' : '') +
+        ' — see <a href="index.html#village-metering/roadmap">roadmap</a>' +
+        (isTc20 ? ' · hub <a href="https://www.sparkmeter.io/open-source.html" target="_blank" rel="noopener">sparkmeter.io/open-source</a> · <a href="meter-solutions-map.html?proto=tc20&amp;host=ground">GroundBolt-only view</a>' : '') +
+        '.';
+    }
+    applyHostChrome();
+  }
+
+  if (PHASE_PARAM === '1' || PHASE_PARAM === '2' || PHASE_PARAM === '3') {
+    activePhase = PHASE_PARAM;
+  }
+  if (HOST_PARAM === 'ground' || HOST_PARAM === 'full') {
+    activeHost = HOST_PARAM;
   }
 
   fetch(MAP_URL)
@@ -894,6 +1204,8 @@ html.embed .back { display: none; }
     .then(function (json) {
       data = normalizeData(json);
       applyProtoChrome(json);
+      buildPhaseFilters();
+      buildHostFilters();
       buildFilters();
       render();
     })

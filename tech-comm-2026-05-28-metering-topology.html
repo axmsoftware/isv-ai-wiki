@@ -34,8 +34,9 @@ h1 { font-size: 26px; font-weight: 500; margin-bottom: 0.35rem; }
 .toggle { display: flex; gap: 0.5rem; }
 .toggle button { font-family: var(--font); font-size: 12px; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-2); background: transparent; color: var(--text-2); cursor: pointer; }
 .toggle button.active { background: var(--green-50); color: var(--green); border-color: var(--green); font-weight: 500; }
-.diagram-wrap { overflow-x: auto; }
-.diagram-object { display: block; min-width: 860px; width: 100%; height: 520px; border: 0; }
+.diagram-wrap { overflow-x: auto; background: var(--bg); border-radius: 8px; border: 1px solid var(--border); }
+.diagram-wrap svg { display: block; width: 100%; min-width: 860px; height: auto; }
+html.dark .diagram-wrap { background: #f7f6f3; }
 .legend { display: flex; flex-wrap: wrap; gap: 1rem 1.5rem; margin-top: 1rem; font-size: 12px; color: var(--text-2); }
 .legend-item { display: flex; align-items: center; gap: 6px; }
 .legend-line { width: 28px; height: 0; border-top: 2px solid; }
@@ -155,14 +156,9 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
         <p class="panel-edit-hint">In diagrams.net: <strong>File &rarr; Import From &rarr; Device</strong></p>
       </div>
       <div class="diagram-wrap">
-        <object
-          id="topology-diagram"
-          class="diagram-object"
-          type="image/svg+xml"
-          data="technical-notes/diagrams/metering-topology.svg"
-          title="Metering communication topology with redundant channels">
-          <p>Diagram failed to load.</p>
-        </object>
+        <div id="topology-diagram-host">
+          <p class="err" style="padding:1rem;font-size:13px;color:var(--text-2)">Loading diagram…</p>
+        </div>
       </div>
       <div class="legend">
         <span class="legend-item"><span class="legend-line" style="border-color:#888"></span> Working path</span>
@@ -217,10 +213,11 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   </ul>
 </div>
 <script>
-const topologyObject = document.getElementById('topology-diagram');
+const topologyHost = document.getElementById('topology-diagram-host');
+let topologySvgRoot = null;
 
 function getTopologySvgRoot() {
-  return topologyObject?.contentDocument?.documentElement || null;
+  return topologySvgRoot;
 }
 
 function setTopologyView(proposed) {
@@ -230,10 +227,6 @@ function setTopologyView(proposed) {
   if (legendProposed) legendProposed.style.display = proposed ? 'flex' : 'none';
 }
 
-if (topologyObject) {
-  topologyObject.addEventListener('load', () => setTopologyView(false));
-}
-
 document.querySelectorAll('.toggle button').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.toggle button').forEach(b => b.classList.remove('active'));
@@ -241,6 +234,23 @@ document.querySelectorAll('.toggle button').forEach(btn => {
     setTopologyView(btn.dataset.view === 'proposed');
   });
 });
+
+fetch('technical-notes/diagrams/metering-topology.svg')
+  .then((r) => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.text();
+  })
+  .then((text) => {
+    topologyHost.innerHTML = text;
+    topologySvgRoot = topologyHost.querySelector('svg');
+    setTopologyView(false);
+  })
+  .catch((err) => {
+    topologyHost.innerHTML =
+      '<p style="padding:1rem;font-size:13px;color:var(--text-2)">Diagram failed to load' +
+      (err && err.message ? ' — ' + err.message : '') +
+      '. Try <a href="technical-notes/diagrams/metering-topology.svg">open SVG directly</a>.</p>';
+  });
 </script>
 <script src="js/isv-tasks.js?v=20260629"></script>
 <script>ISVTasks.renderMeetingPanel('metering-2026-05-28');</script>

@@ -1,100 +1,278 @@
 {
   "version": "proto-1",
   "prototype": "b",
-  "title": "Proposal B · Pole gateway normalization",
-  "subtitle": "DLMS south · VMRS · MQTT north · optional IETF SIP (RFC 3261) for control dialogs",
+  "title": "Proposal B \u00b7 Pole gateway normalization",
+  "subtitle": "DLMS south \u00b7 VMRS \u00b7 MQTT north \u00b7 optional IETF SIP (RFC 3261) for control dialogs",
   "outOfScope": "STS vending at gateway, IEEE 1547, SunSpec on billing registers",
   "groups": [
-    { "id": "billing", "label": "Billing & payment", "short": "Billing" },
-    { "id": "cutoffs", "label": "Cutoffs & control", "short": "Cutoffs" },
-    { "id": "visibility", "label": "Visibility & operations", "short": "Visibility" },
-    { "id": "integration", "label": "Integration & long-term freedom", "short": "Integration" }
+    {
+      "id": "billing",
+      "label": "Billing & payment",
+      "short": "Billing"
+    },
+    {
+      "id": "cutoffs",
+      "label": "Cutoffs & control",
+      "short": "Cutoffs"
+    },
+    {
+      "id": "visibility",
+      "label": "Visibility & operations",
+      "short": "Visibility"
+    },
+    {
+      "id": "integration",
+      "label": "Integration & long-term freedom",
+      "short": "Integration"
+    }
   ],
   "problems": [
-    { "id": "prob-usage", "group": "billing", "label": "Per-home kWh" },
-    { "id": "prob-disconnect", "group": "cutoffs", "label": "Disconnect" },
-    { "id": "prob-reconnect", "group": "cutoffs", "label": "Reconnect" },
-    { "id": "prob-multi-pole", "group": "cutoffs", "label": "Multi-home pole" },
-    { "id": "prob-instant-power", "group": "visibility", "label": "Instant power" },
-    { "id": "prob-identity", "group": "visibility", "label": "Serial & clock" },
-    { "id": "prob-protocols", "group": "integration", "label": "Mixed protocols" },
-    { "id": "prob-vendor-exit", "group": "integration", "label": "Vendor exit" }
+    {
+      "id": "prob-usage",
+      "group": "billing",
+      "label": "Per-home kWh"
+    },
+    {
+      "id": "prob-disconnect",
+      "group": "cutoffs",
+      "label": "Disconnect"
+    },
+    {
+      "id": "prob-reconnect",
+      "group": "cutoffs",
+      "label": "Reconnect"
+    },
+    {
+      "id": "prob-multi-pole",
+      "group": "cutoffs",
+      "label": "Multi-home pole"
+    },
+    {
+      "id": "prob-instant-power",
+      "group": "visibility",
+      "label": "Instant power"
+    },
+    {
+      "id": "prob-identity",
+      "group": "visibility",
+      "label": "Serial & clock"
+    },
+    {
+      "id": "prob-protocols",
+      "group": "integration",
+      "label": "Mixed protocols"
+    },
+    {
+      "id": "prob-vendor-exit",
+      "group": "integration",
+      "label": "Vendor exit"
+    }
   ],
   "hardware": [
-    { "id": "meter", "label": "House revenue meter", "short": "Meter" },
-    { "id": "street-ems", "label": "Street EMS gateway", "short": "Street EMS", "desc": "Multitenant pole system (uses MeshEMS board)" },
-    { "id": "mesh", "label": "MeshEMS · DCU", "short": "MeshEMS / DCU", "desc": "Mesh board & data-concentrator" },
-    { "id": "cloud", "label": "Operator cloud host", "short": "Cloud" }
+    {
+      "id": "meter",
+      "label": "House revenue meter",
+      "short": "Meter"
+    },
+    {
+      "id": "street-ems",
+      "label": "Street EMS gateway",
+      "short": "Street EMS",
+      "desc": "Multitenant pole system (uses MeshEMS board)"
+    },
+    {
+      "id": "mesh",
+      "label": "MeshEMS \u00b7 DCU",
+      "short": "MeshEMS / DCU",
+      "desc": "Mesh board & data-concentrator"
+    },
+    {
+      "id": "cloud",
+      "label": "Operator cloud host",
+      "short": "Cloud"
+    }
   ],
   "softwareKinds": [
-    { "id": "registers", "label": "Registers & telemetry", "short": "Registers" },
-    { "id": "edge", "label": "Edge gateway", "short": "Edge" },
-    { "id": "platform", "label": "Billing platform", "short": "Platform" }
+    {
+      "id": "registers",
+      "label": "Registers & telemetry",
+      "short": "Registers"
+    },
+    {
+      "id": "edge",
+      "label": "Edge gateway",
+      "short": "Edge"
+    },
+    {
+      "id": "platform",
+      "label": "Billing platform",
+      "short": "Platform"
+    }
   ],
   "software": [
     {
       "id": "sw-dlms-client",
       "label": "DLMS client at gateway",
       "kind": "edge",
-      "hardware": ["street-ems", "mesh"],
-      "specs": ["DLMS/COSEM", "HDLC", "vendor ICD"],
-      "href": "index.html#village-metering/vendor-study"
+      "hardware": [
+        "street-ems",
+        "mesh"
+      ],
+      "specs": [
+        "DLMS/COSEM",
+        "HDLC",
+        "vendor ICD"
+      ],
+      "href": "index.html#village-metering/vendor-study",
+      "phase": [
+        1,
+        2
+      ]
     },
     {
       "id": "sw-vmrs",
       "label": "VMRS register map",
       "kind": "registers",
-      "hardware": ["street-ems"],
-      "specs": ["VMRS", "OBIS"],
-      "href": "index.html#village-metering/vmrs"
+      "hardware": [
+        "street-ems"
+      ],
+      "specs": [
+        "VMRS",
+        "OBIS"
+      ],
+      "href": "index.html#village-metering/vmrs",
+      "phase": [
+        1,
+        2
+      ]
     },
     {
       "id": "sw-mqtt",
       "label": "Northbound MQTT v0.1",
       "kind": "registers",
-      "hardware": ["street-ems", "cloud"],
-      "specs": ["MQTT", "JSON envelope"],
-      "href": "meter-benchmark/northbound-mqtt-v0.1.json"
+      "hardware": [
+        "street-ems",
+        "cloud"
+      ],
+      "specs": [
+        "MQTT",
+        "JSON envelope"
+      ],
+      "href": "meter-benchmark/northbound-mqtt-v0.1.json",
+      "phase": [
+        2
+      ]
     },
     {
       "id": "sw-sip",
       "label": "SIP (RFC 3261) control dialogs",
       "kind": "edge",
-      "hardware": ["street-ems", "cloud"],
-      "specs": ["IETF SIP", "INVITE/BYE", "Call-ID ↔ MQTT"],
-      "href": "meter-benchmark/northbound-mqtt-v0.1.json"
+      "hardware": [
+        "street-ems",
+        "cloud"
+      ],
+      "specs": [
+        "IETF SIP",
+        "INVITE/BYE",
+        "Call-ID \u2194 MQTT"
+      ],
+      "href": "meter-benchmark/northbound-mqtt-v0.1.json",
+      "phase": [
+        2
+      ]
     },
     {
       "id": "sw-hes",
       "label": "HES / MPM consumer",
       "kind": "platform",
-      "hardware": ["cloud"],
-      "specs": ["MQTT subscriber", "MPM optional"],
-      "href": "https://github.com/enaccess/micropowermanager"
+      "hardware": [
+        "cloud"
+      ],
+      "specs": [
+        "MQTT subscriber",
+        "MPM optional"
+      ],
+      "href": "https://github.com/enaccess/micropowermanager",
+      "phase": [
+        1,
+        2
+      ]
     },
     {
       "id": "sw-pole-ems",
       "label": "Edge EMS & tenant control",
       "kind": "edge",
-      "hardware": ["street-ems", "mesh"],
-      "specs": ["Street EMS app"],
-      "href": "index.html#village-metering/meshems"
+      "hardware": [
+        "street-ems",
+        "mesh"
+      ],
+      "specs": [
+        "Street EMS app"
+      ],
+      "href": "index.html#village-metering/meshems",
+      "phase": [
+        2
+      ]
     }
   ],
   "links": [
-    ["prob-usage", "sw-vmrs"],
-    ["prob-usage", "sw-mqtt"],
-    ["prob-disconnect", "sw-sip"],
-    ["prob-disconnect", "sw-dlms-client"],
-    ["prob-reconnect", "sw-sip"],
-    ["prob-multi-pole", "sw-pole-ems"],
-    ["prob-instant-power", "sw-vmrs"],
-    ["prob-instant-power", "sw-mqtt"],
-    ["prob-identity", "sw-vmrs"],
-    ["prob-identity", "sw-mqtt"],
-    ["prob-protocols", "sw-dlms-client"],
-    ["prob-protocols", "sw-mqtt"],
-    ["prob-vendor-exit", "sw-mqtt"],
-    ["prob-vendor-exit", "sw-vmrs"]
-  ]
+    [
+      "prob-usage",
+      "sw-vmrs"
+    ],
+    [
+      "prob-usage",
+      "sw-mqtt"
+    ],
+    [
+      "prob-disconnect",
+      "sw-sip"
+    ],
+    [
+      "prob-disconnect",
+      "sw-dlms-client"
+    ],
+    [
+      "prob-reconnect",
+      "sw-sip"
+    ],
+    [
+      "prob-multi-pole",
+      "sw-pole-ems"
+    ],
+    [
+      "prob-instant-power",
+      "sw-vmrs"
+    ],
+    [
+      "prob-instant-power",
+      "sw-mqtt"
+    ],
+    [
+      "prob-identity",
+      "sw-vmrs"
+    ],
+    [
+      "prob-identity",
+      "sw-mqtt"
+    ],
+    [
+      "prob-protocols",
+      "sw-dlms-client"
+    ],
+    [
+      "prob-protocols",
+      "sw-mqtt"
+    ],
+    [
+      "prob-vendor-exit",
+      "sw-mqtt"
+    ],
+    [
+      "prob-vendor-exit",
+      "sw-vmrs"
+    ]
+  ],
+  "roadmapPhase": 2,
+  "roadmapPhaseLabel": "Microgrid core bridge (Phase 1 south \u00b7 Phase 2 north)"
 }

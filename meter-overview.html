@@ -13,25 +13,28 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
 a { color: var(--green); }
-.wrap { max-width: 900px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 .back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
 .back a { text-decoration: none; }
-h2 { font-size: 14px; font-weight: 500; margin: 1.1rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; }
+.lead { font-size: 14px; margin-bottom: 0.85rem; max-width: 48rem; line-height: 1.5; }
+h2 { font-size: 14px; font-weight: 500; margin: 1.15rem 0 0.5rem; padding-bottom: 0.3rem; border-bottom: 1px solid var(--border); }
 .body-text { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; line-height: 1.5; max-width: 48rem; }
 .body-text strong { color: var(--text); font-weight: 500; }
 .callout { border-left: 3px solid var(--amber); background: var(--amber-50); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin-bottom: 0.85rem; font-size: 12px; line-height: 1.45; }
-.callout > strong:first-child { color: var(--amber); }
-.flow-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.5rem; font-size: 12px; margin-bottom: 0.85rem; padding: 0.65rem 0.75rem; border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); line-height: 1.4; }
-.flow-box { padding: 0.35rem 0.55rem; border-radius: 6px; background: var(--bg); border: 1px solid var(--border); color: var(--text); }
-.flow-box-north { border-color: var(--green); background: var(--green-50); color: var(--green); font-weight: 500; }
-.subnav-list { font-size: 13px; margin: 0 0 0.85rem; padding-left: 1.2rem; color: var(--text-2); line-height: 1.5; }
-.subnav-list li { margin-bottom: 0.35rem; }
+.callout > strong:first-child { color: var(--amber); display: block; margin-bottom: 0.2rem; }
+.map-embed {
+  border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
+  background: var(--bg-2); margin-bottom: 0.85rem; min-height: 1180px;
+}
+.map-embed iframe { display: block; width: 100%; height: 1180px; border: 0; background: var(--bg); }
+.map-open { font-size: 11px; color: var(--text-3); margin: -0.5rem 0 0.85rem; }
 .problem-grid div p { margin: 0; font-size: 12px; color: var(--text-2); line-height: 1.45; }
 html.embed .back { display: none; }
-html.embed h2 { font-size: 13px; margin-top: 0.9rem; }
-html.embed .body-text { font-size: 12px; }
-html.embed .flow-row { font-size: 11px; }
-html.embed .subnav-list { font-size: 12px; }
+html.embed h1 { font-size: 18px; }
+html.embed .lead { font-size: 13px; }
+html.embed .map-embed, html.embed .map-embed iframe { min-height: 1100px; height: 1100px; }
 </style>
 </head>
 <body>
@@ -47,97 +50,40 @@ html.embed .subnav-list { font-size: 12px; }
 
   <h1>Village Metering</h1>
   <p class="sub">ISV Tech Comm primary endeavor · 2026</p>
-  <p class="lead">Mini-grid operators need to <strong>bill each home</strong>, <strong>shut off non-payers</strong>, and <strong>catch stolen power</strong> — without buying a city-scale metering system. This page orients the Village Metering section. Next: <a href="index.html#village-metering/village-scope">who we mean by “village”</a>, then <a href="index.html#village-metering/problems"><strong>Problems to solve</strong></a>.</p>
+  <p class="lead">Mini-grid operators need to <strong>bill each home</strong>, <strong>shut off non-payers</strong>, and <strong>catch stolen power</strong> — without city-scale AMI cost. Digest: problem→solution map, tender pitfalls, what ISV publishes.</p>
 
   <div class="callout">
     <strong>Reading path</strong>
-    <p><strong>Overview</strong> (this page) → <a href="index.html#village-metering/roadmap">Roadmap (3 phases)</a> → <a href="index.html#village-metering/village-scope">Village scope</a> → <a href="index.html#village-metering/problems">Problems</a> → vendor study and register checklist below.</p>
+    <p><strong>Overview</strong> (here) → <a href="index.html#village-metering/roadmap">Roadmap</a> → <a href="index.html#village-metering/tc20-review">TC2.0 review</a> → <a href="index.html#village-metering/village-scope">Village scope</a> → vendor study · register checklist.</p>
   </div>
 
   <h2>Why IEEE · why ISV</h2>
-  <p class="body-text">Rural metering stalls when every vendor ships a closed bundle, every tender copies utility software requirements, and operators cannot swap gear without rewriting billing. Meter makers, integrators, open-platform builders, and field NGOs all have legitimate interests — but no single company can credibly write the <em>common</em> data contract everyone else should adopt. <strong>IEEE Smart Village</strong> sits outside those product lines: a neutral place to compare field evidence and publish draft specs without picking a winner.</p>
-  <p class="body-text">Goal: more integrators bidding on the same scope, mixed meter brands on one feeder, and migration paths when a vendor exits — gateways compete on implementation, not proprietary lock-in.</p>
+  <p class="body-text">Rural metering stalls when every vendor ships a closed bundle, tenders copy utility software requirements, and operators cannot swap gear without rewriting billing. <strong>IEEE Smart Village</strong> sits outside those product lines: neutral place to compare field evidence and publish draft specs without picking a winner. Goal: mixed meter brands on one feeder, and migration paths when a vendor exits.</p>
 
-  <h2>What ISV publishes (draft — not official standards)</h2>
-  <div class="problem-grid">
-    <div>
-      <strong>Three-phase roadmap</strong>
-      <p><a href="index.html#village-metering/roadmap">Roadmap</a> — installed-base interop → microgrid core → grid connectivity. Sequence features; don’t mash phases.</p>
-    </div>
-    <div>
-      <strong>Problem → solution map</strong>
-      <p><a href="index.html#village-metering/problems">Problems page</a> — billing, cutoffs, theft, affordability, comms — each tied to hardware and software approaches.</p>
-    </div>
-    <div>
-      <strong>Minimum meter reads</strong>
-      <p><a href="index.html#village-metering/vmrs">Register checklist</a> — ~10 values every village billing case needs (kWh, credit, tamper, disconnect, clock…).</p>
-    </div>
-    <div>
-      <strong>One cloud data format</strong>
-      <p>Pole gateway reads any meter locally, sends <a href="meter-benchmark/northbound-mqtt-v0.1.json">JSON over MQTT</a> northbound so billing software is written once.</p>
-    </div>
-    <div>
-      <strong>Vendor evidence</strong>
-      <p><a href="index.html#village-metering/vendor-study">Vendor study</a> — cited benchmark tables, contacts, and dead ends from public sources.</p>
-    </div>
+  <h2 id="solutions-map">Problem → hardware → software map</h2>
+  <p class="body-text">Full interactive map (filters by problem group and roadmap phase). Click nodes to highlight links. Source: <a href="meter-benchmark/problem-solution-map.json"><code>problem-solution-map.json</code></a>.</p>
+  <div class="map-embed">
+    <iframe
+      title="Problem to solution map"
+      src="meter-solutions-map.html?embed=1&amp;panel=1&amp;v=20260812"
+      loading="lazy"
+    ></iframe>
   </div>
-
-  <h2>How data moves (simple view)</h2>
-  <p class="body-text">Each meter brand uses its own wire protocol under the pole. The <strong>edge gateway</strong> (pole box or data concentrator) translates to one northbound report. Prepaid <strong>tokens</strong> are a payment path — SMS, mobile money, keypad — separate from scheduled meter reads.</p>
-  <div class="flow-row" aria-label="Data path from meter to operator">
-    <span class="flow-box">Home meter</span>
-    <span class="flow-arrow">→</span>
-    <span class="flow-box">Radio / wire to pole</span>
-    <span class="flow-arrow">→</span>
-    <span class="flow-box">Pole gateway</span>
-    <span class="flow-arrow">→</span>
-    <span class="flow-box flow-box-north">Standard JSON report</span>
-    <span class="flow-arrow">→</span>
-    <span class="flow-box">Billing · mobile money</span>
-  </div>
-
-  <h2>Hardware threads on the same problem set</h2>
-  <div class="dash-grid">
-    <div class="dash-card dash-card-primary">
-      <h3>Street Pole EMS</h3>
-      <ul>
-        <li>ESP32 pole box — multiple meters + relays per pole</li>
-        <li>Open firmware: <a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a></li>
-        <li>Target ~$58/household vs $600–1.5k legacy meters</li>
-      </ul>
-    </div>
-    <div class="dash-card">
-      <h3>MeshEMS board</h3>
-      <ul>
-        <li>Lab and pilot PCB for multi-tenant edge metering</li>
-        <li><a href="index.html#village-metering/meshems">Board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">NESL schematic</a></li>
-      </ul>
-    </div>
-    <div class="dash-card">
-      <h3>OpenAMI program</h3>
-      <ul>
-        <li>Actionable feeder telemetry — leakage, aggregation</li>
-        <li><a href="index.html#village-metering/openami">OpenAMI hub</a> · <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">EnAccess</a></li>
-      </ul>
-    </div>
-    <div class="dash-card">
-      <h3>Operator software</h3>
-      <ul>
-        <li><a href="https://github.com/enaccess/micropowermanager" target="_blank" rel="noopener">MicroPowerManager</a> — accounts, prepaid, reporting</li>
-        <li>Open token alternative: <a href="https://github.com/enaccess/OpenPAYGO-Token" target="_blank" rel="noopener">OpenPAYGO</a></li>
-      </ul>
-    </div>
-  </div>
+  <p class="map-open"><a href="meter-solutions-map.html" target="_blank" rel="noopener">Open map full page ↗</a>
+    · phase filters <a href="meter-solutions-map.html?phase=1" target="_blank" rel="noopener">P1</a> ·
+    <a href="meter-solutions-map.html?phase=2" target="_blank" rel="noopener">P2</a> ·
+    <a href="meter-solutions-map.html?phase=3" target="_blank" rel="noopener">P3</a>
+    · <a href="meter-solutions-map.html?proto=tc20" target="_blank" rel="noopener">TC2.0 proto</a></p>
 
   <h2>Why village tenders go wrong</h2>
   <div class="problem-grid">
     <div>
       <strong>Utility scope on a village budget</strong>
-      <p>Consultants paste full billing-suite and 15-minute load-profile requirements into a 200-meter tender. Appropriate for a city — not for a $40–110/connection feeder.</p>
+      <p>Full billing-suite and 15-minute load-profile requirements in a 200-meter tender. City tools; village wallet.</p>
     </div>
     <div>
       <strong>Mixing unlike things</strong>
-      <p>Prepaid tokens, meter reads, inverter monitoring, and cloud format are different layers. One RFP line that says “all protocols” creates impossible bids. See <a href="index.html#village-metering/problems">Problems</a> diagram.</p>
+      <p>Prepaid tokens, meter reads, inverter monitoring, and cloud format are different layers. One RFP line that says “all protocols” creates impossible bids.</p>
     </div>
     <div>
       <strong>Closed vendor bundles</strong>
@@ -145,38 +91,32 @@ html.embed .subnav-list { font-size: 12px; }
     </div>
     <div>
       <strong>Comms fragility</strong>
-      <p>When the pole uplink fails, customers still need tokens and keypads must still work. <a href="tech-comm-2026-05-28-metering-topology.html">May 2026 notes</a> on redundant paths.</p>
+      <p>When pole uplink fails, customers still need tokens and keypads must still work. <a href="tech-comm-2026-05-28-metering-topology.html">May 2026 notes</a>.</p>
     </div>
   </div>
 
-  <h2>Pages in this section</h2>
-  <ul class="subnav-list">
-    <li><a href="index.html#village-metering/village-scope"><strong>Village scope</strong></a> — who we mean by village; population &amp; access stats; HDI; healthy vs unhealthy modernization</li>
-    <li><a href="index.html#village-metering/problems"><strong>Problems to solve</strong></a> — field needs and approaches</li>
-    <li><a href="index.html#village-metering/vendor-study"><strong>Vendor study</strong></a> — who supports prepaid, disconnect, protocols (cited)</li>
-    <li><a href="index.html#village-metering/vmrs"><strong>Register checklist</strong></a> — minimum meter reads for billing and control (OBIS · VMRS)</li>
-    <li><a href="index.html#village-metering/openami"><strong>OpenAMI</strong></a> — feeder telemetry and open stack layers</li>
-    <li><a href="index.html#village-metering/meshems"><strong>MeshEMS board</strong></a> — edge metering dev kit</li>
-  </ul>
+  <h2>What ISV publishes (draft)</h2>
+  <div class="problem-grid">
+    <div>
+      <strong>Three-phase roadmap</strong>
+      <p><a href="index.html#village-metering/roadmap">Roadmap</a> — installed-base interop → microgrid core → grid connectivity.</p>
+    </div>
+    <div>
+      <strong>Minimum meter reads</strong>
+      <p><a href="index.html#village-metering/vmrs">Register checklist</a> — ~10 values every village billing case needs.</p>
+    </div>
+    <div>
+      <strong>One cloud data format</strong>
+      <p>Pole gateway → <a href="meter-benchmark/northbound-mqtt-v0.1.json">JSON over MQTT</a> so billing is written once.</p>
+    </div>
+    <div>
+      <strong>Vendor evidence</strong>
+      <p><a href="index.html#village-metering/vendor-study">Vendor study</a> — cited tables, contacts, dead ends.</p>
+    </div>
+  </div>
 
   <h2>Field validation</h2>
-  <p class="body-text">Anchor pilots compare real meters against the register checklist and JSON profile on live feeders — gap matrices operators can cite.</p>
-  <div class="dash-grid">
-    <div class="dash-card">
-      <h3>SteamaCo</h3>
-      <ul>
-        <li>Closed AMI with migration path to open northbound</li>
-        <li>Kenya deployment context · Power Africa pre-session</li>
-      </ul>
-    </div>
-    <div class="dash-card">
-      <h3>Darway</h3>
-      <ul>
-        <li>Feeder pilot for pole EMS + JSON envelope</li>
-        <li>Per-model register gaps documented</li>
-      </ul>
-    </div>
-  </div>
+  <p class="body-text">Anchor pilots compare real meters against the register checklist and JSON profile on live feeders — gap matrices operators can cite. <strong>SteamaCo</strong> (closed AMI, migration path) · <strong>Darway</strong> (pole EMS + JSON envelope).</p>
 
   <p class="meter-footer">
     Specs: <a href="meter-benchmark/northbound-mqtt-v0.1.json"><code>northbound-mqtt-v0.1.json</code></a> ·
