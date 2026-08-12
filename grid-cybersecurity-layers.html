@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grid Cybersecurity — Defense-in-Depth Layers · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.wrap { max-width: 980px; margin: 0 auto; padding: 1.5rem 1.25rem 2.5rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 26px; font-weight: 500; margin-bottom: 0.35rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.95rem; }
+.lead { font-size: 15px; margin-bottom: 1rem; max-width: 56rem; line-height: 1.55; }
+h2 { font-size: 18px; font-weight: 500; margin: 2rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 2px solid var(--border); }
+h2:first-of-type { margin-top: 1.5rem; }
+h3 { font-size: 15px; font-weight: 500; margin: 1.35rem 0 0.6rem; color: var(--text); }
+p { font-size: 14px; color: var(--text-2); margin-bottom: 0.85rem; line-height: 1.6; max-width: 56rem; }
+ul, ol { margin: 0 0 0.95rem 1.5rem; color: var(--text-2); line-height: 1.65; }
+li { margin-bottom: 0.4rem; font-size: 14px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 0.15rem 0.45rem; border-radius: 4px; }
+strong { color: var(--text); }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.15rem; font-size: 14px; line-height: 1.6; }
+.callout > strong:first-child { color: var(--teal); display: block; margin-bottom: 0.45rem; font-size: 14px; }
+.callout-key { border-left-color: var(--green); background: var(--green-50); }
+.callout-key > strong:first-child { color: var(--green); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+.callout-purple { border-left-color: var(--purple); background: var(--purple-50); }
+.callout-purple > strong:first-child { color: var(--purple); }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1.25rem; }
+th, td { border: 1px solid var(--border); padding: 0.6rem 0.75rem; text-align: left; vertical-align: top; line-height: 1.5; }
+th { background: var(--bg-2); font-size: 12px; font-weight: 600; color: var(--text); letter-spacing: 0.01em; }
+td { color: var(--text-2); font-size: 13px; }
+.layer-card { border: 2px solid var(--border); border-radius: 12px; padding: 1rem 1.15rem; margin-bottom: 1.25rem; background: var(--bg-2); }
+.layer-card h3 { margin-top: 0; display: flex; align-items: center; gap: 0.6rem; font-size: 16px; }
+.layer-icon { font-size: 22px; }
+.layer-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+@media (min-width: 760px) { .layer-grid { grid-template-columns: repeat(2, 1fr); } }
+.pub-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 0.95rem; background: var(--bg); margin-bottom: 0.85rem; font-size: 13px; line-height: 1.55; }
+.pub-card h4 { margin: 0 0 0.4rem; font-size: 14px; color: var(--green); font-weight: 500; }
+.pub-meta { font-size: 11px; color: var(--text-3); margin-bottom: 0.45rem; }
+.pub-card p { font-size: 13px; margin-bottom: 0; }
+.framework-box { background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 2px solid var(--purple); border-radius: 14px; padding: 1.35rem 1.5rem; margin-bottom: 1.75rem; }
+.framework-title { font-size: 16px; font-weight: 600; color: var(--purple); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.6rem; }
+.zone-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem; }
+.zone-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem 0.85rem; font-size: 12px; line-height: 1.5; }
+.zone-box strong { font-size: 11px; color: var(--purple); display: block; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.02em; }
+.footer-nav { font-size: 13px; color: var(--text-2); margin-top: 2rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.footer-nav a { margin-right: 1.25rem; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#standards">← Standards & Security</a></div>
+
+  <h1>Grid Cybersecurity — Defense-in-Depth Layers</h1>
+  <p class="sub">Sandia National Laboratories Framework for Power System Communication Security</p>
+
+  <p class="lead">Power grid cybersecurity requires <strong>layered defenses</strong> — no single technology (firewall, encryption, IDS) protects against all threats. Sandia National Laboratories has developed a <strong>defense-in-depth architecture</strong> based on the Purdue Model and IEC 62443 zones & conduits, validated across utility SCADA, microgrids, and distributed energy resources (DERs). This page synthesizes Sandia's key publications (2014–2024) into a <strong>7-layer security framework</strong> applicable to village-scale energy systems.</p>
+
+  <div class="callout callout-key">
+    <strong>Why this matters for ISV</strong>
+    <p>Village microgrids sit at the <strong>grid edge</strong> — historically unmonitored, now communication-enabled for prepaid metering, remote control, and utility interconnection (IEEE 2030.5). Each new protocol (DLMS, Modbus, MQTT, TLS) expands the attack surface. Sandia's framework shows <strong>how to layer physical security (Phase 1–2) with network security (Phase 3)</strong> without over-engineering or breaking the budget. Security is not binary — it's a graded approach matched to threat, value, and operational phase.</p>
+  </div>
+
+  <h2>Core Framework: Purdue Model + IEC 62443 Zones & Conduits</h2>
+
+  <div class="framework-box">
+    <div class="framework-title">
+      <span style="font-size: 24px;">🏗️</span>
+      Hierarchical Segmentation for Industrial Control Systems
+    </div>
+    <p style="font-size: 14px; color: var(--text-2); margin-bottom: 1rem; line-height: 1.6;">
+      The <strong>Purdue Model</strong> separates control systems into 6 functional levels (0–5), from field sensors to enterprise IT. <strong>IEC 62443</strong> adds security zones (logical/physical grouping of assets with common security requirements) and conduits (controlled channels between zones). Sandia applies this to grid: meters/inverters (L0-1), SCADA/DCU (L2), microgrid EMS (L3), enterprise/cloud (L4+).
+    </p>
+    <div class="zone-grid">
+      <div class="zone-box">
+        <strong>Zone (Security Zone)</strong>
+        Grouping of devices/systems with <em>trusted internal communication</em>. Example: all revenue meters on a feeder form one zone. Compromise of one meter doesn't automatically compromise DCU if zone boundary enforced.
+      </div>
+      <div class="zone-box">
+        <strong>Conduit</strong>
+        Communication channel between zones with <em>untrusted traffic</em>. Enforce authentication, encryption, monitoring at conduit. Example: firewall + IDS between village LAN (meters/inverters) and internet backhaul.
+      </div>
+      <div class="zone-box">
+        <strong>Purdue Level 0-1</strong>
+        Field devices: smart inverters, meters, RTUs, sensors. Direct physical process interaction. Highest availability, lowest tolerance for latency.
+      </div>
+      <div class="zone-box">
+        <strong>Purdue Level 2</strong>
+        Area supervisory: SCADA HMI, DCU, local controllers. Aggregates L0-1 data, sends commands. OT network.
+      </div>
+      <div class="zone-box">
+        <strong>Purdue Level 3</strong>
+        Site operations: microgrid EMS, DER aggregator, manufacturing execution. Bridge between OT and IT.
+      </div>
+      <div class="zone-box">
+        <strong>Purdue Level 4-5</strong>
+        Enterprise IT: billing, ERP, cloud analytics. Business functions, internet-facing. Higher attack surface, lower grid criticality.
+      </div>
+    </div>
+    <p style="font-size: 13px; color: var(--text-3); margin-top: 1rem;">
+      <strong>Defense-in-depth principle:</strong> Attacker must breach multiple zones to reach critical control systems. If enterprise network (L4) compromised, industrial DMZ prevents lateral movement to SCADA (L2). If meter (L0) compromised, conduit firewall prevents attack spreading to DCU (L2).
+    </p>
+  </div>
+
+  <h2>The 7 Security Layers</h2>
+
+  <div class="layer-grid">
+    <div class="layer-card">
+      <h3><span class="layer-icon">🔌</span> Layer 1: Device-Level Security</h3>
+      <p><strong>Scope:</strong> Smart inverters, revenue meters, RTUs, battery management systems (Purdue L0-1)</p>
+      <p><strong>Technologies:</strong> TLS 1.2+ mutual auth, X.509 certificates, firmware signing, secure boot, physical tamper detection</p>
+      <p><strong>Village context:</strong> Phase 3 — IEEE 2030.5 mandates device certs for utility interconnection. Phase 1–2 — physical locks, tamper seals often sufficient if air-gapped.</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🌐</span> Layer 2: Network Security</h3>
+      <p><strong>Scope:</strong> OT networks connecting meters, DCUs, SCADA HMI (Purdue L2)</p>
+      <p><strong>Technologies:</strong> VLAN segmentation, isolated RS-485/Modbus RTU, encrypted DLMS, protocol-aware firewalls</p>
+      <p><strong>Village context:</strong> Village gateway (NSR Stellar Edge, ThunderCloud) = network chokepoint. All meter/inverter traffic passes through — enforce policy here.</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🚪</span> Layer 3: Industrial DMZ</h3>
+      <p><strong>Scope:</strong> Boundary between OT (control) and IT (enterprise/internet) networks</p>
+      <p><strong>Technologies:</strong> Firewall, unidirectional gateway, data diode, jump host for admin access</p>
+      <p><strong>Village context:</strong> Separates village LAN from cellular backhaul. Allows MQTT telemetry out, blocks inbound commands except via VPN/authenticated channel.</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🔒</span> Layer 4: Transport & Application Security</h3>
+      <p><strong>Scope:</strong> Encryption, authentication, integrity for data in transit</p>
+      <p><strong>Technologies:</strong> TLS 1.2+, mutual TLS (mTLS), HTTPS, MQTT over TLS, SSH, IPsec VPN</p>
+      <p><strong>Village context:</strong> Required for IEEE 2030.5 (utility DERMS), vendor cloud APIs, mobile money integrations. Optional for village-internal if physically secured.</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🔍</span> Layer 5: Intrusion Detection & Response</h3>
+      <p><strong>Scope:</strong> Monitoring for malicious or anomalous activity, automated/manual mitigation</p>
+      <p><strong>Technologies:</strong> Network IDS (Snort, Zeek), cyber-physical correlation (PIDMS), SIEM, ML-based anomaly detection</p>
+      <p><strong>Village context:</strong> Gateway-based IDS monitors Modbus commands + feeder voltage/frequency. Alert on disconnect command during normal load, voltage manipulation, firmware update from unknown source.</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🎯</span> Layer 6: Zero Trust & Microsegmentation</h3>
+      <p><strong>Scope:</strong> Identity-based access control, "never trust, always verify"</p>
+      <p><strong>Technologies:</strong> Software-Defined Networking (SDN), Security Group Tags (TrustSec), virtual chambers, dynamic VLAN assignment</p>
+      <p><strong>Village context:</strong> Phase 3 — when multiple vendors/aggregators access same microgrid EMS. Phase 1–2 — defer (complexity/cost not justified for single-operator systems).</p>
+    </div>
+
+    <div class="layer-card">
+      <h3><span class="layer-icon">🔐</span> Layer 7: Physical Security & Supply Chain</h3>
+      <p><strong>Scope:</strong> Prevent unauthorized physical access, hardware tampering, malicious firmware</p>
+      <p><strong>Technologies:</strong> Locked enclosures, secure conduits, tamper seals, signed firmware, vendor trust verification</p>
+      <p><strong>Village context:</strong> <strong>Primary defense for Phase 1–2</strong> — cheaper and simpler than network security for air-gapped systems. Locked meter boxes, pole access control, feeder tap detection.</p>
+    </div>
+  </div>
+
+  <h2>Sandia National Laboratories Key Publications (2014–2024)</h2>
+
+  <h3>Layer 1: Device-Level Security</h3>
+
+  <div class="pub-card">
+    <h4>Roadmap for Photovoltaic Cyber Security</h4>
+    <div class="pub-meta">SAND2017-13262 | December 2017 | Jay Johnson et al.</div>
+    <p>Five-year strategic plan for DER cybersecurity. Defines roles for vendors, utilities, standards bodies, and government. Covers stakeholder engagement, R&D priorities, standards development, and industry best practices. <strong>Essential starting point</strong> for understanding PV/DER security ecosystem.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://sunspec.org/wp-content/uploads/2025/01/Roadmap-for-Photovoltaic-Cyber-Security-SAND2017-13262-4-10-2018.pdf" target="_blank" rel="noopener">Read report (PDF) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>Recommendations for Trust and Encryption in DER Interoperability Standards</h4>
+    <div class="pub-meta">SAND2019-1490 | 2019 | Johnson, Cordeiro, Onunkwo, Wright</div>
+    <p>Deep analysis of IEEE 2030.5 and California Smart Inverter Profile (CSIP) security requirements. Covers TLS 1.2 mutual auth, X.509 certificate lifecycle (provisioning, renewal, revocation), lFDI device identification, IoT-scale key management challenges, and alternative approaches (DTLS, NDN). <strong>Critical for IEEE 2030.5 implementations.</strong></p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.osti.gov/servlets/purl/1761841" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>Cybersecurity Primer for DER Vendors, Aggregators, and Grid Operators</h4>
+    <div class="pub-meta">Sandia (part of SAND2017-13262 project) | 2018</div>
+    <p>Accessible introduction to cybersecurity for non-experts. Establishes common taxonomy. Explains basic cryptography, communication protocols (IEEE 2030.5, Modbus, DNP3), and device/aggregator/utility-level best practices. Written for field engineers, not security researchers.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.naseo.org/Data/Sites/1/documents/tk-news/sandia-summary-of-sandia-der-cyber-research.pdf" target="_blank" rel="noopener">Summary (PDF) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>General Requirements for Designing and Implementing a Cryptography Module for DER Systems</h4>
+    <div class="pub-meta">DOI 10.2172/1467978 | 2018</div>
+    <p>Argues for standalone cryptographic module (hardware security module or isolated firmware) to prevent implementation flaws in DER devices. Separates key storage from control logic. Discusses FIPS 140-2/3 compliance for utilities requiring certified crypto. Addresses IEEE 2030.5 Rule 21 requirements.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://doi.org/10.2172/1467978" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>Securing Inverter Communication: Proactive Intrusion Detection and Mitigation System (PIDMS)</h4>
+    <div class="pub-meta">SAND2022-2827 | March 2022 | Hossain-McKenzie, Jacobs, Jones, Summers, Chavez, Wright</div>
+    <p>Bump-in-the-wire (BITW) intrusion detection device for smart inverter communications. Analyzes <strong>both</strong> network traffic (DNP3, Modbus) <strong>and</strong> physical power measurements (voltage, frequency, power) using machine learning. Detects cyber-physical attacks by correlating network commands with actual inverter behavior. MQTT peer-to-peer communication for distributed alerting. Tested in OPAL-RT hardware-in-the-loop environment.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://doi.org/10.2172/1861984" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <h3>Layer 2: Network Security</h3>
+
+  <div class="pub-card">
+    <h4>Microgrid Cyber Security Reference Architecture</h4>
+    <div class="pub-meta">DOE-SNL SAND2014-5472 | 2014 | Sandia National Laboratories</div>
+    <p>Foundational document mapping TCP/IP protocol stack security to microgrid control networks. Covers application layer (Modbus, DNP3, HTTP), transport layer (TCP, UDP), network layer (IP), and link layer protocols. Recommends TLS/SSL "at any layer" for encryption. Explains control system network vs enterprise network separation using industrial DMZ.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.osti.gov/servlets/purl/1090210" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>Networked Microgrid Cybersecurity Architecture Design Guide — New Jersey TRANSITGRID Use Case</h4>
+    <div class="pub-meta">SAND2022-15760 | November 2022 | Sangoleye, Johnson, Chavez, Tsiropoulou, Marton, Hentz, Yannarelli</div>
+    <p>Real-world application of Purdue Model + IEC 62443 to networked microgrid (NJ Transit rail system). Segments vehicle charging, solar PV, battery storage into protected OT enclaves separated from enterprise IT by industrial DMZ. Deploys intrusion detection (Snort, Zeek) and response tools. Shows how to apply zones & conduits in practice with network diagrams, firewall rules, and chokepoint design.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.osti.gov/servlets/purl/1900087" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <h3>Layer 3–4: DMZ, Transport, Application Security</h3>
+
+  <div class="callout callout-purple">
+    <strong>Cross-layer publications</strong>
+    <p>The TRANSITGRID report (above) covers industrial DMZ design. The <em>Trust and Encryption</em> report (Layer 1 section) covers TLS 1.2 application-layer security for IEEE 2030.5. For in-depth TLS protocol mechanics, see <a href="standard-tls-1-2.html">TLS 1.2 deep-dive page</a>.</p>
+  </div>
+
+  <h3>Layer 5: Intrusion Detection & Cyber-Physical Situational Awareness</h3>
+
+  <div class="pub-card">
+    <h4>Considerations for Secure Data Exchange to Achieve Cyber-Physical Situational Awareness in the Electric Grid</h4>
+    <div class="pub-meta">SAND2024-xxxxx (griDNA project) | 2024 | Sandia National Laboratories</div>
+    <p>Proposes 3-tier sensor architecture for cross-domain data sharing: <strong>local</strong> (device-level), <strong>enclave</strong> (substation/microgrid), <strong>global</strong> (utility-wide). Explores next-generation communication technologies: Named Data Networking (NDN), Software-Defined Networking (SDN), Wi-Fi 6. Discusses privacy-preserving aggregation, anonymization, and distributed AI/ML at the edge. Mnemosyne Logger for high-throughput, resilient event logging over NDN.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://doi.org/10.2172/2431835" target="_blank" rel="noopener">Read report (DOI) ↗</a></p>
+  </div>
+
+  <p style="font-size: 13px; color: var(--text-2); margin-top: 0.5rem;">The <strong>PIDMS report</strong> (Layer 1 section above) is also core Layer 5 research — demonstrates cyber-physical event correlation for intrusion detection.</p>
+
+  <h3>Layer 6: Zero Trust & Advanced Segmentation</h3>
+
+  <div class="pub-card">
+    <h4>PV Cyber Security Research — Software-Defined Networking for DER</h4>
+    <div class="pub-meta">SAND reports (2018–2019, part of multi-year R&D) | Sandia National Laboratories</div>
+    <p>Investigated SDN (OpenFlow controllers) for dynamic VLAN assignment and microsegmentation in DER networks. Explored trust-based policy enforcement where device network access changes based on behavior (e.g., failed auth attempts trigger quarantine VLAN). Practical deployment at Sandia Distributed Energy Technologies Laboratory. Aligned with Cisco TrustSec Security Group Tagging used in TRANSITGRID.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.osti.gov/biblio/1491601" target="_blank" rel="noopener">Final report summary (DOI) ↗</a></p>
+  </div>
+
+  <h3>Layer 7: Physical Security & Defensive Architecture</h3>
+
+  <div class="pub-card">
+    <h4>Advanced Reactor Cybersecurity — Defensive Computer Security Architecture (DCSA)</h4>
+    <div class="pub-meta">Sandia (FY23 Milestone) | 2023 | Maccarone et al.</div>
+    <p>Defines security zones with physical boundaries (locked cabinets, secure cable conduits, hardened walls) and logical boundaries (VLANs, firewalls). Explains chokepoints — force all traffic through monitored entry control point (e.g., single firewall to enter critical zone). Graded approach: assign security levels to zones based on function criticality. Defense-in-depth: systems with redundant functions placed in separate zones so attacker must compromise multiple zones to achieve goal.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.sandia.gov/app/uploads/sites/273/2024/01/Maccarone_DCSA-FY23-M2.pdf" target="_blank" rel="noopener">Read report (PDF) ↗</a></p>
+  </div>
+
+  <div class="pub-card">
+    <h4>Defensive Cybersecurity Architecture Design using Cyber-Physical Modeling</h4>
+    <div class="pub-meta">Sandia (2026) | Advanced Reactor Safeguards & Security program</div>
+    <p>Uses game-theoretic modeling to determine optimal zone placement for critical digital assets. Performance-based design: simulate attacker strategies, measure defender win rate with different zone configurations. Example: cameras and fence sensors in separate zones (redundant physical security functions) vs single zone (both compromised together). Validates DCSA principles with quantitative analysis.</p>
+    <p style="margin-top: 0.5rem;"><a href="https://www.sandia.gov/app/uploads/sites/273/2026/01/Defensive-Cybersecurity-Architecture-Design-using-Cyber-Physical-Modeling-1.pdf" target="_blank" rel="noopener">Read report (PDF) ↗</a></p>
+  </div>
+
+  <h2>Integrated Architecture Example: 100-Home Village Microgrid</h2>
+
+  <p>Applying Sandia's 7-layer framework to ISV Phase 1–2 deployment (50–500 connections, prepaid metering, no utility interconnection yet):</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Security Layer</th>
+        <th>Technology</th>
+        <th>ISV Phase 1–2 Implementation</th>
+        <th>ISV Phase 3 Addition (Utility Interconnect)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>L1: Device</strong></td>
+        <td>Physical tamper detection, firmware signing</td>
+        <td>Locked meter boxes, tamper seals on revenue meters. Signed firmware updates from DCU.</td>
+        <td>+ IEEE 2030.5 device certificates (mutual TLS), lFDI registration with utility DERMS</td>
+      </tr>
+      <tr>
+        <td><strong>L2: Network</strong></td>
+        <td>VLAN segmentation, protocol-aware firewall</td>
+        <td>Village gateway = chokepoint. All DLMS/Modbus traffic passes through. Air-gapped from internet if no remote monitoring.</td>
+        <td>+ Segmented VLANs: meters (VLAN 10), inverters (VLAN 20), EMS (VLAN 30). Firewall rules between.</td>
+      </tr>
+      <tr>
+        <td><strong>L3: Industrial DMZ</strong></td>
+        <td>Firewall, unidirectional gateway, VPN</td>
+        <td>If cellular backhaul for telemetry: firewall allows MQTT out, blocks inbound except VPN for admin.</td>
+        <td>+ Data diode for one-way telemetry to utility SCADA. Separate IEEE 2030.5 conduit with mutual TLS + cert validation.</td>
+      </tr>
+      <tr>
+        <td><strong>L4: Transport/App</strong></td>
+        <td>TLS 1.2+, MQTT over TLS, HTTPS</td>
+        <td>Optional — TLS overhead not justified if physically secured. Plaintext MQTT / HTTP to local gateway acceptable.</td>
+        <td>+ Mandatory TLS 1.2 for IEEE 2030.5 (utility), HTTPS for vendor cloud APIs, SSH for remote admin.</td>
+      </tr>
+      <tr>
+        <td><strong>L5: Intrusion Detection</strong></td>
+        <td>Network IDS, cyber-physical correlation</td>
+        <td>Gateway-based: monitor Modbus commands + feeder voltage/frequency. Alert on disconnect during high load, firmware update from unknown IP.</td>
+        <td>+ PIDMS-style device at IEEE 2030.5 conduit. ML anomaly detection on DERMS commands vs grid state.</td>
+      </tr>
+      <tr>
+        <td><strong>L6: Zero Trust</strong></td>
+        <td>SDN, microsegmentation, identity-based access</td>
+        <td>Defer — complexity/cost not justified for single-operator village.</td>
+        <td>+ Relevant if multiple aggregators/vendors access EMS. Dynamic VLAN assignment per user role.</td>
+      </tr>
+      <tr>
+        <td><strong>L7: Physical</strong></td>
+        <td>Locked enclosures, pole access control</td>
+        <td><strong>Primary defense.</strong> Locked DCU cabinet, pole-mounted equipment caged, feeder tap detection via CT anomaly.</td>
+        <td>+ Same. Physical security never optional — always Layer 7 even with network defenses.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <strong>Phase 1–2 security priority</strong>
+    <p>For village-internal systems (no internet exposure, no utility control), <strong>physical security (Layer 7) + basic network segmentation (Layer 2) are sufficient</strong>. TLS, mTLS, IDS, Zero Trust are Phase 3 concerns driven by utility interconnection requirements (IEEE 2030.5, NERC CIP). Don't over-engineer — budget and training capacity are finite. A locked meter box prevents more theft than an IDS that nobody monitors.</p>
+  </div>
+
+  <h2>Key Sandia Takeaways for Village Microgrids</h2>
+
+  <ol>
+    <li><strong>Defense-in-depth is mandatory</strong> — no single technology solves grid security. Layer physical + network + application + detection.</li>
+    <li><strong>Zones & conduits prevent lateral movement</strong> — segment meters ↔ DCU ↔ EMS ↔ internet with firewalls at each boundary. Compromise of one zone doesn't automatically cascade.</li>
+    <li><strong>Cyber-physical correlation is the innovation</strong> — network IDS alone misses attacks that manipulate physical grid (voltage, frequency, power). PIDMS-style fusion of network traffic + power measurements detects what pure-cyber IDS cannot.</li>
+    <li><strong>TLS 1.2 is Phase 3 requirement</strong> — village-internal (Phase 1–2) can use physical security if air-gapped. Add TLS when internet-facing or utility-mandated (IEEE 2030.5).</li>
+    <li><strong>Certificate management is operational burden</strong> — IEEE 2030.5 mutual TLS means every device needs unique cert + renewal process. Test cert lifecycle (SCEP/EST auto-enrollment, CRL/OCSP revocation checking) before deploying 100+ meters. Clock sync (NTP) required for cert validation.</li>
+    <li><strong>Bump-in-the-wire (BITW) for legacy compatibility</strong> — Sandia's PIDMS approach lets you add security (encryption, IDS) to existing Modbus/DNP3 systems without replacing hardware. Inline gateway intercepts traffic, adds TLS wrapper or anomaly detection.</li>
+    <li><strong>Physical security never optional</strong> — even with network defenses, locked enclosures and tamper detection are Layer 7. Rural villages: theft and bypass via physical access more common than sophisticated cyber attacks. Balance investment accordingly.</li>
+  </ol>
+
+  <h2>Further Reading & Related Standards</h2>
+
+  <ul>
+    <li><a href="standard-tls-1-2.html">TLS 1.2 (RFC 5246) — Transport Layer Security deep-dive</a> — protocol mechanics, handshake, cipher suites, mutual auth</li>
+    <li><a href="standard-ieee-2030-5.html">IEEE 2030.5 — Smart Energy Profile</a> — RESTful DER protocol requiring TLS 1.2 mutual auth</li>
+    <li><a href="https://www.isa.org/standards-and-publications/isa-standards/isa-iec-62443-series-of-standards" target="_blank" rel="noopener">IEC 62443 — Security for Industrial Automation and Control Systems ↗</a></li>
+    <li><a href="https://www.nist.gov/publications/guide-industrial-control-systems-ics-security" target="_blank" rel="noopener">NIST SP 800-82 Rev 2 — Guide to ICS Security ↗</a></li>
+    <li><a href="https://www.energy.gov/ceser/securing-energy-infrastructure" target="_blank" rel="noopener">DOE Cybersecurity, Energy Security, and Emergency Response (CESER) ↗</a></li>
+    <li><a href="https://www.nerc.com/pa/Stand/Pages/CIPStandards.aspx" target="_blank" rel="noopener">NERC CIP — Critical Infrastructure Protection standards (bulk power system) ↗</a></li>
+  </ul>
+
+  <div class="footer-nav">
+    <a href="index.html#standards">← All standards</a>
+    <a href="meter-roadmap.html">Village metering roadmap →</a>
+  </div>
+</div>
+</body>
+</html>
