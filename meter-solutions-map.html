@@ -190,6 +190,43 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-title-sync { fill: var(--amber); }
 .map-frame .sw-band-title-ops { fill: var(--text-3); }
 .map-legend { font-size: 11px; color: var(--text-2); line-height: 1.45; margin-bottom: 0.75rem; }
+.view-toggle-bar {
+  display: flex; gap: 0.35rem; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
+}
+.view-toggle-btn {
+  font-size: 13px; padding: 0.35rem 0.85rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-2); cursor: pointer; font-family: inherit; font-weight: 500;
+  transition: all 0.12s;
+}
+.view-toggle-btn:hover { background: var(--bg-3); color: var(--text); }
+.view-toggle-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.story-view { margin-bottom: 0.85rem; }
+.story-grid {
+  display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 0.85rem;
+}
+@media (min-width: 640px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 920px) { .story-grid { grid-template-columns: repeat(3, 1fr); } }
+.story-card {
+  border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 0.95rem;
+  background: var(--bg-2); font-size: 12px; line-height: 1.5; transition: border-color 0.12s, box-shadow 0.12s;
+}
+.story-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.story-card-header { margin-bottom: 0.5rem; }
+.story-theme { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 0.25rem; }
+.story-phase {
+  display: inline-block; font-size: 9px; padding: 3px 8px; border-radius: 12px;
+  background: var(--green-50); color: var(--green); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; margin-bottom: 0.35rem;
+}
+.story-phase-1 { background: var(--green-50); color: var(--green); }
+.story-phase-2 { background: var(--teal-50); color: var(--teal); }
+.story-phase-1-2 { background: var(--blue-50); color: var(--blue); }
+.story-problems { font-size: 11px; color: var(--text-3); margin-bottom: 0.5rem; line-height: 1.4; }
+.story-caps { margin: 0; padding: 0; list-style: none; }
+.story-caps li { margin-bottom: 0.3rem; padding-left: 0.85rem; position: relative; }
+.story-caps li::before { content: "→"; position: absolute; left: 0; color: var(--green); font-weight: 600; }
+.story-caps a { color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--border-2); }
+.story-caps a:hover { color: var(--green); border-bottom-color: var(--green); }
 html.embed .back { display: none; }
 html.embed.panel .isv-topbar { display: none; }
 html.embed.panel .wrap { padding: 0.5rem 0.75rem 0.75rem; max-width: none; }
@@ -218,27 +255,39 @@ html.embed.panel .meter-footer { display: none; }
   <div class="map-proto-nav" id="map-proto-nav" hidden></div>
   <div class="map-proto-banner" id="map-proto-banner" hidden></div>
 
-  <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
-
-  <div class="map-roadmap-note" id="map-roadmap-note">
-    <strong>Roadmap phases</strong> tag software nodes —
-    <strong>1</strong> installed-base interop ·
-    <strong>2</strong> microgrid core ·
-    <strong>3</strong> grid connectivity.
-    Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
-    <span id="map-tc20-entry"> · SparkMeter / TC2.0:
-      <a href="meter-tc20-review.html">TC2.0 review</a> ·
-      <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
-    </span>
+  <div class="view-toggle-bar">
+    <button type="button" class="view-toggle-btn active" data-view="story">Story</button>
+    <button type="button" class="view-toggle-btn" data-view="full">Full graph</button>
   </div>
 
-  <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
-  <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
-  <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
-  <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
+  <div id="story-view" class="story-view">
+    <p class="lead">Six outcome themes that reinforce the <a href="meter-roadmap.html">3-phase roadmap</a> — from installed-base prepaid (Phase 1) through next-gen microgrid core (Phase 2) to grid connectivity (Phase 3).</p>
+    <div class="story-grid" id="story-grid"></div>
+  </div>
 
-  <div class="map-frame" id="map-frame">
-    <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
+  <div id="full-graph-view" class="full-graph-view" hidden>
+    <div class="map-roadmap-note" id="map-roadmap-note">
+      <strong>Roadmap phases</strong> tag software nodes —
+      <strong>1</strong> installed-base interop ·
+      <strong>2</strong> microgrid core ·
+      <strong>3</strong> grid connectivity.
+      Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
+      <span id="map-tc20-entry"> · SparkMeter / TC2.0:
+        <a href="meter-tc20-review.html">TC2.0 review</a> ·
+        <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
+      </span>
+    </div>
+
+    <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
+
+    <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
+    <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
+    <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
+    <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
+
+    <div class="map-frame" id="map-frame">
+      <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
+    </div>
   </div>
 
   <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links / <code>phase</code> tags there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Prototypes (TC2.0 · A–D)</a> · <a href="index.html#village-metering/roadmap">Roadmap</a></p>
@@ -254,6 +303,7 @@ html.embed.panel .meter-footer { display: none; }
 (function () {
   var PARAMS = new URLSearchParams(location.search);
   var PROTO = (PARAMS.get('proto') || '').toLowerCase();
+  var currentView = 'story';
   var PHASE_PARAM = (PARAMS.get('phase') || '').trim();
   var HOST_PARAM = (PARAMS.get('host') || '').toLowerCase().trim();
   var PROTO_FILES = {
@@ -300,6 +350,71 @@ html.embed.panel .meter-footer { display: none; }
   var hoverId = null;
   var hoverSide = null;
   var hoverFrame = null;
+
+  var STORY_THEMES = [
+    {
+      theme: 'Revenue collection',
+      problems: 'Per-home kWh, collect-before-use, deliver credit, show balance, token audit, O&M revenue',
+      phase: 'Phase 1',
+      phaseClass: 'story-phase-1',
+      capabilities: [
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' },
+        { label: 'Operator billing platform (ThunderCloud / MPM)', href: 'https://github.com/enaccess/micropowermanager' },
+        { label: 'Billing register model (VMRS)', href: 'index.html#village-metering/vmrs' }
+      ]
+    },
+    {
+      theme: 'Control',
+      problems: 'Disconnect, reconnect, multi-home pole',
+      phase: 'Phase 1 → 2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' },
+        { label: 'Edge EMS & tenant control', href: 'index.html#village-metering/meshems' }
+      ]
+    },
+    {
+      theme: 'Loss & theft visibility',
+      problems: 'Illegal taps, unmetered load, leakage, neutral imbalance, meters disagree, spot theft',
+      phase: 'Phase 2',
+      phaseClass: 'story-phase-2',
+      capabilities: [
+        { label: 'Feeder AMI / OpenAMI', href: 'index.html#village-metering/openami' },
+        { label: 'Field QA & reconciliation', href: null }
+      ]
+    },
+    {
+      theme: 'Operational visibility',
+      problems: 'Voltage, instant power, serial & clock',
+      phase: 'Phase 1 → 2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Billing register model (VMRS)', href: 'index.html#village-metering/vmrs' },
+        { label: 'Northbound telemetry contract', href: 'meter-benchmark/northbound-mqtt-v0.1.json' }
+      ]
+    },
+    {
+      theme: 'Cost & independence',
+      problems: 'Meter capex, MDMS cost, mixed protocols, vendor exit, inverter vs billing',
+      phase: 'Phase 1–2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Deployment scope definition', href: 'index.html#village-metering/overview' },
+        { label: 'Vendor & protocol study', href: 'index.html#village-metering/vendor-study' },
+        { label: 'Northbound telemetry contract', href: 'meter-benchmark/northbound-mqtt-v0.1.json' }
+      ]
+    },
+    {
+      theme: 'Comms resilience',
+      problems: 'Cloud unreachable, prepaid offline, vending down',
+      phase: 'Phase 1–2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Resilient comms design', href: 'tech-comm-2026-05-28-metering-topology.html' },
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' }
+      ]
+    }
+  ];
 
   function normalizeData(json) {
     if (!json.hardware && json.deployLayers) {
@@ -361,6 +476,75 @@ html.embed.panel .meter-footer { display: none; }
       throw new Error('map data missing hardware array');
     }
     return json;
+  }
+
+  function buildStoryView() {
+    var grid = document.getElementById('story-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    STORY_THEMES.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 'story-card';
+      var header = document.createElement('div');
+      header.className = 'story-card-header';
+      var theme = document.createElement('div');
+      theme.className = 'story-theme';
+      theme.textContent = t.theme;
+      var phase = document.createElement('div');
+      phase.className = 'story-phase ' + t.phaseClass;
+      phase.textContent = t.phase;
+      header.appendChild(theme);
+      header.appendChild(phase);
+      var probs = document.createElement('div');
+      probs.className = 'story-problems';
+      probs.textContent = t.problems;
+      var caps = document.createElement('ul');
+      caps.className = 'story-caps';
+      t.capabilities.forEach(function (c) {
+        var li = document.createElement('li');
+        if (c.href) {
+          var a = document.createElement('a');
+          a.href = c.href;
+          a.textContent = c.label;
+          li.appendChild(a);
+        } else {
+          li.textContent = c.label;
+          li.style.color = 'var(--text-3)';
+        }
+        caps.appendChild(li);
+      });
+      card.appendChild(header);
+      card.appendChild(probs);
+      card.appendChild(caps);
+      grid.appendChild(card);
+    });
+  }
+
+  function switchView(view) {
+    currentView = view;
+    var storyView = document.getElementById('story-view');
+    var fullView = document.getElementById('full-graph-view');
+    var btns = document.querySelectorAll('.view-toggle-btn');
+    btns.forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    if (view === 'story') {
+      storyView.hidden = false;
+      fullView.hidden = true;
+    } else {
+      storyView.hidden = true;
+      fullView.hidden = false;
+    }
+  }
+
+  function bindViewToggle() {
+    var bar = document.querySelector('.view-toggle-bar');
+    if (!bar) return;
+    bar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.view-toggle-btn');
+      if (!btn) return;
+      switchView(btn.dataset.view);
+    });
   }
 
   function clearHover() {
@@ -1198,6 +1382,10 @@ html.embed.panel .meter-footer { display: none; }
   if (HOST_PARAM === 'ground' || HOST_PARAM === 'full') {
     activeHost = HOST_PARAM;
   }
+
+  buildStoryView();
+  bindViewToggle();
+  switchView('story');
 
   fetch(MAP_URL)
     .then(function (r) { if (!r.ok) throw new Error('map load failed'); return r.json(); })
