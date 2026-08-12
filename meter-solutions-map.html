@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/meter-focus.css">
 <script src="js/isv-theme.js"></script>
 <script src="js/meter-embed.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
@@ -227,6 +228,46 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .story-caps li::before { content: "→"; position: absolute; left: 0; color: var(--green); font-weight: 600; }
 .story-caps a { color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--border-2); }
 .story-caps a:hover { color: var(--green); border-bottom-color: var(--green); }
+.force-view { margin-bottom: 0.85rem; }
+.force-controls {
+  display: flex; gap: 1rem; align-items: center; margin-bottom: 0.65rem; padding: 0.5rem 0.75rem;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;
+}
+.force-controls label { font-size: 12px; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 0.35rem; }
+.force-controls input[type="checkbox"] { cursor: pointer; }
+.force-controls button {
+  font-size: 11px; padding: 0.3rem 0.65rem; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-2); cursor: pointer; font-family: inherit; font-weight: 500;
+}
+.force-controls button:hover { background: var(--green); color: #fff; border-color: var(--green); }
+.force-frame {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2);
+  height: 600px; overflow: hidden; position: relative;
+}
+.force-frame svg { width: 100%; height: 100%; }
+.force-node { cursor: grab; stroke: var(--bg); stroke-width: 2; transition: stroke-width 0.15s; }
+.force-node:active { cursor: grabbing; }
+.force-node:hover { stroke-width: 3; }
+.force-node-problem { fill: var(--amber); }
+.force-node-software { fill: var(--green); }
+.force-node-hardware { fill: var(--teal); }
+.force-node-billing { fill: var(--green); }
+.force-node-cutoffs { fill: var(--amber); }
+.force-node-theft { fill: var(--red); }
+.force-node-visibility { fill: var(--teal); }
+.force-node-affordability { fill: var(--purple); }
+.force-node-comms { fill: var(--blue); }
+.force-node-integration { fill: var(--ieee-blue); }
+.force-link { stroke: var(--border-2); stroke-opacity: 0.4; stroke-width: 1; }
+.force-link-hardware { stroke: var(--teal); stroke-dasharray: 3 2; }
+.force-label { font-size: 9px; fill: var(--text); pointer-events: none; text-anchor: middle; font-weight: 500; }
+.force-tooltip {
+  position: absolute; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.5rem 0.65rem; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  box-shadow: var(--shadow); z-index: 100; max-width: 200px;
+}
+.force-tooltip.show { opacity: 1; }
+.force-tooltip strong { display: block; margin-bottom: 0.25rem; color: var(--text); }
 html.embed .back { display: none; }
 html.embed.panel .isv-topbar { display: none; }
 html.embed.panel .wrap { padding: 0.5rem 0.75rem 0.75rem; max-width: none; }
@@ -257,12 +298,25 @@ html.embed.panel .meter-footer { display: none; }
 
   <div class="view-toggle-bar">
     <button type="button" class="view-toggle-btn active" data-view="story">Story</button>
-    <button type="button" class="view-toggle-btn" data-view="full">Full graph</button>
+    <button type="button" class="view-toggle-btn" data-view="force">Force graph</button>
+    <button type="button" class="view-toggle-btn" data-view="full">Full diagram</button>
   </div>
 
   <div id="story-view" class="story-view">
     <p class="lead">Six outcome themes that reinforce the <a href="meter-roadmap.html">3-phase roadmap</a> — from installed-base prepaid (Phase 1) through next-gen microgrid core (Phase 2) to grid connectivity (Phase 3).</p>
     <div class="story-grid" id="story-grid"></div>
+  </div>
+
+  <div id="force-view" class="force-view" hidden>
+    <p class="lead">Interactive force-directed graph — drag nodes to explore connections. <strong>Problems</strong> (amber) → <strong>Software</strong> (green). Node size reflects connection count. Hover for details.</p>
+    <div class="force-controls">
+      <label><input type="checkbox" id="force-show-hardware" checked> Show hardware layer</label>
+      <label><input type="checkbox" id="force-show-groups" checked> Color by problem group</label>
+      <button type="button" id="force-reset">Reset positions</button>
+    </div>
+    <div class="force-frame" id="force-frame">
+      <svg id="force-svg"></svg>
+    </div>
   </div>
 
   <div id="full-graph-view" class="full-graph-view" hidden>
@@ -523,18 +577,233 @@ html.embed.panel .meter-footer { display: none; }
   function switchView(view) {
     currentView = view;
     var storyView = document.getElementById('story-view');
+    var forceView = document.getElementById('force-view');
     var fullView = document.getElementById('full-graph-view');
     var btns = document.querySelectorAll('.view-toggle-btn');
     btns.forEach(function (b) {
       b.classList.toggle('active', b.dataset.view === view);
     });
-    if (view === 'story') {
-      storyView.hidden = false;
-      fullView.hidden = true;
-    } else {
-      storyView.hidden = true;
-      fullView.hidden = false;
+    storyView.hidden = view !== 'story';
+    forceView.hidden = view !== 'force';
+    fullView.hidden = view !== 'full';
+    
+    if (view === 'force' && data && !window.forceGraphInitialized) {
+      buildForceGraph();
     }
+  }
+
+  var forceSimulation = null;
+  var forceNodes = [];
+  var forceLinks = [];
+
+  function buildForceGraph() {
+    if (!data || !window.d3) return;
+    window.forceGraphInitialized = true;
+
+    var frame = document.getElementById('force-frame');
+    var svg = d3.select('#force-svg');
+    var width = frame.clientWidth;
+    var height = frame.clientHeight;
+
+    svg.selectAll('*').remove();
+
+    var showHardware = document.getElementById('force-show-hardware').checked;
+    var showGroups = document.getElementById('force-show-groups').checked;
+
+    var nodes = [];
+    var links = [];
+    var nodeMap = new Map();
+
+    data.problems.forEach(function (p) {
+      var node = {
+        id: p.id,
+        label: p.label,
+        type: 'problem',
+        group: p.group,
+        radius: 8
+      };
+      nodes.push(node);
+      nodeMap.set(p.id, node);
+    });
+
+    if (showHardware) {
+      data.hardware.forEach(function (h) {
+        var node = {
+          id: h.id,
+          label: h.short || h.label,
+          type: 'hardware',
+          group: 'hardware',
+          radius: 6
+        };
+        nodes.push(node);
+        nodeMap.set(h.id, node);
+      });
+    }
+
+    data.software.forEach(function (s) {
+      var node = {
+        id: s.id,
+        label: s.label,
+        type: 'software',
+        group: 'software',
+        radius: 10
+      };
+      nodes.push(node);
+      nodeMap.set(s.id, node);
+    });
+
+    data.links.forEach(function (pair) {
+      var prob = nodeMap.get(pair[0]);
+      var sw = nodeMap.get(pair[1]);
+      if (!prob || !sw) return;
+
+      if (showHardware) {
+        var s = data.software.find(function (x) { return x.id === pair[1]; });
+        var hwList = s ? (s.hardware || []) : [];
+        if (hwList.length === 0) {
+          links.push({ source: pair[0], target: pair[1], type: 'direct' });
+        } else {
+          hwList.forEach(function (hid) {
+            var hw = nodeMap.get(hid);
+            if (hw) {
+              links.push({ source: pair[0], target: hid, type: 'prob-hw' });
+              links.push({ source: hid, target: pair[1], type: 'hw-sw' });
+            }
+          });
+        }
+      } else {
+        links.push({ source: pair[0], target: pair[1], type: 'direct' });
+      }
+    });
+
+    forceNodes = nodes;
+    forceLinks = links;
+
+    var linkCounts = new Map();
+    links.forEach(function (l) {
+      linkCounts.set(l.source, (linkCounts.get(l.source) || 0) + 1);
+      linkCounts.set(l.target, (linkCounts.get(l.target) || 0) + 1);
+    });
+    nodes.forEach(function (n) {
+      var count = linkCounts.get(n.id) || 0;
+      n.radius = n.type === 'software' ? 8 + count * 0.5 : n.type === 'problem' ? 6 + count * 0.3 : 5;
+    });
+
+    forceSimulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(function (d) { return d.id; }).distance(80))
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius(function (d) { return d.radius + 4; }));
+
+    var g = svg.append('g');
+
+    var zoom = d3.zoom()
+      .scaleExtent([0.3, 3])
+      .on('zoom', function (event) {
+        g.attr('transform', event.transform);
+      });
+    svg.call(zoom);
+
+    var link = g.append('g')
+      .selectAll('line')
+      .data(links)
+      .join('line')
+      .attr('class', function (d) {
+        return 'force-link' + (d.type === 'hw-sw' ? ' force-link-hardware' : '');
+      });
+
+    var node = g.append('g')
+      .selectAll('circle')
+      .data(nodes)
+      .join('circle')
+      .attr('class', function (d) {
+        if (!showGroups || d.type !== 'problem') {
+          return 'force-node force-node-' + d.type;
+        }
+        return 'force-node force-node-' + d.group;
+      })
+      .attr('r', function (d) { return d.radius; })
+      .call(d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended));
+
+    var label = g.append('g')
+      .selectAll('text')
+      .data(nodes.filter(function (d) { return d.type === 'software' || d.radius > 8; }))
+      .join('text')
+      .attr('class', 'force-label')
+      .attr('dy', function (d) { return d.radius + 12; })
+      .text(function (d) { return d.label.length > 20 ? d.label.substring(0, 18) + '…' : d.label; });
+
+    var tooltip = d3.select(frame).append('div').attr('class', 'force-tooltip');
+
+    node.on('mouseover', function (event, d) {
+      tooltip.html('<strong>' + d.label + '</strong>' + 
+        (d.type === 'problem' ? '<br>Group: ' + d.group : '') +
+        '<br>Type: ' + d.type)
+        .style('left', (event.pageX - frame.offsetLeft + 10) + 'px')
+        .style('top', (event.pageY - frame.offsetTop - 10) + 'px')
+        .classed('show', true);
+    }).on('mouseout', function () {
+      tooltip.classed('show', false);
+    });
+
+    forceSimulation.on('tick', function () {
+      link
+        .attr('x1', function (d) { return d.source.x; })
+        .attr('y1', function (d) { return d.source.y; })
+        .attr('x2', function (d) { return d.target.x; })
+        .attr('y2', function (d) { return d.target.y; });
+
+      node
+        .attr('cx', function (d) { return d.x; })
+        .attr('cy', function (d) { return d.y; });
+
+      label
+        .attr('x', function (d) { return d.x; })
+        .attr('y', function (d) { return d.y; });
+    });
+
+    function dragstarted(event, d) {
+      if (!event.active) forceSimulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) forceSimulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    document.getElementById('force-show-hardware').addEventListener('change', function () {
+      window.forceGraphInitialized = false;
+      buildForceGraph();
+    });
+
+    document.getElementById('force-show-groups').addEventListener('change', function () {
+      node.attr('class', function (d) {
+        if (!document.getElementById('force-show-groups').checked || d.type !== 'problem') {
+          return 'force-node force-node-' + d.type;
+        }
+        return 'force-node force-node-' + d.group;
+      });
+    });
+
+    document.getElementById('force-reset').addEventListener('click', function () {
+      nodes.forEach(function (n) {
+        n.fx = null;
+        n.fy = null;
+      });
+      forceSimulation.alpha(1).restart();
+      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+    });
   }
 
   function bindViewToggle() {
