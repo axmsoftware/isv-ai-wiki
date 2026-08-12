@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IEEE 2030.5 — Smart Energy Profile · Standards · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 24px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.85rem; }
+.lead { font-size: 14px; margin-bottom: 0.85rem; max-width: 54rem; line-height: 1.5; }
+h2 { font-size: 16px; font-weight: 500; margin: 1.5rem 0 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 500; margin: 1.1rem 0 0.5rem; color: var(--text); }
+p { font-size: 14px; color: var(--text-2); margin-bottom: 0.75rem; line-height: 1.55; max-width: 54rem; }
+ul, ol { margin: 0 0 0.85rem 1.5rem; color: var(--text-2); line-height: 1.6; }
+li { margin-bottom: 0.35rem; font-size: 14px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 0.15rem 0.4rem; border-radius: 4px; }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.75rem 0.95rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; font-size: 13px; line-height: 1.5; }
+.callout > strong:first-child { color: var(--teal); display: block; margin-bottom: 0.4rem; }
+.callout-key { border-left-color: var(--green); background: var(--green-50); }
+.callout-key > strong:first-child { color: var(--green); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+.spec-grid { display: grid; grid-template-columns: 1fr; gap: 0.65rem; margin-bottom: 1rem; }
+@media (min-width: 720px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+.spec-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.85rem; background: var(--bg-2); font-size: 13px; line-height: 1.5; }
+.spec-card h4 { margin: 0 0 0.35rem; font-size: 13px; color: var(--green); font-weight: 500; }
+.spec-card p { font-size: 12px; margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; line-height: 1.45; }
+th { background: var(--bg-2); font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.02em; }
+td { color: var(--text-2); font-size: 13px; }
+.timeline { margin: 1rem 0; }
+.timeline-item { display: flex; gap: 0.75rem; margin-bottom: 0.85rem; }
+.timeline-year { font-weight: 600; color: var(--green); min-width: 4rem; font-size: 13px; }
+.timeline-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.footer-nav { font-size: 13px; color: var(--text-2); margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.footer-nav a { margin-right: 1rem; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#standards">← Standards</a></div>
+
+  <h1>IEEE 2030.5-2018</h1>
+  <p class="sub">Smart Energy Profile (SEP 2.0) — Application Protocol for DER Communication</p>
+
+  <p class="lead">IEEE 2030.5 defines a RESTful HTTP/XML protocol for secure, interoperable communication between distributed energy resources (DER), gateways, and utility/aggregator head-end systems. It enables remote monitoring, control, pricing, and demand response over IP networks — the application layer above IEEE 1547's physical behavior requirements.</p>
+
+  <div class="callout callout-key">
+    <strong>Core purpose</strong>
+    <p>Provide a <strong>standard communication protocol</strong> so utilities/aggregators can monitor and control DER from any vendor without proprietary APIs. The "HTTP/REST for energy devices" — DER expose resources (endpoints) that clients GET/PUT/POST to read status or send commands.</p>
+  </div>
+
+  <h2>What it is at its core</h2>
+
+  <p>IEEE 2030.5 is a <strong>RESTful application protocol</strong> — not a physical layer or power system spec. Key characteristics:</p>
+
+  <ul>
+    <li><strong>Client-server model</strong> — DER/gateway acts as server hosting resources; utility DERMS or aggregator acts as client polling those resources</li>
+    <li><strong>Resource-oriented</strong> — Everything is a resource with a URI: <code>/edev</code> (end device), <code>/der</code> (DER program), <code>/dr</code> (demand response), <code>/mr</code> (metering), <code>/tm</code> (time/tariff)</li>
+    <li><strong>XML payloads</strong> — Data exchanged as XML over HTTPS (not JSON, for historical/standards-body reasons)</li>
+    <li><strong>Security built-in</strong> — TLS 1.2+ required, certificate-based device authentication, role-based access control</li>
+    <li><strong>Publish-subscribe</strong> — Optional push notifications via HTTP long-polling or pub/sub for real-time events</li>
+  </ul>
+
+  <p>Think of it as <strong>the API layer</strong> that IEEE 1547 devices use to talk to the grid — 1547 defines <em>what</em> the inverter must do, 2030.5 defines <em>how</em> to tell it to do it.</p>
+
+  <div class="callout callout-warn">
+    <strong>Village metering context</strong>
+    <p>IEEE 2030.5 is a <strong>Phase 3</strong> standard in the ISV roadmap — relevant when a village microgrid has a utility/aggregator DERMS to talk to. Phase 1–2 (prepaid metering, village-internal control) use simpler protocols (DLMS, Modbus, MQTT) without the overhead of IEEE 2030.5 certificate infrastructure. OpenAMI MQTT northbound is the Phase 2 telemetry path; 2030.5 becomes relevant only at utility interconnection (Phase 3).</p>
+  </div>
+
+  <h2>How it came to be</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">2008</div>
+      <div class="timeline-text"><strong>ZigBee Smart Energy Profile 1.0</strong> — Original SEP over ZigBee (mesh RF). Home area networks (HANs) for smart meters, in-home displays, thermostats.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2012</div>
+      <div class="timeline-text"><strong>SEP 2.0</strong> released by ZigBee Alliance — moved to IP/HTTP/XML instead of ZigBee RF. More generic, supports WiFi/Ethernet/cellular, not just mesh.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2013</div>
+      <div class="timeline-text">California adopts SEP 2.0 as mandatory for smart inverter communication (Rule 21 Annex). Utilities need standard API to control rooftop solar fleet.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2018</div>
+      <div class="timeline-text"><strong>IEEE 2030.5-2018</strong> — ZigBee Alliance donates SEP 2.0 to IEEE. Becomes IEEE standard, aligned with IEEE 1547-2018 interoperability requirements (Annex E).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2020+</div>
+      <div class="timeline-text">SunSpec Alliance publishes IEEE 2030.5 implementation guide. CSIP (Common Smart Inverter Profile) test certification launched. Adoption grows in CA, HI, Australia, Germany.</div>
+    </div>
+  </div>
+
+  <h3>Why IEEE standardized it</h3>
+
+  <p>Before 2030.5, every DER vendor had a proprietary cloud API. Utilities wanting to control aggregated fleets (e.g., 10,000 rooftop inverters for VPP) had to integrate with SolarEdge, Enphase, SMA, Tesla APIs separately — vendor lock-in nightmare. IEEE 2030.5 solved this by providing a <strong>single standard protocol</strong> all vendors could implement, so utilities/aggregators connect once and reach any compliant device.</p>
+
+  <h2>Resource structure and message shape</h2>
+
+  <p>IEEE 2030.5 organizes functionality into <strong>function sets</strong> (resource trees). Here's the visual structure:</p>
+
+  <div style="background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 2px solid var(--blue); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <div style="font-size: 14px; font-weight: 600; color: var(--blue); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 18px;">🌐</span> IEEE 2030.5 Resource Tree (Server = DER/Gateway)
+    </div>
+
+    <!-- Root -->
+    <div style="background: var(--blue-50); border: 2px solid var(--blue); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 0.5rem;">📡 /dcap (Device Capability)</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        Root resource — advertises which function sets the device supports<br>
+        <strong>GET /dcap</strong> → returns links to available resources
+      </div>
+    </div>
+
+    <!-- End Device -->
+    <div style="background: var(--green-50); border-left: 4px solid var(--green); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 0.65rem;">🔌 /edev (End Device)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">EndDevice</div>
+          <div style="color: var(--text-2); line-height: 1.4;">
+            <strong>lFDI:</strong> device cert fingerprint<br>
+            <strong>sFDI:</strong> short device ID<br>
+            <strong>deviceCategory:</strong> "PV_INVERTER"<br>
+            <strong>changedTime:</strong> timestamp
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">Registration</div>
+          <div style="color: var(--text-2); line-height: 1.4;">
+            <strong>dateTimeRegistered:</strong> ISO8601<br>
+            <strong>pIN:</strong> enrollment PIN<br>
+            <strong>pollRate:</strong> default 900 sec
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DER Program -->
+    <div style="background: var(--teal-50); border-left: 4px solid var(--teal); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 0.65rem;">⚡ /derp (DER Program)</div>
+      
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.7rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--teal); margin-bottom: 0.5rem;">DERControl (Commands)</div>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4rem; font-size: 10px;">
+          <div style="background: var(--green-50); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <strong>opModConnect</strong><br>
+            <span style="color: var(--text-3);">Connect/Disconnect</span>
+          </div>
+          <div style="background: var(--amber-50); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <strong>opModExpLimW</strong><br>
+            <span style="color: var(--text-3);">Export limit (W)</span>
+          </div>
+          <div style="background: var(--purple-50); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <strong>opModFixedPFAbsorbW</strong><br>
+            <span style="color: var(--text-3);">Fixed power factor</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.7rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--teal); margin-bottom: 0.5rem;">DERCurve (Settings)</div>
+        <div style="display: flex; gap: 0.4rem; font-size: 10px;">
+          <div style="flex: 1; background: var(--blue-50); border-radius: 4px; padding: 0.4rem;">
+            <strong>curveType:</strong> 0 (opModVoltVar)<br>
+            <strong>xMultiplier:</strong> voltage<br>
+            <strong>yMultiplier:</strong> VAR<br>
+            <strong>CurveData:</strong> [(x,y), ...]
+          </div>
+          <div style="flex: 1; background: var(--blue-50); border-radius: 4px; padding: 0.4rem;">
+            <strong>curveType:</strong> 1 (opModFreqWatt)<br>
+            <strong>xMultiplier:</strong> frequency<br>
+            <strong>yMultiplier:</strong> power<br>
+            <strong>CurveData:</strong> [(x,y), ...]
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--teal); margin-bottom: 0.4rem;">DERStatus (Monitoring)</div>
+        <div style="font-size: 10px; color: var(--text-2); line-height: 1.5;">
+          <strong>readingTime:</strong> timestamp<br>
+          <strong>genConnectStatus:</strong> 0=disconnected, 1=connected, 2=available<br>
+          <strong>inverterStatus:</strong> operating state code<br>
+          <strong>localControlModeStatus:</strong> active control mode<br>
+          <strong>operationalModeStatus:</strong> current op mode flags
+        </div>
+      </div>
+    </div>
+
+    <!-- Metering -->
+    <div style="background: var(--purple-50); border-left: 4px solid var(--purple); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--purple); margin-bottom: 0.65rem;">📊 /mr (Metering / Mirror Usage Point)</div>
+      
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.7rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 0.5rem;">MirrorReadingSet</div>
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; font-size: 10px;">
+          <div style="background: var(--bg-2); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <div style="color: var(--text-3); margin-bottom: 0.2rem;">ACTIVE POWER</div>
+            <strong>4200 W</strong>
+          </div>
+          <div style="background: var(--bg-2); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <div style="color: var(--text-3); margin-bottom: 0.2rem;">REACTIVE POWER</div>
+            <strong>-150 VAR</strong>
+          </div>
+          <div style="background: var(--bg-2); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <div style="color: var(--text-3); margin-bottom: 0.2rem;">VOLTAGE</div>
+            <strong>241.3 V</strong>
+          </div>
+          <div style="background: var(--bg-2); border-radius: 4px; padding: 0.4rem; text-align: center;">
+            <div style="color: var(--text-3); margin-bottom: 0.2rem;">FREQUENCY</div>
+            <strong>59.98 Hz</strong>
+          </div>
+        </div>
+        <div style="margin-top: 0.5rem; font-size: 10px; color: var(--text-2);">
+          <strong>ReadingType:</strong> defines units, multiplier, data qualifier<br>
+          <strong>timePeriod:</strong> start/duration for interval data
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing & DR -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      <div style="background: var(--amber-50); border-left: 4px solid var(--amber); border-radius: 8px; padding: 0.75rem;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 0.5rem;">💰 /tm (Time / Tariff)</div>
+        <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+          <strong>TimeTariffInterval:</strong> TOU pricing<br>
+          <strong>RateComponent:</strong> energy charges<br>
+          <strong>ConsumptionTariffInterval:</strong> tiered rates
+        </div>
+      </div>
+      <div style="background: var(--red-50); border-left: 4px solid var(--red); border-radius: 8px; padding: 0.75rem;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--red); margin-bottom: 0.5rem;">🚨 /dr (Demand Response)</div>
+        <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+          <strong>DRProgram:</strong> event definitions<br>
+          <strong>EndDeviceControl:</strong> curtailment commands<br>
+          <strong>LoadShedAvailability:</strong> capacity bid
+        </div>
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div style="background: var(--bg); border: 2px solid var(--text-3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;">🔒 Security Model</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        <strong>TLS 1.2+ required</strong> — all HTTP traffic encrypted<br>
+        <strong>X.509 certificates</strong> — mutual auth (client cert + server cert)<br>
+        <strong>lFDI (Long Form Device Identifier)</strong> — SHA256 hash of device cert for unique ID<br>
+        <strong>Role-based access</strong> — server checks client cert roles before serving resources
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>How requests work</strong>
+    <p>Client (DERMS) sends HTTP requests to server (DER/gateway):</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>GET /edev/0/derp/1/derc/5</strong> → read DER control #5 settings</li>
+      <li><strong>PUT /edev/0/derp/1/derc/5</strong> → update control (e.g., change export limit)</li>
+      <li><strong>POST /edev/0/derp/1/derc</strong> → create new control command</li>
+      <li><strong>GET /edev/0/mr/1/mrs</strong> → read metering data (mirror reading set)</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">Server returns XML payloads with requested data or confirmation. Client polls periodically (default 900 sec) or subscribes for push notifications.</p>
+  </div>
+
+  <h2>Relationship to other standards</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Standard</th>
+        <th>Relationship to IEEE 2030.5</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IEEE 1547</strong></td>
+        <td>1547 defines <em>behavior</em> (volt-VAR curves, ride-through). 2030.5 is the <em>protocol</em> to configure and monitor that behavior remotely.</td>
+      </tr>
+      <tr>
+        <td><strong>SunSpec Modbus</strong></td>
+        <td>Alternative device-level protocol. Many inverters support <em>both</em> — SunSpec for local access (installer laptop), 2030.5 for remote utility control.</td>
+      </tr>
+      <tr>
+        <td><strong>OpenADR</strong></td>
+        <td>Demand response protocol (VTN ↔ VEN). IEEE 2030.5 /dr function set can carry OpenADR-style events, or devices use both protocols (2030.5 for DER control, OpenADR for DR programs).</td>
+      </tr>
+      <tr>
+        <td><strong>CSIP</strong> (Common Smart Inverter Profile)</td>
+        <td>SunSpec Alliance test profile for IEEE 2030.5 + 1547 compliance. Defines which 2030.5 function sets are mandatory for California Rule 21.</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 61850</strong></td>
+        <td>Substation automation protocol. Different domain (utility SCADA vs. DER fleet management). Some overlap in metering/control concepts but not interoperable.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Relevance to village microgrids</h2>
+
+  <div class="callout">
+    <strong>When IEEE 2030.5 matters for ISV deployments</strong>
+    <p>IEEE 2030.5 is <strong>utility-facing</strong> — designed for scenarios where a <strong>utility DERMS or aggregator</strong> needs to control DER remotely. For village microgrids:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>Phase 1–2:</strong> Village-internal control uses simpler protocols (DLMS for prepaid meters, Modbus for inverters, MQTT for telemetry). No IEEE 2030.5 needed.</li>
+      <li><strong>Phase 3:</strong> When village interconnects to main utility grid and utility wants to control the microgrid as aggregated DER (export limits, curtailment, VPP participation), <em>then</em> IEEE 2030.5 becomes relevant.</li>
+      <li><strong>Certificate overhead:</strong> IEEE 2030.5 requires X.509 cert infrastructure (enrollment, provisioning, renewal). Village operators may lack PKI capability; OpenAMI MQTT is lighter-weight for Phase 2.</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">Most ISV villages won't implement IEEE 2030.5 until they have a utility interconnection agreement requiring it (Phase 3, years after initial deployment).</p>
+  </div>
+
+  <h3>ISV-specific considerations</h3>
+
+  <ul>
+    <li><strong>OpenAMI MQTT vs. IEEE 2030.5</strong> — OpenAMI uses JSON/MQTT for village-internal telemetry (Phase 2). IEEE 2030.5 is for utility-facing control (Phase 3). They serve different layers.</li>
+    <li><strong>Gateway role</strong> — Village gateway (Street EMS) could act as IEEE 2030.5 server, aggregating multiple DER/meters into one interface for utility DERMS.</li>
+    <li><strong>Prepaid/STS unchanged</strong> — IEEE 2030.5 doesn't address prepaid metering, STS tokens, or village billing. Those stay in DLMS/COSEM domain (Phase 1).</li>
+    <li><strong>IEEE 2030.5 + Modbus</strong> — Likely deployment: village uses Modbus/MQTT internally (Phase 1–2), adds IEEE 2030.5 gateway at PCC when grid arrives (Phase 3).</li>
+  </ul>
+
+  <h2>Key takeaways</h2>
+
+  <ul>
+    <li>IEEE 2030.5 is the <strong>standard communication protocol</strong> for DER — the "API" that IEEE 1547 devices use to talk to utilities/aggregators</li>
+    <li>RESTful HTTP/XML over TLS — resource-oriented (devices expose endpoints), certificate-based security</li>
+    <li>Function sets: DER control/status, metering, pricing/tariffs, demand response, time sync</li>
+    <li>For ISV: <strong>Phase 3 standard</strong> — relevant at utility interconnection, not for village-internal operations (Phase 1–2 use DLMS, Modbus, MQTT)</li>
+    <li>Complements IEEE 1547 (behavior) and SunSpec (device models) — the application layer above physical DER</li>
+  </ul>
+
+  <h2>Further reading</h2>
+
+  <ul>
+    <li><a href="https://standards.ieee.org/ieee/2030.5/5897/" target="_blank" rel="noopener">IEEE 2030.5-2018 standard (purchase) ↗</a></li>
+    <li><a href="https://sunspec.org/ieee-2030-5-common-smart-inverter-profile-csip-implementation-guide/" target="_blank" rel="noopener">SunSpec CSIP implementation guide ↗</a></li>
+    <li><a href="https://sunspec.org/certification/" target="_blank" rel="noopener">SunSpec Alliance IEEE 2030.5 certification ↗</a></li>
+    <li><a href="https://www.cpuc.ca.gov/rule21/" target="_blank" rel="noopener">California Rule 21 (mandates 2030.5 for smart inverters) ↗</a></li>
+    <li><a href="https://github.com/sunspec" target="_blank" rel="noopener">SunSpec GitHub (reference implementations) ↗</a></li>
+  </ul>
+
+  <div class="footer-nav">
+    <a href="standard-ieee-1547.html">← IEEE 1547</a>
+    <a href="index.html#standards">All standards</a>
+    <a href="standard-ieee-2030-10.html">IEEE 2030.10 →</a>
+  </div>
+</div>
+</body>
+</html>

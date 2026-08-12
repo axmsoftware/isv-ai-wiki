@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TLS 1.2 — Transport Layer Security · Standards · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 24px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.85rem; }
+.lead { font-size: 14px; margin-bottom: 0.85rem; max-width: 54rem; line-height: 1.5; }
+h2 { font-size: 16px; font-weight: 500; margin: 1.5rem 0 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 500; margin: 1.1rem 0 0.5rem; color: var(--text); }
+p { font-size: 14px; color: var(--text-2); margin-bottom: 0.75rem; line-height: 1.55; max-width: 54rem; }
+ul, ol { margin: 0 0 0.85rem 1.5rem; color: var(--text-2); line-height: 1.6; }
+li { margin-bottom: 0.35rem; font-size: 14px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 0.15rem 0.4rem; border-radius: 4px; }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.75rem 0.95rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; font-size: 13px; line-height: 1.5; }
+.callout > strong:first-child { color: var(--teal); display: block; margin-bottom: 0.4rem; }
+.callout-key { border-left-color: var(--green); background: var(--green-50); }
+.callout-key > strong:first-child { color: var(--green); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+.callout-danger { border-left-color: var(--red); background: var(--red-50); }
+.callout-danger > strong:first-child { color: var(--red); }
+.spec-grid { display: grid; grid-template-columns: 1fr; gap: 0.65rem; margin-bottom: 1rem; }
+@media (min-width: 720px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+.spec-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.85rem; background: var(--bg-2); font-size: 13px; line-height: 1.5; }
+.spec-card h4 { margin: 0 0 0.35rem; font-size: 13px; color: var(--green); font-weight: 500; }
+.spec-card p { font-size: 12px; margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; line-height: 1.45; }
+th { background: var(--bg-2); font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.02em; }
+td { color: var(--text-2); font-size: 13px; }
+.timeline { margin: 1rem 0; }
+.timeline-item { display: flex; gap: 0.75rem; margin-bottom: 0.85rem; }
+.timeline-year { font-weight: 600; color: var(--green); min-width: 4rem; font-size: 13px; }
+.timeline-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.footer-nav { font-size: 13px; color: var(--text-2); margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.footer-nav a { margin-right: 1rem; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#standards">← Standards</a></div>
+
+  <h1>TLS 1.2 (RFC 5246)</h1>
+  <p class="sub">Transport Layer Security — IETF Standard for Encrypted Network Communication</p>
+
+  <p class="lead">TLS 1.2 is the <strong>cryptographic protocol</strong> that secures internet communication — encrypting data in transit between clients and servers to prevent eavesdropping, tampering, and impersonation. It's the foundation for HTTPS, and is <strong>mandatory</strong> for IEEE 2030.5 (Smart Energy Profile) and most modern DER/IoT communication protocols.</p>
+
+  <div class="callout callout-key">
+    <strong>Core purpose</strong>
+    <p>Provide <strong>confidentiality, integrity, and authentication</strong> for network communication. TLS ensures that when a DER/gateway talks to a utility DERMS or when a meter reports to an HES, the messages are encrypted (can't be read), tamper-proof (can't be modified), and authenticated (both parties verify identity via certificates).</p>
+  </div>
+
+  <div class="callout callout-danger">
+    <strong>Security warning</strong>
+    <p>TLS 1.0 and 1.1 are <strong>deprecated</strong> (IETF 2021, PCI-DSS 2018). TLS 1.2 is the <strong>minimum</strong> for secure deployments. TLS 1.3 (RFC 8446, 2018) is preferred when supported but not yet mandatory for all IEEE 2030.5 devices. <strong>Never deploy TLS 1.0/1.1 or SSLv3</strong> — they have known vulnerabilities (POODLE, BEAST, CRIME).</p>
+  </div>
+
+  <h2>What it is at its core</h2>
+
+  <p>TLS 1.2 is a <strong>session protocol</strong> that sits between the application layer (HTTP, MQTT, Modbus TCP) and the transport layer (TCP). Key characteristics:</p>
+
+  <ul>
+    <li><strong>Handshake</strong> — client and server negotiate cipher suite, exchange certificates, derive session keys</li>
+    <li><strong>Encryption</strong> — symmetric encryption (AES-128/256) protects data payload after handshake</li>
+    <li><strong>Authentication</strong> — X.509 certificates verify identity (one-way or mutual TLS)</li>
+    <li><strong>Integrity</strong> — HMAC or AEAD ensures messages haven't been modified</li>
+    <li><strong>Forward secrecy</strong> — ephemeral keys (DHE/ECDHE) prevent decryption of past sessions even if long-term key compromised</li>
+  </ul>
+
+  <p>Think of it as the <strong>secure wrapper</strong> around any TCP-based protocol — it doesn't care what application data flows inside (HTTP, MQTT, IEEE 2030.5 XML), it just encrypts and authenticates the pipe.</p>
+
+  <div class="callout">
+    <strong>Village metering context</strong>
+    <p>TLS 1.2+ is required whenever:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>IEEE 2030.5</strong> — mandatory for Smart Energy Profile (DER ↔ utility DERMS)</li>
+      <li><strong>MQTT over TLS</strong> — OpenAMI northbound telemetry, if sensitive or crossing public networks</li>
+      <li><strong>HTTPS APIs</strong> — vendor cloud portals, mobile money integrations, billing platform APIs</li>
+      <li><strong>VPN / remote access</strong> — field technician access to village gateway for maintenance</li>
+    </ul>
+    <p style="margin-top: 0.5rem;"><strong>Phase 1–2 village-internal</strong> (Modbus RTU, local DLMS) often runs <em>without</em> TLS (physical security, no internet exposure). <strong>Phase 3</strong> (utility interconnection, IEEE 2030.5) makes TLS mandatory.</p>
+  </div>
+
+  <h2>How it came to be</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">1994</div>
+      <div class="timeline-text"><strong>SSL 1.0</strong> — Netscape develops Secure Sockets Layer for HTTPS. Never released publicly (too many flaws).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1995</div>
+      <div class="timeline-text"><strong>SSL 2.0</strong> — First public release. Widely deployed but had design weaknesses.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1996</div>
+      <div class="timeline-text"><strong>SSL 3.0</strong> — Major rewrite fixes SSL 2.0 flaws. Becomes de facto standard for HTTPS in late 90s.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">1999</div>
+      <div class="timeline-text"><strong>TLS 1.0 (RFC 2246)</strong> — IETF standardizes SSL 3.0 with minor changes, renames to Transport Layer Security. Not compatible with SSL 3.0 but very similar.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2006</div>
+      <div class="timeline-text"><strong>TLS 1.1 (RFC 4346)</strong> — Fixes CBC attacks (BEAST). Limited adoption — most skip straight to TLS 1.2.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2008</div>
+      <div class="timeline-text"><strong>TLS 1.2 (RFC 5246)</strong> — Major upgrade: SHA-256 HMAC (replaces MD5/SHA-1), AEAD cipher suites (AES-GCM), extensible for future crypto. Becomes industry standard by 2015.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2011–2015</div>
+      <div class="timeline-text">High-profile attacks exposed: BEAST (2011), CRIME (2012), Heartbleed (2014), POODLE (2014), FREAK (2015). Industry pushes TLS 1.2 adoption, deprecates SSL 3.0 / TLS 1.0.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2018</div>
+      <div class="timeline-text"><strong>TLS 1.3 (RFC 8446)</strong> — Complete redesign: faster handshake (1-RTT), removes legacy crypto (RC4, 3DES, SHA-1), mandatory forward secrecy. Not yet required by IEEE 2030.5 but recommended.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2020–2021</div>
+      <div class="timeline-text">IETF officially deprecates TLS 1.0/1.1 (RFC 8996). Major browsers block TLS 1.0/1.1 by default. <strong>TLS 1.2 is minimum</strong> for production systems.</div>
+    </div>
+  </div>
+
+  <h3>Why TLS 1.2 became mandatory</h3>
+
+  <p>Before TLS became standard, energy protocols were often unencrypted or used weak proprietary crypto:</p>
+
+  <ul>
+    <li><strong>Modbus TCP</strong> — no built-in security, plaintext commands visible to anyone on network</li>
+    <li><strong>DLMS over TCP</strong> — optional encryption but often disabled for "simplicity"</li>
+    <li><strong>DNP3</strong> — SCADA protocol with optional Secure Authentication (SAv5) but rarely used</li>
+    <li><strong>Vendor APIs</strong> — proprietary, inconsistent, sometimes no HTTPS</li>
+  </ul>
+
+  <p>As smart grid / DER deployments connected to public internet and aggregators needed remote control, <strong>TLS became non-negotiable</strong>. IEEE 2030.5 mandated TLS 1.2+ to ensure every DER ↔ utility connection is encrypted and authenticated.</p>
+
+  <h2>Protocol structure and handshake</h2>
+
+  <p>TLS 1.2 operates in <strong>two phases</strong>: handshake (setup) and record protocol (data transfer).</p>
+
+  <div style="background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 2px solid var(--purple); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <div style="font-size: 14px; font-weight: 600; color: var(--purple); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 18px;">🔒</span> TLS 1.2 Handshake (Full Handshake — 2 Round Trips)
+    </div>
+
+    <!-- Client Hello -->
+    <div style="background: var(--blue-50); border-left: 4px solid var(--blue); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 0.65rem;">1️⃣ Client → Server: ClientHello</div>
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.7rem; font-size: 11px; color: var(--text-2); line-height: 1.6;">
+        <strong>TLS version:</strong> 1.2 (0x0303)<br>
+        <strong>Random:</strong> 32 bytes (client nonce)<br>
+        <strong>Cipher suites:</strong> [TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, ...]<br>
+        <strong>Compression:</strong> null (compression disabled after CRIME attack)<br>
+        <strong>Extensions:</strong> server_name (SNI), signature_algorithms, supported_groups (curves), ec_point_formats
+      </div>
+    </div>
+
+    <!-- Server Hello + Certs -->
+    <div style="background: var(--green-50); border-left: 4px solid var(--green); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 0.65rem;">2️⃣ Server → Client: ServerHello + Certificates + KeyExchange + HelloDone</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 0.3rem;">ServerHello</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            <strong>Chosen cipher:</strong> TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256<br>
+            <strong>Random:</strong> 32 bytes (server nonce)<br>
+            <strong>Session ID:</strong> optional resumption token
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 0.3rem;">Certificate</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            <strong>Server cert:</strong> X.509 (CN, public key, signature)<br>
+            <strong>Chain:</strong> intermediate CA → root CA<br>
+            <strong>Validation:</strong> client checks signature, expiry, revocation
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+        <div style="font-weight: 600; color: var(--green); margin-bottom: 0.3rem;">ServerKeyExchange (ECDHE only)</div>
+        <div style="color: var(--text-2); line-height: 1.5;">
+          <strong>Named curve:</strong> secp256r1 (P-256)<br>
+          <strong>Server ephemeral public key:</strong> EC point on curve<br>
+          <strong>Signature:</strong> RSA/ECDSA signature over (client_random || server_random || server_params) → proves server owns private key
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; margin-top: 0.5rem;">
+        <div style="font-weight: 600; color: var(--green); margin-bottom: 0.3rem;">CertificateRequest (mutual TLS only)</div>
+        <div style="color: var(--text-2); line-height: 1.5;">
+          <strong>Certificate types:</strong> RSA sign, ECDSA sign<br>
+          <strong>CA list:</strong> acceptable client cert issuers → IEEE 2030.5 requires this for device auth
+        </div>
+      </div>
+    </div>
+
+    <!-- Client Key Exchange + Cert -->
+    <div style="background: var(--teal-50); border-left: 4px solid var(--teal); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 0.65rem;">3️⃣ Client → Server: Certificate (if requested) + ClientKeyExchange + ChangeCipherSpec + Finished</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--teal); margin-bottom: 0.3rem;">Certificate (mutual TLS)</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            <strong>Client cert:</strong> device X.509 cert<br>
+            <strong>lFDI:</strong> SHA256(client_cert) for IEEE 2030.5<br>
+            Server validates signature against CA list
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--teal); margin-bottom: 0.3rem;">ClientKeyExchange</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            <strong>Client ephemeral public key:</strong> EC point<br>
+            <strong>Pre-master secret:</strong> ECDH(client_priv, server_pub)<br>
+            Both sides now compute same shared secret
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; margin-top: 0.5rem;">
+        <div style="font-weight: 600; color: var(--teal); margin-bottom: 0.3rem;">ChangeCipherSpec + Finished</div>
+        <div style="color: var(--text-2); line-height: 1.5;">
+          <strong>Master secret:</strong> PRF(pre_master_secret, "master secret", client_random || server_random)<br>
+          <strong>Session keys:</strong> derive AES encryption key, HMAC key, IV from master secret<br>
+          <strong>Finished:</strong> encrypted hash of all handshake messages → proves both sides derived same keys
+        </div>
+      </div>
+    </div>
+
+    <!-- Server Finished -->
+    <div style="background: var(--purple-50); border-left: 4px solid var(--purple); border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--purple); margin-bottom: 0.5rem;">4️⃣ Server → Client: ChangeCipherSpec + Finished</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        Server switches to encrypted mode, sends its own Finished message (encrypted). Handshake complete. Both sides now have symmetric session keys.
+      </div>
+    </div>
+
+    <!-- Application Data -->
+    <div style="background: var(--green-50); border: 2px solid var(--green); border-radius: 8px; padding: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 0.5rem;">🔓 Application Data (Record Protocol)</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        <strong>AES-128-GCM encryption</strong> — symmetric cipher encrypts HTTP/MQTT/IEEE 2030.5 payloads<br>
+        <strong>AEAD authentication</strong> — GCM mode provides integrity + confidentiality in one operation (no separate HMAC)<br>
+        <strong>Sequence numbers</strong> — prevent replay attacks<br>
+        <strong>Record format:</strong> [type:1][version:2][length:2][encrypted_payload:N][auth_tag:16]
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>Why ECDHE is important (forward secrecy)</strong>
+    <p>TLS_ECDHE_* cipher suites use <strong>ephemeral Diffie-Hellman</strong> — both sides generate temporary key pairs for each session, compute shared secret via ECDH, then destroy ephemeral private keys. Even if attacker later steals server's long-term private key (used only for signature, not encryption), they <strong>cannot decrypt past sessions</strong> — those used ephemeral keys that no longer exist.</p>
+    <p style="margin-top: 0.5rem;"><strong>Avoid RSA key exchange</strong> (TLS_RSA_WITH_*) — client encrypts pre-master secret with server's public RSA key. If attacker records session and later steals server private key, they can decrypt everything. No forward secrecy.</p>
+  </div>
+
+  <h2>Cipher suites and crypto agility</h2>
+
+  <p>A <strong>cipher suite</strong> bundles key exchange + authentication + encryption + MAC algorithms. Example breakdown:</p>
+
+  <div style="background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; font-family: var(--mono); font-size: 12px;">
+    <div style="margin-bottom: 0.5rem; color: var(--text-3);">TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</div>
+    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; color: var(--text-2);">
+      <div style="color: var(--green); font-weight: 600;">ECDHE</div>
+      <div>Elliptic Curve Diffie-Hellman Ephemeral (key exchange with forward secrecy)</div>
+      
+      <div style="color: var(--teal); font-weight: 600;">RSA</div>
+      <div>Server authentication via RSA signature (server cert is RSA)</div>
+      
+      <div style="color: var(--purple); font-weight: 600;">AES_128_GCM</div>
+      <div>AES-128 encryption in Galois/Counter Mode (AEAD — authenticated encryption)</div>
+      
+      <div style="color: var(--amber); font-weight: 600;">SHA256</div>
+      <div>SHA-256 for PRF (pseudo-random function) in key derivation</div>
+    </div>
+  </div>
+
+  <h3>Recommended cipher suites (2026)</h3>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Priority</th>
+        <th>Cipher Suite</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>1st choice</strong></td>
+        <td>TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384</td>
+        <td>Best: ECDSA cert (faster), AES-256, SHA-384</td>
+      </tr>
+      <tr>
+        <td><strong>2nd choice</strong></td>
+        <td>TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384</td>
+        <td>RSA cert (more common), AES-256</td>
+      </tr>
+      <tr>
+        <td><strong>3rd choice</strong></td>
+        <td>TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256</td>
+        <td>AES-128 (lighter for embedded), ECDSA</td>
+      </tr>
+      <tr>
+        <td><strong>4th choice</strong></td>
+        <td>TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256</td>
+        <td>Most compatible, still secure</td>
+      </tr>
+      <tr>
+        <td><strong>Avoid</strong></td>
+        <td>TLS_RSA_WITH_* (any)</td>
+        <td>❌ No forward secrecy</td>
+      </tr>
+      <tr>
+        <td><strong>Avoid</strong></td>
+        <td>*_CBC_* (any CBC mode)</td>
+        <td>❌ Vulnerable to padding oracle (Lucky13, POODLE)</td>
+      </tr>
+      <tr>
+        <td><strong>Avoid</strong></td>
+        <td>*_3DES_*, *_RC4_*</td>
+        <td>❌ Weak/broken ciphers</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Mutual TLS (mTLS) and certificate management</h2>
+
+  <p><strong>IEEE 2030.5 requires mutual TLS</strong> — both server (DERMS) and client (DER device) present X.509 certificates. This is different from web HTTPS (typically only server has cert).</p>
+
+  <div class="spec-grid">
+    <div class="spec-card">
+      <h4>Certificate provisioning</h4>
+      <p>Each DER device needs a unique X.509 certificate signed by a CA that the utility DERMS trusts. Options: vendor-issued certs, utility-issued certs via SCEP/EST enrollment, or pre-shared root CA.</p>
+    </div>
+    <div class="spec-card">
+      <h4>lFDI (Long Form Device Identifier)</h4>
+      <p>IEEE 2030.5 uses SHA-256 hash of device certificate as unique device ID. DERMS uses lFDI to identify which device is connecting, map to customer account, check authorization.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Certificate expiry</h4>
+      <p>Typical cert lifetime: 1–3 years. Devices need renewal process (SCEP/EST auto-renewal or manual re-provisioning). Expired cert = device locked out of utility network.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Revocation (CRL / OCSP)</h4>
+      <p>If device compromised, utility must revoke cert. DERMS checks Certificate Revocation List (CRL) or Online Certificate Status Protocol (OCSP) during handshake. Revoked cert = rejected connection.</p>
+    </div>
+  </div>
+
+  <h2>Relationship to other standards</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Standard</th>
+        <th>Relationship to TLS 1.2</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IEEE 2030.5</strong></td>
+        <td>Mandates TLS 1.2+ with mutual authentication. All IEEE 2030.5 communication runs over TLS (HTTPS endpoints).</td>
+      </tr>
+      <tr>
+        <td><strong>TLS 1.3 (RFC 8446)</strong></td>
+        <td>Successor to TLS 1.2 — faster (1-RTT vs 2-RTT handshake), removes weak crypto, mandatory forward secrecy. Recommended for new deployments but not yet required by IEEE 2030.5.</td>
+      </tr>
+      <tr>
+        <td><strong>X.509 (RFC 5280)</strong></td>
+        <td>Certificate format used by TLS. Defines structure, extensions (key usage, SAN), validation rules.</td>
+      </tr>
+      <tr>
+        <td><strong>DTLS 1.2 (RFC 6347)</strong></td>
+        <td>TLS for UDP (datagram transport). Used in CoAP (IoT), some low-latency DER apps. Same crypto as TLS 1.2 but with packet loss handling.</td>
+      </tr>
+      <tr>
+        <td><strong>MQTT over TLS</strong></td>
+        <td>OpenAMI MQTT telemetry can run over TLS for encryption. Typically one-way TLS (server cert only), not mutual like IEEE 2030.5.</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 62351</strong></td>
+        <td>Security standards for power system protocols. Part 3 specifies TLS for securing IEC 61850, DLMS, etc. Same TLS 1.2 as IEEE 2030.5.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Relevance to village microgrids</h2>
+
+  <div class="callout">
+    <strong>When TLS 1.2 matters for ISV deployments</strong>
+    <p>TLS is <strong>Phase 3</strong> overhead for most ISV villages — needed only when:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>IEEE 2030.5 interconnection</strong> — utility DERMS requires mutual TLS for DER control (Phase 3)</li>
+      <li><strong>Public network telemetry</strong> — OpenAMI MQTT over cellular/internet (Phase 2 if data crosses public networks)</li>
+      <li><strong>Vendor cloud APIs</strong> — HTTPS to SteamaCo/SparkMeter/ThunderCloud backends (Phase 1–2, vendor-dependent)</li>
+      <li><strong>Remote admin</strong> — VPN or SSH (wrapped in TLS) for field tech access to village gateway</li>
+    </ul>
+    <p style="margin-top: 0.5rem;"><strong>Village-internal</strong> (Modbus RTU, DLMS over RS-485, local MQTT) typically runs <em>without</em> TLS — physical security sufficient, no internet exposure. Adding TLS to resource-constrained embedded devices increases cost/complexity without security benefit if network is isolated.</p>
+  </div>
+
+  <h3>ISV-specific considerations</h3>
+
+  <ul>
+    <li><strong>Certificate cost</strong> — Public CAs charge per cert. For 100-home village with per-meter certs, that's 100+ certs/year to renew. Private CA (self-signed root) is cheaper but utility may not trust it.</li>
+    <li><strong>Embedded TLS stack</strong> — Meters/gateways need TLS library (mbedTLS, OpenSSL, wolfSSL). Adds firmware size, RAM overhead. ESP32-class MCU can handle it; cheaper 8-bit MCUs struggle.</li>
+    <li><strong>Clock sync requirement</strong> — TLS cert validation checks "not before / not after" dates. Devices without RTC or NTP can fail handshake if clock drifts. Village gateway needs accurate time source.</li>
+    <li><strong>Rural bandwidth</strong> — TLS handshake is 2–4 KB overhead (certs, messages). On 2G/GPRS (slow, expensive), that's noticeable. TLS session resumption helps (skip full handshake on reconnect).</li>
+    <li><strong>Certificate enrollment</strong> — SCEP/EST auto-enrollment requires device to already have network access. Chicken-egg for new deployments; often solved with vendor pre-provisioned certs or manual install.</li>
+  </ul>
+
+  <h2>Key takeaways</h2>
+
+  <ul>
+    <li>TLS 1.2 is the <strong>encryption and authentication protocol</strong> for modern DER communication — mandatory for IEEE 2030.5</li>
+    <li>Provides confidentiality (AES encryption), integrity (AEAD/HMAC), authentication (X.509 certificates)</li>
+    <li>Handshake establishes session keys via ECDHE (forward secrecy); record protocol encrypts application data</li>
+    <li>Mutual TLS (mTLS) required for IEEE 2030.5 — both device and utility DERMS present certs</li>
+    <li>For ISV: <strong>Phase 3 requirement</strong> (utility interconnection). Phase 1–2 village-internal often uses simpler security or physical isolation.</li>
+    <li>TLS 1.0/1.1/SSLv3 are deprecated — never deploy. TLS 1.3 preferred when available.</li>
+  </ul>
+
+  <h2>Further reading</h2>
+
+  <ul>
+    <li><a href="https://datatracker.ietf.org/doc/html/rfc5246" target="_blank" rel="noopener">RFC 5246 — TLS 1.2 specification ↗</a></li>
+    <li><a href="https://datatracker.ietf.org/doc/html/rfc8446" target="_blank" rel="noopener">RFC 8446 — TLS 1.3 specification ↗</a></li>
+    <li><a href="https://datatracker.ietf.org/doc/html/rfc8996" target="_blank" rel="noopener">RFC 8996 — Deprecating TLS 1.0 and 1.1 ↗</a></li>
+    <li><a href="https://wiki.mozilla.org/Security/Server_Side_TLS" target="_blank" rel="noopener">Mozilla TLS configuration guide ↗</a></li>
+    <li><a href="https://www.ssllabs.com/ssltest/" target="_blank" rel="noopener">SSL Labs server test (check TLS config) ↗</a></li>
+    <li><a href="https://tls.ulfheim.net/" target="_blank" rel="noopener">Illustrated TLS 1.2 handshake ↗</a></li>
+  </ul>
+
+  <div class="footer-nav">
+    <a href="index.html#standards">← All standards</a>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IEEE 2030.10 — DC Microgrids for Rural Access · Standards · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 24px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.85rem; }
+.lead { font-size: 14px; margin-bottom: 0.85rem; max-width: 54rem; line-height: 1.5; }
+h2 { font-size: 16px; font-weight: 500; margin: 1.5rem 0 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 500; margin: 1.1rem 0 0.5rem; color: var(--text); }
+p { font-size: 14px; color: var(--text-2); margin-bottom: 0.75rem; line-height: 1.55; max-width: 54rem; }
+ul, ol { margin: 0 0 0.85rem 1.5rem; color: var(--text-2); line-height: 1.6; }
+li { margin-bottom: 0.35rem; font-size: 14px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 0.15rem 0.4rem; border-radius: 4px; }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.75rem 0.95rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; font-size: 13px; line-height: 1.5; }
+.callout > strong:first-child { color: var(--teal); display: block; margin-bottom: 0.4rem; }
+.callout-key { border-left-color: var(--green); background: var(--green-50); }
+.callout-key > strong:first-child { color: var(--green); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+.spec-grid { display: grid; grid-template-columns: 1fr; gap: 0.65rem; margin-bottom: 1rem; }
+@media (min-width: 720px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+.spec-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.85rem; background: var(--bg-2); font-size: 13px; line-height: 1.5; }
+.spec-card h4 { margin: 0 0 0.35rem; font-size: 13px; color: var(--green); font-weight: 500; }
+.spec-card p { font-size: 12px; margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; line-height: 1.45; }
+th { background: var(--bg-2); font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.02em; }
+td { color: var(--text-2); font-size: 13px; }
+.timeline { margin: 1rem 0; }
+.timeline-item { display: flex; gap: 0.75rem; margin-bottom: 0.85rem; }
+.timeline-year { font-weight: 600; color: var(--green); min-width: 4rem; font-size: 13px; }
+.timeline-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.footer-nav { font-size: 13px; color: var(--text-2); margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.footer-nav a { margin-right: 1rem; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#standards">← Standards</a></div>
+
+  <h1>IEEE 2030.10-2021</h1>
+  <p class="sub">Standard for DC Microgrids for Rural and Remote Electricity Access Applications</p>
+
+  <p class="lead">IEEE 2030.10 defines the design, operation, and maintenance of <strong>extra-low voltage DC (ELVDC) microgrids</strong> for off-grid rural and remote electricity access. It addresses the specific needs of communities without centralized power infrastructure — simplifying stability, reducing cost, and enabling clean renewable generation where AC distribution is financially prohibitive.</p>
+
+  <div class="callout callout-key">
+    <strong>Core purpose</strong>
+    <p>Provide a <strong>standard framework for DC microgrids in villages</strong> — the IEEE standard that directly addresses ISV's core mission. Covers system architecture, voltage levels, safety, generation/storage integration, and load connectivity for <em>off-grid</em> applications where the main utility grid doesn't exist or is too expensive to extend.</p>
+  </div>
+
+  <h2>What it is at its core</h2>
+
+  <p>IEEE 2030.10 is a <strong>DC microgrid design standard</strong> for rural electrification — distinct from IEEE 1547/2030.5 (which assume grid interconnection). Key characteristics:</p>
+
+  <ul>
+    <li><strong>DC-native</strong> — uses DC distribution (12V, 24V, 48V) instead of AC, simplifying solar/battery/LED integration without inverters at every home</li>
+    <li><strong>Extra-low voltage (ELVDC)</strong> — typically ≤120V DC, safer for rural installation with limited electrician availability</li>
+    <li><strong>Off-grid focus</strong> — designed for <em>islanded</em> operation, not utility interconnection (Phase 1–2 in ISV roadmap)</li>
+    <li><strong>Cost optimization</strong> — reduces capex by eliminating AC conversion losses, simplifying protection, using commodity DC appliances</li>
+    <li><strong>Clean generation priority</strong> — frameworks for solar PV, small wind, micro-hydro + battery storage integration</li>
+  </ul>
+
+  <p>Think of it as the <strong>village microgrid standard</strong> — IEEE's recognition that off-grid electrification needs different technical requirements than grid-connected DER.</p>
+
+  <div class="callout callout-warn">
+    <strong>ISV relevance</strong>
+    <p>IEEE 2030.10 is the <strong>most directly applicable IEEE standard</strong> to ISV's field programs. It covers Phase 1–2 scenarios (islanded microgrids, rural access) that 1547/2030.5 don't address. This is the standard that understands <em>prepaid solar villages without utility grids</em>.</p>
+  </div>
+
+  <h2>How it came to be</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">2010s</div>
+      <div class="timeline-text">Explosion of off-grid solar products (Lighting Global, solar home systems) and DC appliances (LED, USB, DC fans). Field experience shows DC distribution is simpler/cheaper than AC for village scale.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2015</div>
+      <div class="timeline-text">IEEE establishes working group (DRI/2030.10) to address rural DC microgrid standardization gap. Existing IEEE standards assume AC or grid interconnection — don't fit off-grid villages.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2018–2020</div>
+      <div class="timeline-text">Drafting process incorporates field lessons from India, Africa, remote island deployments. Focus on <em>practical</em> rural constraints (limited skilled labor, low-cost components, harsh environments).</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2021</div>
+      <div class="timeline-text"><strong>IEEE 2030.10-2021 published</strong> — first IEEE standard specifically for off-grid DC rural microgrids. 47 pages covering voltage levels, safety, system architecture, generation/storage, protection.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2022+</div>
+      <div class="timeline-text">Adoption in India, SSA, Pacific islands for rural electrification programs. Influences national policies and donor-funded project specs (World Bank, IFC, GIZ, USAID).</div>
+    </div>
+  </div>
+
+  <h3>Why this standard was needed</h3>
+
+  <p>Before 2030.10, off-grid DC microgrids had no IEEE standard. Problems this caused:</p>
+
+  <ul>
+    <li><strong>No voltage standardization</strong> — villages used 12V, 24V, 48V, 110V DC arbitrarily, no appliance interoperability</li>
+    <li><strong>Safety gaps</strong> — DC protection more complex than AC (no zero-crossing), installers often applied AC rules incorrectly</li>
+    <li><strong>Procurement chaos</strong> — donors/governments had no standard to reference in RFPs, vendors diverged wildly</li>
+    <li><strong>IEEE 1547 doesn't fit</strong> — assumes grid interconnection, AC distribution, utility coordination — none exist in off-grid villages</li>
+  </ul>
+
+  <p>IEEE 2030.10 filled the gap by providing an <strong>IEEE-backed framework</strong> specifically for the off-grid rural context.</p>
+
+  <h2>System architecture and voltage structure</h2>
+
+  <p>IEEE 2030.10 defines a <strong>layered DC distribution architecture</strong> for village microgrids:</p>
+
+  <div style="background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 2px solid var(--green); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <div style="font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 18px;">⚡</span> IEEE 2030.10 DC Microgrid Architecture
+    </div>
+
+    <!-- Generation Layer -->
+    <div style="background: var(--amber-50); border-left: 4px solid var(--amber); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--amber); margin-bottom: 0.65rem;">☀️ Generation Layer</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">Solar PV Array</div>
+          <div style="color: var(--text-2);">MPPT controller<br>Direct DC output<br>48V nominal</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">Battery Storage</div>
+          <div style="color: var(--text-2);">LFP / Lead-acid<br>48V bank<br>BMS integrated</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">Backup Generator</div>
+          <div style="color: var(--text-2);">AC → DC rectifier<br>Diesel / biogas<br>Optional</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Distribution Bus -->
+    <div style="background: var(--teal-50); border-left: 4px solid var(--teal); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 0.65rem;">🔌 DC Distribution Bus (ELVDC)</div>
+      
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.4rem; margin-bottom: 0.6rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center; font-size: 11px;">
+          <div style="color: var(--text-3); margin-bottom: 0.2rem; font-size: 9px;">CATEGORY 1</div>
+          <div style="font-weight: 600; color: var(--green); font-size: 14px;">12V DC</div>
+          <div style="color: var(--text-2); margin-top: 0.2rem;">≤ 120 km wire</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center; font-size: 11px;">
+          <div style="color: var(--text-3); margin-bottom: 0.2rem; font-size: 9px;">CATEGORY 2</div>
+          <div style="font-weight: 600; color: var(--teal); font-size: 14px;">24V DC</div>
+          <div style="color: var(--text-2); margin-top: 0.2rem;">LED, phones</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center; font-size: 11px; border: 2px solid var(--green);">
+          <div style="color: var(--text-3); margin-bottom: 0.2rem; font-size: 9px;">CATEGORY 3 ⭐</div>
+          <div style="font-weight: 600; color: var(--green); font-size: 14px;">48V DC</div>
+          <div style="color: var(--text-2); margin-top: 0.2rem;">Most common</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center; font-size: 11px;">
+          <div style="color: var(--text-3); margin-bottom: 0.2rem; font-size: 9px;">UPPER LIMIT</div>
+          <div style="font-weight: 600; color: var(--amber); font-size: 14px;">120V DC</div>
+          <div style="color: var(--text-2); margin-top: 0.2rem;">ELVDC max</div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px; color: var(--text-2);">
+        <strong style="color: var(--teal);">Standard recommendation:</strong> 48V nominal system voltage for village-scale deployments (balance between efficiency, safety, wire cost). Allows distribution over 100–300m with acceptable voltage drop using affordable copper gauge.
+      </div>
+    </div>
+
+    <!-- Protection & Control -->
+    <div style="background: var(--purple-50); border-left: 4px solid var(--purple); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--purple); margin-bottom: 0.65rem;">🛡️ Protection & Control</div>
+      
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem;">
+          <div style="font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 0.4rem;">Fault Protection</div>
+          <div style="font-size: 10px; color: var(--text-2); line-height: 1.5;">
+            <strong>DC circuit breakers</strong> — rated for DC arc extinction<br>
+            <strong>Overcurrent protection</strong> — fuses/MCBs per circuit<br>
+            <strong>Ground fault detection</strong> — IT system or grounded neg<br>
+            <strong>Arc fault detection</strong> — recommended for fire safety
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem;">
+          <div style="font-size: 11px; font-weight: 600; color: var(--purple); margin-bottom: 0.4rem;">System Control</div>
+          <div style="font-size: 10px; color: var(--text-2); line-height: 1.5;">
+            <strong>Charge controller</strong> — MPPT solar → battery<br>
+            <strong>Battery management (BMS)</strong> — SOC, balancing, protection<br>
+            <strong>Load management</strong> — priority shedding, prepaid disconnect<br>
+            <strong>Monitoring</strong> — voltage, current, energy, alarms
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Load Circuits -->
+    <div style="background: var(--blue-50); border-left: 4px solid var(--blue); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 0.65rem;">🏠 Load Circuits (Customer Premises)</div>
+      
+      <div style="display: flex; gap: 0.4rem; font-size: 10px;">
+        <div style="flex: 1; background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">LED Lighting</div>
+          <div style="color: var(--text-2);">Native DC<br>12–48V</div>
+        </div>
+        <div style="flex: 1; background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">Phone Charging</div>
+          <div style="color: var(--text-2);">USB 5V<br>DC-DC step-down</div>
+        </div>
+        <div style="flex: 1; background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">DC Fans</div>
+          <div style="color: var(--text-2);">Brushless<br>24–48V</div>
+        </div>
+        <div style="flex: 1; background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">DC Fridge</div>
+          <div style="color: var(--text-2);">Compressor<br>48V native</div>
+        </div>
+        <div style="flex: 1; background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="font-weight: 600; color: var(--text); margin-bottom: 0.3rem;">AC Loads</div>
+          <div style="color: var(--text-2);">Via inverter<br>if needed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metering & Billing -->
+    <div style="background: var(--green-50); border-left: 4px solid var(--green); border-radius: 8px; padding: 0.75rem;">
+      <div style="font-size: 13px; font-weight: 600; color: var(--green); margin-bottom: 0.5rem;">💰 Metering & Billing (Prepaid)</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        <strong>DC energy meter</strong> — kWh measurement on DC bus (not AC meter)<br>
+        <strong>Prepaid disconnect</strong> — solid-state relay or contactor on customer circuit<br>
+        <strong>Token/payment</strong> — STS, mobile money, scratch cards → remote reconnect<br>
+        <strong>Communication</strong> — RF mesh, GPRS, or local admin keypad
+      </div>
+    </div>
+
+    <div style="background: var(--bg); border: 2px solid var(--text-3); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 0.5rem;">🔧 Key Design Principles (per IEEE 2030.10)</div>
+      <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+        <strong>1. Safety first:</strong> ELVDC (≤120V) reduces shock risk; DC-rated protection mandatory<br>
+        <strong>2. Cost optimization:</strong> minimize conversion stages (solar DC → battery DC → load DC = no inverter losses)<br>
+        <strong>3. Simplicity:</strong> design for maintenance by technicians with basic electrical training<br>
+        <strong>4. Modularity:</strong> start small (10 homes), expand incrementally without full redesign<br>
+        <strong>5. Renewable priority:</strong> solar/wind/hydro primary; diesel/grid backup only
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>DC vs AC for village scale</strong>
+    <p><strong>Why IEEE 2030.10 standardizes DC:</strong></p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>Solar is DC</strong> — PV panels output DC; batteries store DC; going DC-to-AC-to-DC (via inverters) wastes 10–20% in conversion losses</li>
+      <li><strong>LED/electronics are DC</strong> — modern loads (LED lights, phones, laptops, DC fans) run natively on DC; AC requires rectifiers at every device</li>
+      <li><strong>Simpler stability</strong> — no frequency/phase sync needed; voltage regulation easier than AC waveform quality</li>
+      <li><strong>Lower cost</strong> — DC appliances cheaper at village scale; no transformer losses; protection less complex than AC short-circuit</li>
+    </ul>
+    <p style="margin-top: 0.5rem;"><strong>AC still needed for:</strong> motors >1kW, AC appliances (if already owned), welding, pumps. Hybrid systems use DC backbone + per-home or community inverter when AC loads exist.</p>
+  </div>
+
+  <h2>Safety requirements</h2>
+
+  <p>IEEE 2030.10 emphasizes safety for rural contexts (limited electrician availability, harsh environments). Key requirements:</p>
+
+  <div class="spec-grid">
+    <div class="spec-card">
+      <h4>Voltage limits (ELVDC)</h4>
+      <p>≤120V DC between conductors, ≤60V DC to ground in accessible locations. Lower shock risk than 230V AC, but still requires protection (DC doesn't let go like AC).</p>
+    </div>
+    <div class="spec-card">
+      <h4>DC-rated components</h4>
+      <p>All circuit breakers, fuses, disconnects must be DC-rated. AC breakers fail on DC (no zero-crossing to extinguish arc). Standard specifies UL 508, IEC 60947 compliance.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Overcurrent protection</h4>
+      <p>Fuses or MCBs on every circuit (generation, battery, loads). DC arcs hotter than AC — must protect wire gauge vs. current capacity.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Ground fault protection</h4>
+      <p>IT system (ungrounded) or grounded negative with GFCI. Standard recommends IT for better reliability (one ground fault doesn't trip system).</p>
+    </div>
+    <div class="spec-card">
+      <h4>Battery safety</h4>
+      <p>Ventilation (lead-acid H₂), temperature monitoring, BMS disconnect on over-temp/voltage. LFP preferred over lead-acid (thermal runaway protection).</p>
+    </div>
+    <div class="spec-card">
+      <h4>Labeling & signage</h4>
+      <p>Clear DC voltage labels, polarity markings, arc flash warnings. Field workers must distinguish DC from AC circuits.</p>
+    </div>
+  </div>
+
+  <h2>Relationship to other standards</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Standard</th>
+        <th>Relationship to IEEE 2030.10</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IEEE 1547</strong></td>
+        <td>Different domain — 1547 is for grid interconnection, 2030.10 is for <em>off-grid</em> rural access. No overlap (2030.10 microgrids typically never connect to main grid).</td>
+      </tr>
+      <tr>
+        <td><strong>IEEE 2030.7</strong></td>
+        <td>Microgrid controller standard (AC, grid-interactive). 2030.10 is simpler (DC, islanded). Some control concepts overlap (load management, SOC tracking) but different technical domain.</td>
+      </tr>
+      <tr>
+        <td><strong>IEC 62619</strong></td>
+        <td>Battery safety for LFP/Li-ion. IEEE 2030.10 references IEC battery safety standards for storage integration.</td>
+      </tr>
+      <tr>
+        <td><strong>DLMS/COSEM</strong></td>
+        <td>Prepaid metering protocol. IEEE 2030.10 allows DLMS for revenue meters on DC systems (DC kWh meters exist, can run DLMS/STS like AC meters).</td>
+      </tr>
+      <tr>
+        <td><strong>STS (IEC 62055)</strong></td>
+        <td>Prepaid token standard. Compatible with IEEE 2030.10 — DC meters can implement STS prepaid just like AC meters.</td>
+      </tr>
+      <tr>
+        <td><strong>NEC 690 / IEC 60364-7-712</strong></td>
+        <td>PV installation codes. IEEE 2030.10 is higher-level system design; installers still follow NEC/IEC wiring rules for solar arrays.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>ISV deployment relevance</h2>
+
+  <div class="callout callout-key">
+    <strong>IEEE 2030.10 is THE ISV standard</strong>
+    <p>This is the IEEE standard that <strong>directly describes ISV's core work</strong>:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>Phase 1–2 focus</strong> — off-grid, islanded, village-scale, prepaid revenue</li>
+      <li><strong>DC distribution</strong> — aligns with solar PV + battery + LED/DC appliance reality</li>
+      <li><strong>Rural context</strong> — designed for limited skilled labor, low-cost components, harsh environments</li>
+      <li><strong>Clean generation</strong> — solar/wind/hydro primary, matches ISV's energy pillar</li>
+      <li><strong>Community scale</strong> — 10–500 homes, not single-home solar or utility-scale wind</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">Most ISV field programs are <strong>2030.10-class systems</strong> — this standard should guide procurement specs, safety reviews, and training materials.</p>
+  </div>
+
+  <h3>Practical ISV considerations</h3>
+
+  <ul>
+    <li><strong>48V as default</strong> — IEEE 2030.10 recommends 48V nominal for village scale; matches Victron, Schneider, Outback off-grid equipment</li>
+    <li><strong>Prepaid integration</strong> — standard allows prepaid metering; ISV can specify DLMS/STS DC meters in 2030.10 architecture</li>
+    <li><strong>Modular expansion</strong> — start with 10-home pilot (5 kW solar, 10 kWh battery, 48V DC), expand to 100 homes without voltage change</li>
+    <li><strong>AC hybrid option</strong> — standard allows DC backbone + community or per-home inverter when AC loads needed (pumps, welding, legacy appliances)</li>
+    <li><strong>Safety training</strong> — ISV field teams need DC-specific electrician training (arc flash, DC breaker sizing, battery handling per 2030.10)</li>
+    <li><strong>Procurement language</strong> — RFPs can reference "IEEE 2030.10 compliant DC microgrid" as shorthand for safety/voltage/protection requirements</li>
+  </ul>
+
+  <h2>Key takeaways</h2>
+
+  <ul>
+    <li>IEEE 2030.10 is the <strong>DC microgrid standard for off-grid rural electrification</strong> — the IEEE standard that fits ISV's mission</li>
+    <li>ELVDC (≤120V) distribution, typically 48V nominal — solar DC → battery DC → load DC with minimal conversion</li>
+    <li>Covers system architecture, safety, voltage levels, protection, generation/storage, load connectivity</li>
+    <li>For ISV: <strong>Phase 1–2 standard</strong> — directly applicable to islanded village microgrids before grid arrival</li>
+    <li>Distinct from IEEE 1547/2030.5 (which assume grid interconnection) — 2030.10 is the off-grid counterpart</li>
+  </ul>
+
+  <h2>Further reading</h2>
+
+  <ul>
+    <li><a href="https://standards.ieee.org/ieee/2030.10/10742/" target="_blank" rel="noopener">IEEE 2030.10-2021 standard (purchase) ↗</a></li>
+    <li><a href="https://ieeexplore.ieee.org/document/9646866" target="_blank" rel="noopener">IEEE Xplore: 2030.10-2021 abstract ↗</a></li>
+    <li><a href="https://smartgrid.ieee.org/bulletins/february-2018/standardizing-dc-microgrids" target="_blank" rel="noopener">IEEE Smart Grid: DC microgrid standardization ↗</a></li>
+    <li><a href="https://globalleap.org/" target="_blank" rel="noopener">Global LEAP — off-grid appliance testing & standards ↗</a></li>
+    <li><a href="https://www.lightingglobal.org/" target="_blank" rel="noopener">Lighting Global — quality standards for off-grid solar products ↗</a></li>
+  </ul>
+
+  <div class="footer-nav">
+    <a href="standard-ieee-2030-5.html">← IEEE 2030.5</a>
+    <a href="index.html#standards">All standards</a>
+  </div>
+</div>
+</body>
+</html>
