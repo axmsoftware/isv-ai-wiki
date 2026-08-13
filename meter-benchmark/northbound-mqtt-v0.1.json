@@ -16,7 +16,7 @@
     "includes": [
       "Normalized VMRS register payloads from edge gateway to operator HES",
       "MQTT topic layout and JSON envelope",
-      "Correlation hooks to IETF Session Initiation Protocol (SIP, RFC 3261) dialogs for control-plane admission"
+      "Correlation hooks to IETF Session Initiation Protocol (SIP, RFC 3261) dialogs for control-plane admission (optional Phase 3)"
     ],
     "excludes": [
       "Full DLMS/COSEM object model on the wire",
@@ -74,9 +74,9 @@
     "mqttCorrelation": {
       "optionalField": "sipCallId",
       "mapsTo": "SIP Call-ID header of the controlling dialog",
-      "commandGate": "Relay, disconnect, reconnect, and settlement commands SHOULD require an active SIP dialog; telemetry MAY omit sipCallId when no dialog is in force"
+      "commandGate": "When a Phase 3 SIP dialog is in force, relay / disconnect / reconnect / settlement commands SHOULD bind to that dialog; Phase 1–2 prepaid and OpenAMI telemetry MUST NOT require SIP. Telemetry MAY omit sipCallId when no dialog is in force"
     },
     "transports": "SIP over UDP/TCP/TLS or SIP over WebSocket — operator choice; not carried inside the MQTT JSON envelope",
-    "note": "OpenAMI does not redefine SIP. This profile only states how northbound MQTT correlates to IETF SIP dialogs for village / mini-grid control. Contact Tech Comm (Glenn Algie / NESL Street-EMS track) for reference dialog flows."
+    "note": "OpenAMI does not redefine SIP. This profile only states how northbound MQTT correlates to IETF SIP dialogs for village / mini-grid control. ISV roadmap: optional Phase 3 (grid connectivity) — not required for Phase 1 prepaid or Phase 2 OpenAMI MQTT telemetry. Contact Tech Comm (Glenn Algie / NESL Street-EMS track) for reference dialog flows."
   }
 }

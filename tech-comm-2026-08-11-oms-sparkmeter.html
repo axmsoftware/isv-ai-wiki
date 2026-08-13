@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Comm — OMS / SparkMeter stack · 11 Aug 2026 · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/isv-tasks.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.65; }
+a { color: var(--green); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.back { font-size: 13px; color: var(--text-2); margin-bottom: 1.5rem; }
+.back a { text-decoration: none; }
+.back a:hover { text-decoration: underline; }
+h1 { font-size: 26px; font-weight: 500; margin-bottom: 0.35rem; }
+.sub { font-size: 14px; color: var(--text-2); margin-bottom: 1.75rem; }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.85rem 1rem; border-radius: 0 8px 8px 0; margin-bottom: 1.5rem; font-size: 14px; line-height: 1.55; }
+.callout > strong:first-child { display: block; margin-bottom: 0.35rem; font-weight: 500; color: var(--teal); }
+.callout p { margin: 0; font-size: 14px; line-height: 1.55; }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+h2 { font-size: 17px; font-weight: 500; margin: 2rem 0 0.75rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 500; margin: 1.25rem 0 0.45rem; }
+p, li { font-size: 14px; color: var(--text); margin-bottom: 0.5rem; }
+ul { padding-left: 1.25rem; margin-bottom: 1rem; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; }
+th { background: var(--bg-2); font-weight: 500; font-size: 12px; }
+.body-text { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; line-height: 1.5; max-width: 48rem; }
+.stack-flow {
+  font-size: 13px; padding: 0.75rem 0.85rem; border: 1px solid var(--border); border-radius: 10px;
+  background: var(--bg-2); margin-bottom: 1rem; line-height: 1.5; font-family: var(--mono);
+}
+html.embed .back,
+html.embed #notes-back-btn { display: none; }
+html.embed .wrap { padding-top: 1rem; }
+html.embed h1 { font-size: 20px; }
+</style>
+</head>
+<body>
+<script>
+if (new URLSearchParams(location.search).get('embed') === '1') {
+  document.documentElement.classList.add('embed');
+}
+</script>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back" id="notes-back"><a href="index.html">← ISV Knowledge Base · Home</a></div>
+  <h1>OMS · SparkMeter stack notes</h1>
+  <p class="sub">ISV Technology Committee · 11 August 2026 · A2EI Open Meter Stack · EarthSpark / SteamaCo · OpenAMI Alliance · priorities</p>
+
+  <p id="notes-back-btn" style="margin-bottom:1.25rem"><a href="index.html#notes/tech-comm-2026-08-11" style="display:inline-block;padding:0.55rem 1rem;border-radius:8px;background:var(--green);color:var(--green-50);text-decoration:none;font-size:14px;font-weight:500">← Back to Meeting Notes</a> · <a href="index.html" style="font-size:14px">Home</a></p>
+
+  <div id="follow-ups-panel"></div>
+
+  <div class="callout">
+    <strong>Call capture</strong>
+    <p>Working notes on how SparkMeter / GroundBolt / ThunderCloud pieces fit, SteamaCo Nimbus as peer under A2EI <strong>OMS</strong> (Open Meter Stack), OpenAMI Alliance scope, and near-term standards focus (OMS progress over OBIS deep-dive).</p>
+  </div>
+
+  <div class="callout callout-warn">
+    <strong>Status</strong>
+    <p>Field / meeting understanding — not yet cross-checked against every EarthSpark ICD. Diagrams on <a href="index.html#village-metering/tc20-review">TC2.0 review</a> may still show older Firefly-as-radio framing; see correction below.</p>
+  </div>
+
+  <h2>SparkMeter / EarthSpark stack (as heard)</h2>
+  <div class="stack-flow">
+    SM meters (2.4&nbsp;GHz, encrypted / hidden SSID)
+      ↔  USB Gateway (runs on laptop)
+      ↔  GroundBolt (site)  ·via Gateway·
+      ↔  ThunderCloud (= GroundBolt in the cloud)
+  </div>
+  <ul>
+    <li><strong>Meters</strong> — SparkMeter field meters on <strong>2.4&nbsp;GHz</strong>; SSID encrypted or hidden.</li>
+    <li><strong>Gateway</strong> — <strong>USB</strong> device; works attached to a laptop. Physical bridge to the meter RF.</li>
+    <li><strong>GroundBolt</strong> — on-site app; talks to meters <em>via</em> the Gateway (not a separate radio hop labeled Firefly).</li>
+    <li><strong>ThunderCloud</strong> — same app family as GroundBolt, deployed in the cloud.</li>
+    <li><strong>SparkNet-HTTP</strong> and <strong>Firefly</strong> — described as <strong>software plugins</strong> (not standalone RF radios). Aligns with public <a href="https://github.com/EarthSpark/sparknet-http" target="_blank" rel="noopener"><code>sparknet-http</code></a> repo being software; Firefly naming on older wiki diagrams likely overstated as hardware mesh gateways.</li>
+  </ul>
+
+  <h3>Wiki correction · RF vs software</h3>
+  <p class="body-text"><strong>Verified public:</strong> meters advertise built-in RF mesh; <code>sparknet-http</code> is open software; ThunderCloud / GroundBolt are the same web app, different deploy target.</p>
+  <p class="body-text"><strong>Meeting correction:</strong> the <em>USB Gateway</em> is the hardware RF interface (laptop/site). Firefly + SparkNet-HTTP = plugins into that stack. Older village diagrams that draw multiple “Firefly radios” with coverage discs should be treated as provisional until redrawn against this model.</p>
+
+  <h2>Open Code · STS vending</h2>
+  <ul>
+    <li><strong>Open Code</strong> path today: basic meter reading · toggle relays.</li>
+    <li><strong>Tokens / prepaid:</strong> STS. Do <strong>not</strong> redo vending — use existing STS token path.</li>
+  </ul>
+
+  <h2>A2EI OMS · Nimbus peer</h2>
+  <ul>
+    <li><strong>OMS</strong> = A2EI <strong>Open Meter Stack</strong> — CRM / operator platform layer.</li>
+    <li><strong>ThunderCloud</strong> (EarthSpark / SparkMeter) and <strong>Nimbus</strong> (SteamaCo) are both part of OMS — Nimbus ≈ SteamaCo’s ThunderCloud-class HES.</li>
+    <li><strong>Nimbus</strong> uses a <strong>universal SGC</strong> (Security Group Code) key for token generation.</li>
+  </ul>
+
+  <h2>Roles</h2>
+  <table>
+    <thead><tr><th>Actor</th><th>Role (as stated)</th></tr></thead>
+    <tbody>
+      <tr><td><strong>REI</strong> (e.g. REIc)</td><td>Customer of OMS</td></tr>
+      <tr><td><strong>Beneficiary</strong></td><td>Customer of REI (end household / site user)</td></tr>
+      <tr><td><strong>Jude</strong></td><td>Uses <strong>Volta</strong> as server</td></tr>
+    </tbody>
+  </table>
+
+  <h2>OpenAMI Alliance (scope heard)</h2>
+  <p class="body-text">Premium / value-add layer on top of core metering — not year-one prepaid plumbing:</p>
+  <ul>
+    <li>Premium services</li>
+    <li>Carbon credit tracing</li>
+    <li>Theft detection</li>
+    <li>VPP (virtual power plant)</li>
+  </ul>
+
+  <h2>Priorities · OBIS vs OMS standards</h2>
+  <div class="callout callout-warn">
+    <strong>Focus shift</strong>
+    <p><strong>OBIS / VMRS deep register work takes a back burner</strong> relative to standards and interfaces that drive progress on the <strong>OMS stack</strong> (read · relay · STS tokens already in path · GroundBolt/Nimbus under A2EI). Keep VMRS as the short northbound checklist when needed; do not block OMS on a full OBIS campaign.</p>
+  </div>
+
+  <h2>Follow-ups for wiki</h2>
+  <ul>
+    <li>Redraw TC2.0 village / stack diagrams: USB Gateway as RF bridge; Firefly / SparkNet-HTTP as software plugins.</li>
+    <li>Vendor study: note Nimbus ↔ ThunderCloud peer under A2EI OMS; SGC token note.</li>
+    <li>Roadmap / OpenAMI: Alliance premium tracks (carbon, theft analytics, VPP) vs core OpenAMI MQTT.</li>
+    <li>Confirm Volta server role with Jude before publishing as architecture fact.</li>
+  </ul>
+
+  <p class="meter-footer" style="margin-top:1.5rem;font-size:12px;color:var(--text-3)">
+    Related: <a href="index.html#village-metering/tc20-review">TC2.0 review</a> ·
+    <a href="index.html#village-metering/vendor-study">Vendor study</a> ·
+    <a href="index.html#village-metering/roadmap">Roadmap</a> ·
+    <a href="https://github.com/EarthSpark" target="_blank" rel="noopener">EarthSpark GitHub</a>
+  </p>
+</div>
+<script src="js/isv-tasks.js?v=20260629"></script>
+</body>
+</html>

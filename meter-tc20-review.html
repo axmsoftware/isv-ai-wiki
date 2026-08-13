@@ -119,10 +119,19 @@ html.dark .diagram-wrap { background: #f7f6f3; }
   <h1>ThunderCloud 2.0 · comprehensive review</h1>
   <p class="lede">
     How the open EarthSpark / SparkMeter stack should work in an ideal village install:
-    meters and <strong>CIUs</strong> (Customer Interface Units) in the field, Firefly radios for the
-    <strong>RF</strong> (radio-frequency) mesh, GroundBolt as the on-site brain,
-    optional ThunderCloud off-site. Diagrams below share the same layers — toggle site-only vs site+cloud once for both stack and village views.
+    meters and <strong>CIUs</strong> (Customer Interface Units) in the field on a 2.4&nbsp;GHz mesh,
+    a <strong>USB Gateway</strong> as the RF bridge (works on a laptop),
+    <strong>GroundBolt</strong> as the on-site brain talking to meters via that Gateway,
+    optional <strong>ThunderCloud</strong> (= GroundBolt in the cloud).
+    Diagrams below share the same layers — toggle site-only vs site+cloud once for both views.
   </p>
+
+  <div class="callout">
+    <strong>Aug 2026 stack correction</strong>
+    <p>Meeting notes (<a href="index.html#notes/tech-comm-2026-08-11">11 Aug 2026</a>): <strong>SparkNet-HTTP</strong> and <strong>Firefly</strong> are software plugins — not standalone RF radios.
+    Physical RF interface = <strong>USB Gateway</strong>. Meters = 2.4&nbsp;GHz (encrypted / hidden SSID). Village SVGs may still show older “Firefly coverage discs”; treat those as provisional pending redraw.
+    Public check: <a href="https://github.com/EarthSpark/sparknet-http" target="_blank" rel="noopener"><code>sparknet-http</code></a> is a software repo; marketing still says meters have built-in RF mesh.</p>
+  </div>
 
   <h2 id="origin">How ThunderCloud 2.0 (TC2.0) came to be</h2>
   <p>
@@ -194,19 +203,18 @@ html.dark .diagram-wrap { background: #f7f6f3; }
   <p>
     A village mini-grid powers homes and civic loads over LV feeders. Each prepaid customer has an
     <strong>SM</strong> (SparkMeter) <strong>meter</strong> and a <strong>CIU</strong> (Customer Interface Unit — keypad / balance display) on a short local link — no cloud required for that UI.
-    Meters talk <strong>SparkNet RF mesh</strong> to one or more <strong>Firefly</strong> gateways (radios) on the
-    <strong>NAN</strong> (neighborhood area network).
-    Fireflies backhaul into an <strong>ops / utility building</strong> where <strong>GroundBolt</strong> runs
-    (site UI + Postgres): readings climb up, disconnect / config / balance commands fall down.
+    Meters join a <strong>2.4&nbsp;GHz</strong> mesh (encrypted / hidden SSID). A <strong>USB Gateway</strong> bridges that RF to the site computer;
+    <strong>GroundBolt</strong> speaks to meters <em>through</em> the Gateway.
+    <strong>SparkNet-HTTP</strong> and <strong>Firefly</strong> are software plugins on that path (not separate radio boxes).
   </p>
   <p>
     When the operator wants remote ops, CRM, or multi-site portfolio tools, <strong>SymmetricDS</strong> syncs the site database
-    to <strong>ThunderCloud</strong> in the sky (managed EarthSpark SaaS or self-hosted). Cloud is optional.
-    Commission the field ↔ GroundBolt loop first; attach cloud only after that loop is proven.
+    to <strong>ThunderCloud</strong> in the sky (managed EarthSpark SaaS or self-hosted) — same app family as GroundBolt, cloud deploy.
+    Cloud is optional. Commission the field ↔ Gateway ↔ GroundBolt loop first; attach cloud only after that loop is proven.
   </p>
 
   <div class="flow">
-    SM meter / CIU  ↔  Firefly (RF NAN)  ↔  SparkNet-HTTP  ↔  GroundBolt
+    SM meter / CIU  ↔  2.4&nbsp;GHz mesh  ↔  USB Gateway  ↔  SparkNet-HTTP / Firefly (plugins)  ↔  GroundBolt
     &nbsp;&nbsp;[optional]&nbsp;&nbsp;↔  SymmetricDS  ↔  ThunderCloud
   </div>
 
@@ -223,17 +231,17 @@ html.dark .diagram-wrap { background: #f7f6f3; }
 
   <h3>What must work before cloud</h3>
   <ul>
-    <li>Meters join mesh; Firefly coverage overlaps the village (multiple radios if one cannot cover).</li>
-    <li>SparkNet-HTTP carries commands out and SSE (live event stream) / readings in.</li>
-    <li>GroundBolt shows live kWh, power, voltage, state; can Enable/Disable and push balance.</li>
-    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down.</li>
+    <li>USB Gateway sees meters on the 2.4&nbsp;GHz mesh; GroundBolt talks through that Gateway.</li>
+    <li>SparkNet-HTTP / Firefly plugins carry commands out and SSE (live event stream) / readings in.</li>
+    <li>GroundBolt shows live kWh, power, voltage, state; can Enable/Disable and push balance (Open Code: read + toggle relays).</li>
+    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down; STS token path stays — do not redo vending.</li>
     <li>Meter keys held safely (EarthSpark, A2EI escrow, or operator) — mishandling can brick meters.</li>
   </ul>
 
   <h2>Visual 1 · Stack beside village</h2>
   <p>
     Left = software / protocol stack. Right = simplified village with the same horizontal bands.
-    Gray = LV power. Amber discs = Firefly RF coverage. Green = site serial / backhaul. Blue dashed = optional WAN (internet) link to ThunderCloud.
+    Gray = LV power. Amber discs on current SVG still labeled “Firefly coverage” — <strong>provisional</strong>; RF bridge is the USB Gateway per <a href="index.html#notes/tech-comm-2026-08-11">11 Aug notes</a>. Green = site backhaul. Blue dashed = optional WAN to ThunderCloud.
   </p>
 
   <div class="host-bar" role="tablist" aria-label="Hosting path">
@@ -294,12 +302,12 @@ html.dark .diagram-wrap { background: #f7f6f3; }
       <p><strong>GroundBolt</strong> — site UI + Postgres at the ops building. Installer hub. Survives WAN outages for local control.</p>
     </div>
     <div class="card">
-      <h3>L3 · Driver</h3>
-      <p><strong>SparkNet-HTTP</strong> + <strong>meter-driver-spec</strong> — open contract for commands / SSE (live event stream) / meter capabilities (energy, power, voltage, enable/disable, tamper, …).</p>
+      <h3>L3 · Driver / plugins</h3>
+      <p><strong>SparkNet-HTTP</strong> + <strong>Firefly</strong> (software plugins) + <strong>meter-driver-spec</strong> — open contract for commands / SSE / meter capabilities (energy, power, voltage, enable/disable, tamper, …).</p>
     </div>
     <div class="card">
       <h3>L2–L1 · Radio + field</h3>
-      <p><strong>Firefly</strong> RF mesh gateways; <strong>SM meter / CIU</strong> at each prepaid home. Gray LV feeders carry power, not data.</p>
+      <p><strong>USB Gateway</strong> = RF bridge to meter 2.4&nbsp;GHz mesh; <strong>SM meter / CIU</strong> at each prepaid home. Gray LV feeders carry power, not data.</p>
     </div>
   </div>
 
@@ -308,15 +316,18 @@ html.dark .diagram-wrap { background: #f7f6f3; }
     <div class="card">
       <p><strong>HES</strong> — head-end system: utility software that commands and reads meters.</p>
       <p><strong>CIU</strong> — Customer Interface Unit: prepaid keypad / balance display at the home.</p>
-      <p><strong>NAN</strong> — neighborhood area network: local RF mesh among meters and Fireflies.</p>
+      <p><strong>USB Gateway</strong> — hardware RF interface (laptop/site) to the meter mesh.</p>
+      <p><strong>NAN</strong> — neighborhood area network: local 2.4&nbsp;GHz mesh among meters (bridged by USB Gateway).</p>
       <p><strong>WAN</strong> — wide-area network: usually the site’s internet uplink to cloud.</p>
       <p><strong>LV</strong> — low voltage: customer / village distribution voltages.</p>
+      <p><strong>OMS</strong> — A2EI Open Meter Stack (CRM / operator platform; ThunderCloud and Nimbus both sit here).</p>
     </div>
     <div class="card">
       <p><strong>SSE</strong> — Server-Sent Events: one-way live stream from server to client (readings / events).</p>
       <p><strong>OEM</strong> — original equipment manufacturer (e.g. another meter vendor).</p>
       <p><strong>SaaS</strong> — software-as-a-service (vendor-hosted cloud).</p>
       <p><strong>CRM</strong> — customer relationship management (accounts, tickets, portfolio ops).</p>
+      <p><strong>SGC</strong> — Security Group Code (Nimbus universal key used for token generation).</p>
       <p><strong>TC1.x / TC2.0</strong> — ThunderCloud software generations (field vs open foundation).</p>
     </div>
   </div>
@@ -338,6 +349,7 @@ html.dark .diagram-wrap { background: #f7f6f3; }
   <h3>ISV Village Metering</h3>
   <ul class="link-list">
     <li><a href="meter-roadmap.html">Roadmap</a> — Phase 1–3 · ThunderCloud update section</li>
+    <li><a href="index.html#notes/tech-comm-2026-08-11">11 Aug 2026 meeting notes</a> — USB Gateway · Firefly/SparkNet plugins · A2EI OMS · Nimbus</li>
     <li><a href="meter-overview.html#solutions-map">Overview · solutions map</a> — problem → hardware → software</li>
     <li><a href="meter-solutions-map.html?proto=tc20">TC2.0 solutions map proto</a></li>
     <li><a href="tech-comm-2026-05-28-metering-topology.html">May 28 topology notes</a> — sister diagram language</li>
