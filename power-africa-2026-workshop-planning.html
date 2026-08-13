@@ -100,19 +100,6 @@ th { background: var(--bg-2); font-weight: 500; font-size: 12px; }
 .actions li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); display: flex; gap: 0.5rem; align-items: flex-start; }
 .actions li::before { content: "○"; color: var(--text-3); flex-shrink: 0; }
 .todo { color: var(--text-2); font-style: italic; }
-.conference-poster {
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  background: var(--bg-2);
-  width: 100%;
-  flex-shrink: 0;
-}
-.conference-poster img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
 @media (min-width: 768px) {
   .hero-layout {
     display: grid;
@@ -121,12 +108,6 @@ th { background: var(--bg-2); font-weight: 500; font-size: 12px; }
     gap: 1.5rem;
   }
   .overview-cards { grid-template-columns: repeat(3, 1fr); }
-}
-.conference-poster figcaption {
-  padding: 0.75rem 1rem;
-  font-size: 13px;
-  color: var(--text-2);
-  border-top: 1px solid var(--border);
 }
 html.embed .back,
 html.embed #notes-back-btn { display: none; }
@@ -203,11 +184,6 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
         <p><strong>Register:</strong> <a href="https://luma.com/d7p7lqo0" target="_blank" rel="noopener">Day 1 (Mon 21 Sep) ↗</a> · <a href="https://luma.com/skhy0ib4" target="_blank" rel="noopener">Day 2 (Tue 22 Sep) ↗</a> — conference day rate applies. No separate workshop fee.</p>
       </div>
     </div>
-
-    <figure class="conference-poster">
-      <img src="assets/power-africa-2026-openami-workshop-flyer.png" alt="OpenAMI Multitenant Metering EMS Workshop — MAKE, CODE, INTEGRATE at IEEE PES and IAS Power Africa, Nairobi, 21–26 September 2026">
-      <figcaption>OpenAMI Multitenant Metering EMS Workshop flyer. <a href="https://ieee-powerafrica.org/isvx/" target="_blank" rel="noopener">ieee-powerafrica.org/isvx</a> · <a href="power-africa-2026-conference.html">Conference hub</a></figcaption>
-    </figure>
   </div>
 
   <p class="body-text">Mentoring-based, hands-on workshop for in-country engineers developing village electrification and community mini-grid solutions using the open-source <strong>Street-EMS</strong> platform. Focus: cloudless architectures, multi-tenant metering, sovereign &amp; resilient systems, edge intelligence at the LV feeder, and business-case sensitivity.</p>
