@@ -225,10 +225,10 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <h3>Day 1: MAKE + CODE</h3>
   <p class="body-text"><strong>Hardware build (11:30–16:00):</strong> Assemble <strong>EarthSpark TC2.0 reference cabinet</strong> — OpenAMI/MeshEMS v2.0 controller (ESP32), DLMS meters, CTs, contactors on DIN rail. Commission firmware, test MQTT telemetry, verify remote disconnect. Participants take home working ESP32 Street-EMS boards.</p>
   
-  <p class="body-text"><strong>Integration challenge (16:15–18:00):</strong> Get it <strong>actually working</strong>. DLMS/COSEM meter queries over RS-485, MQTT publisher streaming real data, basic Node-RED dashboard. If time: REST → MQTT bridge pattern for closed vendor APIs.</p>
+  <p class="body-text"><strong>Integration challenge (16:15–18:00):</strong> Get it <strong>actually working</strong>. DLMS/COSEM meter queries over RS-485, MQTT publisher streaming real data, basic Node-RED dashboard.</p>
 
-  <h3>Day 2: INTEGRATE</h3>
-  <p class="body-text"><strong>Multi-vendor integration:</strong> If Warren brings SteamaCo hardware, we build a REST → MQTT bridge to Nimbus AMI. Otherwise we demonstrate the <strong>pattern</strong> — how to connect any proprietary vendor API to an open MQTT backbone. Goal: participants leave knowing how to integrate <em>whatever hardware their project already bought</em> into a unified monitoring stack.</p>
+  <h3>Day 2: INTEGRATE — Coding Challenge</h3>
+  <p class="body-text"><strong>GroundBolt integration:</strong> Get <strong>GroundBolt</strong> (SparkMeter Gateway) talking to <strong>SteamaCo DCU</strong> and <strong>MeshEMS board</strong>. The challenge: GroundBolt already speaks to SparkMeters — now extend it to aggregate SteamaCo (Nimbus AMI REST API) and OpenAMI/MeshEMS (native MQTT). Build the bridges, unified dashboard, compare what you see from each vendor's data stream.</p>
 
   <p class="body-text"><strong>Decision workshop:</strong> Compare open (MeshEMS/OpenAMI) vs proprietary full-stack (SteamaCo/SparkMeter) on cost, lock-in, sovereignty, comms requirements. Honest trade-offs — not marketing.</p>
 
