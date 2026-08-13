@@ -9,6 +9,7 @@
 <link rel="stylesheet" href="css/meter-focus.css">
 <script src="js/isv-theme.js"></script>
 <script src="js/meter-embed.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
@@ -190,6 +191,83 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-title-sync { fill: var(--amber); }
 .map-frame .sw-band-title-ops { fill: var(--text-3); }
 .map-legend { font-size: 11px; color: var(--text-2); line-height: 1.45; margin-bottom: 0.75rem; }
+.view-toggle-bar {
+  display: flex; gap: 0.35rem; margin-bottom: 0.85rem; border-bottom: 1px solid var(--border); padding-bottom: 0.5rem;
+}
+.view-toggle-btn {
+  font-size: 13px; padding: 0.35rem 0.85rem; border-radius: 8px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-2); cursor: pointer; font-family: inherit; font-weight: 500;
+  transition: all 0.12s;
+}
+.view-toggle-btn:hover { background: var(--bg-3); color: var(--text); }
+.view-toggle-btn.active { background: var(--green); color: #fff; border-color: var(--green); }
+.story-view { margin-bottom: 0.85rem; }
+.story-grid {
+  display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 0.85rem;
+}
+@media (min-width: 640px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 920px) { .story-grid { grid-template-columns: repeat(3, 1fr); } }
+.story-card {
+  border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 0.95rem;
+  background: var(--bg-2); font-size: 12px; line-height: 1.5; transition: border-color 0.12s, box-shadow 0.12s;
+}
+.story-card:hover { border-color: var(--green); box-shadow: var(--shadow); }
+.story-card-header { margin-bottom: 0.5rem; }
+.story-theme { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 0.25rem; }
+.story-phase {
+  display: inline-block; font-size: 9px; padding: 3px 8px; border-radius: 12px;
+  background: var(--green-50); color: var(--green); font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.04em; margin-bottom: 0.35rem;
+}
+.story-phase-1 { background: var(--green-50); color: var(--green); }
+.story-phase-2 { background: var(--teal-50); color: var(--teal); }
+.story-phase-1-2 { background: var(--blue-50); color: var(--blue); }
+.story-problems { font-size: 11px; color: var(--text-3); margin-bottom: 0.5rem; line-height: 1.4; }
+.story-caps { margin: 0; padding: 0; list-style: none; }
+.story-caps li { margin-bottom: 0.3rem; padding-left: 0.85rem; position: relative; }
+.story-caps li::before { content: "→"; position: absolute; left: 0; color: var(--green); font-weight: 600; }
+.story-caps a { color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--border-2); }
+.story-caps a:hover { color: var(--green); border-bottom-color: var(--green); }
+.force-view { margin-bottom: 0.85rem; }
+.force-controls {
+  display: flex; gap: 1rem; align-items: center; margin-bottom: 0.65rem; padding: 0.5rem 0.75rem;
+  background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; flex-wrap: wrap;
+}
+.force-controls label { font-size: 12px; color: var(--text-2); cursor: pointer; display: flex; align-items: center; gap: 0.35rem; }
+.force-controls input[type="checkbox"] { cursor: pointer; }
+.force-controls button {
+  font-size: 11px; padding: 0.3rem 0.65rem; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text-2); cursor: pointer; font-family: inherit; font-weight: 500;
+}
+.force-controls button:hover { background: var(--green); color: #fff; border-color: var(--green); }
+.force-frame {
+  border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2);
+  height: 600px; overflow: hidden; position: relative;
+}
+.force-frame svg { width: 100%; height: 100%; }
+.force-node { cursor: grab; stroke: var(--bg); stroke-width: 2; transition: stroke-width 0.15s; }
+.force-node:active { cursor: grabbing; }
+.force-node:hover { stroke-width: 3; }
+.force-node-problem { fill: var(--amber); }
+.force-node-software { fill: var(--green); }
+.force-node-hardware { fill: var(--teal); }
+.force-node-billing { fill: var(--green); }
+.force-node-cutoffs { fill: var(--amber); }
+.force-node-theft { fill: var(--red); }
+.force-node-visibility { fill: var(--teal); }
+.force-node-affordability { fill: var(--purple); }
+.force-node-comms { fill: var(--blue); }
+.force-node-integration { fill: var(--ieee-blue); }
+.force-link { stroke: var(--border-2); stroke-opacity: 0.4; stroke-width: 1; }
+.force-link-hardware { stroke: var(--teal); stroke-dasharray: 3 2; }
+.force-label { font-size: 9px; fill: var(--text); pointer-events: none; text-anchor: middle; font-weight: 500; }
+.force-tooltip {
+  position: absolute; background: var(--bg); border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.5rem 0.65rem; font-size: 11px; pointer-events: none; opacity: 0; transition: opacity 0.15s;
+  box-shadow: var(--shadow); z-index: 100; max-width: 200px;
+}
+.force-tooltip.show { opacity: 1; }
+.force-tooltip strong { display: block; margin-bottom: 0.25rem; color: var(--text); }
 html.embed .back { display: none; }
 html.embed.panel .isv-topbar { display: none; }
 html.embed.panel .wrap { padding: 0.5rem 0.75rem 0.75rem; max-width: none; }
@@ -218,27 +296,52 @@ html.embed.panel .meter-footer { display: none; }
   <div class="map-proto-nav" id="map-proto-nav" hidden></div>
   <div class="map-proto-banner" id="map-proto-banner" hidden></div>
 
-  <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
-
-  <div class="map-roadmap-note" id="map-roadmap-note">
-    <strong>Roadmap phases</strong> tag software nodes —
-    <strong>1</strong> installed-base interop ·
-    <strong>2</strong> microgrid core ·
-    <strong>3</strong> grid connectivity.
-    Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
-    <span id="map-tc20-entry"> · SparkMeter / TC2.0:
-      <a href="meter-tc20-review.html">TC2.0 review</a> ·
-      <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
-    </span>
+  <div class="view-toggle-bar">
+    <button type="button" class="view-toggle-btn active" data-view="story">Story</button>
+    <button type="button" class="view-toggle-btn" data-view="force">Force graph</button>
+    <button type="button" class="view-toggle-btn" data-view="full">Full diagram</button>
   </div>
 
-  <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
-  <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
-  <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
-  <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
+  <div id="story-view" class="story-view">
+    <p class="lead">Six outcome themes that reinforce the <a href="meter-roadmap.html">3-phase roadmap</a> — from installed-base prepaid (Phase 1) through next-gen microgrid core (Phase 2) to grid connectivity (Phase 3).</p>
+    <div class="story-grid" id="story-grid"></div>
+  </div>
 
-  <div class="map-frame" id="map-frame">
-    <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
+  <div id="force-view" class="force-view" hidden>
+    <p class="lead">Interactive force-directed graph — drag nodes to explore connections. <strong>Problems</strong> (amber) → <strong>Software</strong> (green). Node size reflects connection count. Hover for details.</p>
+    <div class="force-controls">
+      <label><input type="checkbox" id="force-show-hardware" checked> Show hardware layer</label>
+      <label><input type="checkbox" id="force-show-groups" checked> Color by problem group</label>
+      <button type="button" id="force-reset">Reset positions</button>
+    </div>
+    <div class="force-frame" id="force-frame">
+      <svg id="force-svg"></svg>
+    </div>
+  </div>
+
+  <div id="full-graph-view" class="full-graph-view" hidden>
+    <div class="map-roadmap-note" id="map-roadmap-note">
+      <strong>Roadmap phases</strong> tag software nodes —
+      <strong>1</strong> installed-base interop ·
+      <strong>2</strong> microgrid core ·
+      <strong>3</strong> grid connectivity.
+      Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
+      <span id="map-tc20-entry"> · SparkMeter / TC2.0:
+        <a href="meter-tc20-review.html">TC2.0 review</a> ·
+        <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
+      </span>
+    </div>
+
+    <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
+
+    <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
+    <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
+    <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
+    <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
+
+    <div class="map-frame" id="map-frame">
+      <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
+    </div>
   </div>
 
   <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links / <code>phase</code> tags there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Prototypes (TC2.0 · A–D)</a> · <a href="index.html#village-metering/roadmap">Roadmap</a></p>
@@ -254,6 +357,7 @@ html.embed.panel .meter-footer { display: none; }
 (function () {
   var PARAMS = new URLSearchParams(location.search);
   var PROTO = (PARAMS.get('proto') || '').toLowerCase();
+  var currentView = 'story';
   var PHASE_PARAM = (PARAMS.get('phase') || '').trim();
   var HOST_PARAM = (PARAMS.get('host') || '').toLowerCase().trim();
   var PROTO_FILES = {
@@ -300,6 +404,71 @@ html.embed.panel .meter-footer { display: none; }
   var hoverId = null;
   var hoverSide = null;
   var hoverFrame = null;
+
+  var STORY_THEMES = [
+    {
+      theme: 'Revenue collection',
+      problems: 'Per-home kWh, collect-before-use, deliver credit, show balance, token audit, O&M revenue',
+      phase: 'Phase 1',
+      phaseClass: 'story-phase-1',
+      capabilities: [
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' },
+        { label: 'Operator billing platform (ThunderCloud / MPM)', href: 'https://github.com/enaccess/micropowermanager' },
+        { label: 'Billing register model (VMRS)', href: 'index.html#village-metering/vmrs' }
+      ]
+    },
+    {
+      theme: 'Control',
+      problems: 'Disconnect, reconnect, multi-home pole',
+      phase: 'Phase 1 → 2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' },
+        { label: 'Edge EMS & tenant control', href: 'index.html#village-metering/meshems' }
+      ]
+    },
+    {
+      theme: 'Loss & theft visibility',
+      problems: 'Illegal taps, unmetered load, leakage, neutral imbalance, meters disagree, spot theft',
+      phase: 'Phase 2',
+      phaseClass: 'story-phase-2',
+      capabilities: [
+        { label: 'Feeder AMI / OpenAMI', href: 'index.html#village-metering/openami' },
+        { label: 'Field QA & reconciliation', href: null }
+      ]
+    },
+    {
+      theme: 'Operational visibility',
+      problems: 'Voltage, instant power, serial & clock',
+      phase: 'Phase 1 → 2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Billing register model (VMRS)', href: 'index.html#village-metering/vmrs' },
+        { label: 'Northbound telemetry contract', href: 'meter-benchmark/northbound-mqtt-v0.1.json' }
+      ]
+    },
+    {
+      theme: 'Cost & independence',
+      problems: 'Meter capex, MDMS cost, mixed protocols, vendor exit, inverter vs billing',
+      phase: 'Phase 1–2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Deployment scope definition', href: 'index.html#village-metering/overview' },
+        { label: 'Vendor & protocol study', href: 'index.html#village-metering/vendor-study' },
+        { label: 'Northbound telemetry contract', href: 'meter-benchmark/northbound-mqtt-v0.1.json' }
+      ]
+    },
+    {
+      theme: 'Comms resilience',
+      problems: 'Cloud unreachable, prepaid offline, vending down',
+      phase: 'Phase 1–2',
+      phaseClass: 'story-phase-1-2',
+      capabilities: [
+        { label: 'Resilient comms design', href: 'tech-comm-2026-05-28-metering-topology.html' },
+        { label: 'Prepaid & token delivery', href: 'https://github.com/enaccess/OpenPAYGO-Token' }
+      ]
+    }
+  ];
 
   function normalizeData(json) {
     if (!json.hardware && json.deployLayers) {
@@ -361,6 +530,290 @@ html.embed.panel .meter-footer { display: none; }
       throw new Error('map data missing hardware array');
     }
     return json;
+  }
+
+  function buildStoryView() {
+    var grid = document.getElementById('story-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    STORY_THEMES.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 'story-card';
+      var header = document.createElement('div');
+      header.className = 'story-card-header';
+      var theme = document.createElement('div');
+      theme.className = 'story-theme';
+      theme.textContent = t.theme;
+      var phase = document.createElement('div');
+      phase.className = 'story-phase ' + t.phaseClass;
+      phase.textContent = t.phase;
+      header.appendChild(theme);
+      header.appendChild(phase);
+      var probs = document.createElement('div');
+      probs.className = 'story-problems';
+      probs.textContent = t.problems;
+      var caps = document.createElement('ul');
+      caps.className = 'story-caps';
+      t.capabilities.forEach(function (c) {
+        var li = document.createElement('li');
+        if (c.href) {
+          var a = document.createElement('a');
+          a.href = c.href;
+          a.textContent = c.label;
+          li.appendChild(a);
+        } else {
+          li.textContent = c.label;
+          li.style.color = 'var(--text-3)';
+        }
+        caps.appendChild(li);
+      });
+      card.appendChild(header);
+      card.appendChild(probs);
+      card.appendChild(caps);
+      grid.appendChild(card);
+    });
+  }
+
+  function switchView(view) {
+    currentView = view;
+    var storyView = document.getElementById('story-view');
+    var forceView = document.getElementById('force-view');
+    var fullView = document.getElementById('full-graph-view');
+    var btns = document.querySelectorAll('.view-toggle-btn');
+    btns.forEach(function (b) {
+      b.classList.toggle('active', b.dataset.view === view);
+    });
+    storyView.hidden = view !== 'story';
+    forceView.hidden = view !== 'force';
+    fullView.hidden = view !== 'full';
+    
+    if (view === 'force' && data && !window.forceGraphInitialized) {
+      buildForceGraph();
+    }
+  }
+
+  var forceSimulation = null;
+  var forceNodes = [];
+  var forceLinks = [];
+
+  function buildForceGraph() {
+    if (!data || !window.d3) return;
+    window.forceGraphInitialized = true;
+
+    var frame = document.getElementById('force-frame');
+    var svg = d3.select('#force-svg');
+    var width = frame.clientWidth;
+    var height = frame.clientHeight;
+
+    svg.selectAll('*').remove();
+
+    var showHardware = document.getElementById('force-show-hardware').checked;
+    var showGroups = document.getElementById('force-show-groups').checked;
+
+    var nodes = [];
+    var links = [];
+    var nodeMap = new Map();
+
+    data.problems.forEach(function (p) {
+      var node = {
+        id: p.id,
+        label: p.label,
+        type: 'problem',
+        group: p.group,
+        radius: 8
+      };
+      nodes.push(node);
+      nodeMap.set(p.id, node);
+    });
+
+    if (showHardware) {
+      data.hardware.forEach(function (h) {
+        var node = {
+          id: h.id,
+          label: h.short || h.label,
+          type: 'hardware',
+          group: 'hardware',
+          radius: 6
+        };
+        nodes.push(node);
+        nodeMap.set(h.id, node);
+      });
+    }
+
+    data.software.forEach(function (s) {
+      var node = {
+        id: s.id,
+        label: s.label,
+        type: 'software',
+        group: 'software',
+        radius: 10
+      };
+      nodes.push(node);
+      nodeMap.set(s.id, node);
+    });
+
+    data.links.forEach(function (pair) {
+      var prob = nodeMap.get(pair[0]);
+      var sw = nodeMap.get(pair[1]);
+      if (!prob || !sw) return;
+
+      if (showHardware) {
+        var s = data.software.find(function (x) { return x.id === pair[1]; });
+        var hwList = s ? (s.hardware || []) : [];
+        if (hwList.length === 0) {
+          links.push({ source: pair[0], target: pair[1], type: 'direct' });
+        } else {
+          hwList.forEach(function (hid) {
+            var hw = nodeMap.get(hid);
+            if (hw) {
+              links.push({ source: pair[0], target: hid, type: 'prob-hw' });
+              links.push({ source: hid, target: pair[1], type: 'hw-sw' });
+            }
+          });
+        }
+      } else {
+        links.push({ source: pair[0], target: pair[1], type: 'direct' });
+      }
+    });
+
+    forceNodes = nodes;
+    forceLinks = links;
+
+    var linkCounts = new Map();
+    links.forEach(function (l) {
+      linkCounts.set(l.source, (linkCounts.get(l.source) || 0) + 1);
+      linkCounts.set(l.target, (linkCounts.get(l.target) || 0) + 1);
+    });
+    nodes.forEach(function (n) {
+      var count = linkCounts.get(n.id) || 0;
+      n.radius = n.type === 'software' ? 8 + count * 0.5 : n.type === 'problem' ? 6 + count * 0.3 : 5;
+    });
+
+    forceSimulation = d3.forceSimulation(nodes)
+      .force('link', d3.forceLink(links).id(function (d) { return d.id; }).distance(80))
+      .force('charge', d3.forceManyBody().strength(-200))
+      .force('center', d3.forceCenter(width / 2, height / 2))
+      .force('collision', d3.forceCollide().radius(function (d) { return d.radius + 4; }));
+
+    var g = svg.append('g');
+
+    var zoom = d3.zoom()
+      .scaleExtent([0.3, 3])
+      .on('zoom', function (event) {
+        g.attr('transform', event.transform);
+      });
+    svg.call(zoom);
+
+    var link = g.append('g')
+      .selectAll('line')
+      .data(links)
+      .join('line')
+      .attr('class', function (d) {
+        return 'force-link' + (d.type === 'hw-sw' ? ' force-link-hardware' : '');
+      });
+
+    var node = g.append('g')
+      .selectAll('circle')
+      .data(nodes)
+      .join('circle')
+      .attr('class', function (d) {
+        if (!showGroups || d.type !== 'problem') {
+          return 'force-node force-node-' + d.type;
+        }
+        return 'force-node force-node-' + d.group;
+      })
+      .attr('r', function (d) { return d.radius; })
+      .call(d3.drag()
+        .on('start', dragstarted)
+        .on('drag', dragged)
+        .on('end', dragended));
+
+    var label = g.append('g')
+      .selectAll('text')
+      .data(nodes.filter(function (d) { return d.type === 'software' || d.radius > 8; }))
+      .join('text')
+      .attr('class', 'force-label')
+      .attr('dy', function (d) { return d.radius + 12; })
+      .text(function (d) { return d.label.length > 20 ? d.label.substring(0, 18) + '…' : d.label; });
+
+    var tooltip = d3.select(frame).append('div').attr('class', 'force-tooltip');
+
+    node.on('mouseover', function (event, d) {
+      tooltip.html('<strong>' + d.label + '</strong>' + 
+        (d.type === 'problem' ? '<br>Group: ' + d.group : '') +
+        '<br>Type: ' + d.type)
+        .style('left', (event.pageX - frame.offsetLeft + 10) + 'px')
+        .style('top', (event.pageY - frame.offsetTop - 10) + 'px')
+        .classed('show', true);
+    }).on('mouseout', function () {
+      tooltip.classed('show', false);
+    });
+
+    forceSimulation.on('tick', function () {
+      link
+        .attr('x1', function (d) { return d.source.x; })
+        .attr('y1', function (d) { return d.source.y; })
+        .attr('x2', function (d) { return d.target.x; })
+        .attr('y2', function (d) { return d.target.y; });
+
+      node
+        .attr('cx', function (d) { return d.x; })
+        .attr('cy', function (d) { return d.y; });
+
+      label
+        .attr('x', function (d) { return d.x; })
+        .attr('y', function (d) { return d.y; });
+    });
+
+    function dragstarted(event, d) {
+      if (!event.active) forceSimulation.alphaTarget(0.3).restart();
+      d.fx = d.x;
+      d.fy = d.y;
+    }
+
+    function dragged(event, d) {
+      d.fx = event.x;
+      d.fy = event.y;
+    }
+
+    function dragended(event, d) {
+      if (!event.active) forceSimulation.alphaTarget(0);
+      d.fx = null;
+      d.fy = null;
+    }
+
+    document.getElementById('force-show-hardware').addEventListener('change', function () {
+      window.forceGraphInitialized = false;
+      buildForceGraph();
+    });
+
+    document.getElementById('force-show-groups').addEventListener('change', function () {
+      node.attr('class', function (d) {
+        if (!document.getElementById('force-show-groups').checked || d.type !== 'problem') {
+          return 'force-node force-node-' + d.type;
+        }
+        return 'force-node force-node-' + d.group;
+      });
+    });
+
+    document.getElementById('force-reset').addEventListener('click', function () {
+      nodes.forEach(function (n) {
+        n.fx = null;
+        n.fy = null;
+      });
+      forceSimulation.alpha(1).restart();
+      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
+    });
+  }
+
+  function bindViewToggle() {
+    var bar = document.querySelector('.view-toggle-bar');
+    if (!bar) return;
+    bar.addEventListener('click', function (e) {
+      var btn = e.target.closest('.view-toggle-btn');
+      if (!btn) return;
+      switchView(btn.dataset.view);
+    });
   }
 
   function clearHover() {
@@ -1198,6 +1651,10 @@ html.embed.panel .meter-footer { display: none; }
   if (HOST_PARAM === 'ground' || HOST_PARAM === 'full') {
     activeHost = HOST_PARAM;
   }
+
+  buildStoryView();
+  bindViewToggle();
+  switchView('story');
 
   fetch(MAP_URL)
     .then(function (r) { if (!r.ok) throw new Error('map load failed'); return r.json(); })

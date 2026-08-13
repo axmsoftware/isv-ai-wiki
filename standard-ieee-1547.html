@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IEEE 1547 — DER Interconnection · Standards · ISV</title>
+<link rel="icon" href="assets/favicon.ico" sizes="any">
+<link rel="stylesheet" href="css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="css/meter-focus.css">
+<script src="js/isv-theme.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
+a { color: var(--green); }
+.wrap { max-width: 920px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 24px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.85rem; }
+.lead { font-size: 14px; margin-bottom: 0.85rem; max-width: 54rem; line-height: 1.5; }
+h2 { font-size: 16px; font-weight: 500; margin: 1.5rem 0 0.65rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); }
+h3 { font-size: 14px; font-weight: 500; margin: 1.1rem 0 0.5rem; color: var(--text); }
+p { font-size: 14px; color: var(--text-2); margin-bottom: 0.75rem; line-height: 1.55; max-width: 54rem; }
+ul, ol { margin: 0 0 0.85rem 1.5rem; color: var(--text-2); line-height: 1.6; }
+li { margin-bottom: 0.35rem; font-size: 14px; }
+code { font-family: var(--mono); font-size: 13px; background: var(--bg-2); padding: 0.15rem 0.4rem; border-radius: 4px; }
+.callout { border-left: 3px solid var(--teal); background: var(--teal-50); padding: 0.75rem 0.95rem; border-radius: 0 8px 8px 0; margin-bottom: 1rem; font-size: 13px; line-height: 1.5; }
+.callout > strong:first-child { color: var(--teal); display: block; margin-bottom: 0.4rem; }
+.callout-key { border-left-color: var(--green); background: var(--green-50); }
+.callout-key > strong:first-child { color: var(--green); }
+.callout-warn { border-left-color: var(--amber); background: var(--amber-50); }
+.callout-warn > strong:first-child { color: var(--amber); }
+.spec-grid { display: grid; grid-template-columns: 1fr; gap: 0.65rem; margin-bottom: 1rem; }
+@media (min-width: 720px) { .spec-grid { grid-template-columns: repeat(2, 1fr); } }
+.spec-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.75rem 0.85rem; background: var(--bg-2); font-size: 13px; line-height: 1.5; }
+.spec-card h4 { margin: 0 0 0.35rem; font-size: 13px; color: var(--green); font-weight: 500; }
+.spec-card p { font-size: 12px; margin-bottom: 0; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 1rem; }
+th, td { border: 1px solid var(--border); padding: 0.5rem 0.65rem; text-align: left; vertical-align: top; line-height: 1.45; }
+th { background: var(--bg-2); font-size: 11px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.02em; }
+td { color: var(--text-2); font-size: 13px; }
+.timeline { margin: 1rem 0; }
+.timeline-item { display: flex; gap: 0.75rem; margin-bottom: 0.85rem; }
+.timeline-year { font-weight: 600; color: var(--green); min-width: 4rem; font-size: 13px; }
+.timeline-text { font-size: 13px; color: var(--text-2); line-height: 1.5; }
+.footer-nav { font-size: 13px; color: var(--text-2); margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+.footer-nav a { margin-right: 1rem; }
+</style>
+</head>
+<body>
+<div class="isv-topbar">
+  <a class="isv-topbar-brand" href="index.html"><span class="isv-topbar-mark">ISV</span> IEEE Smart Village</a>
+  <button type="button" class="theme-toggle theme-toggle--icon" data-isv-theme-toggle aria-label="Switch to dark mode">
+    <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/></svg>
+    <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+  </button>
+</div>
+<div class="wrap">
+  <div class="back"><a href="index.html#standards">← Standards</a></div>
+
+  <h1>IEEE 1547-2018</h1>
+  <p class="sub">Standard for Interconnection and Interoperability of Distributed Energy Resources with Electric Power Systems</p>
+
+  <p class="lead">IEEE 1547 defines technical requirements and testing procedures for connecting distributed energy resources (DER) — solar, storage, microgrids, generators — to the electric grid. It specifies voltage/frequency limits, power quality rules, and grid support functions so DER can safely ride through disturbances without tripping offline or destabilizing the feeder.</p>
+
+  <div class="callout callout-key">
+    <strong>Core purpose</strong>
+    <p>Enable safe, reliable interconnection of behind-the-meter and community-scale DER while maintaining grid stability. Mandates that DER <em>support</em> the grid (frequency/voltage response, ride-through) rather than just passively consume/export power.</p>
+  </div>
+
+  <h2>What it is at its core</h2>
+
+  <p>IEEE 1547 is an <strong>interconnection standard</strong> — the contract between a DER owner and the utility defining:</p>
+
+  <ul>
+    <li><strong>Performance requirements</strong> — voltage/frequency operating ranges, response times, power quality limits (harmonics, flicker, DC injection)</li>
+    <li><strong>Interoperability functions</strong> — grid support capabilities (volt-VAR, freq-watt, ride-through), communication protocols</li>
+    <li><strong>Test procedures</strong> — certification that the DER meets those requirements before interconnection approval</li>
+    <li><strong>Interface point</strong> — point of common coupling (PCC) where DER connects to utility distribution system</li>
+  </ul>
+
+  <p>It does <strong>not</strong> dictate equipment design or internal DER control algorithms. It only specifies <strong>external behavior at the PCC</strong> — what the utility sees.</p>
+
+  <div class="callout callout-warn">
+    <strong>Village metering context</strong>
+    <p>IEEE 1547 is a <strong>Phase 3</strong> standard in the ISV roadmap — relevant when a village microgrid interconnects to the main utility grid. It does <strong>not</strong> address islanded microgrids, prepaid metering, or village-internal load management (Phase 1–2). Most village systems deploy <em>before</em> grid arrival and run in island mode; 1547 becomes relevant only at grid-facing interconnection.</p>
+  </div>
+
+  <h2>How it came to be</h2>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-year">2003</div>
+      <div class="timeline-text"><strong>IEEE 1547-2003</strong> — First edition published. Simple interconnection rules: DER must cease to energize utility feeder within 2 seconds of grid disturbance (anti-islanding). Minimal grid support.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2000s</div>
+      <div class="timeline-text">Rooftop solar explosion in California, Germany, Japan. Utilities see voltage rise, reverse power flow, protection coordination issues. Need for <em>active</em> grid support becomes clear.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2014</div>
+      <div class="timeline-text">California Rule 21 mandates smart inverter functions (volt-VAR, freq-watt). Hawaii HECO adopts similar rules for high-penetration solar feeders.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2018</div>
+      <div class="timeline-text"><strong>IEEE 1547-2018</strong> — Major revision. DER must now <em>support</em> grid stability: ride-through faults, provide reactive power, regulate voltage. Categories A/B for performance levels.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-year">2020+</div>
+      <div class="timeline-text">State PUCs adopt 2018 version. FERC orders (2222) require ISOs to allow DER aggregation. IEEE 1547.1 test procedures updated. Series expands: 1547.2 (application guide), 1547.3 (monitoring), 1547.9 (microgrids).</div>
+    </div>
+  </div>
+
+  <h3>Why the 2018 revision happened</h3>
+
+  <p>The 2003 standard assumed DER was <strong>passive</strong> — just disconnect during grid trouble. By 2015, California had 10+ GW of rooftop solar, and Hawaii hit 30%+ daytime penetration on some circuits. Problems emerged:</p>
+
+  <ul>
+    <li><strong>Voltage rise</strong> — midday solar export pushed feeder voltages above ANSI limits, forcing curtailment</li>
+    <li><strong>Duck curve</strong> — evening ramp when solar drops and load peaks stressed grid ramping capability</li>
+    <li><strong>Protection blinding</strong> — backfed fault current confused recloser coordination</li>
+    <li><strong>Unintended islanding</strong> — high DER penetration could sustain island after feeder trip, safety hazard</li>
+  </ul>
+
+  <p>The 2018 revision reframed DER as <strong>active grid participants</strong> that must help stabilize the system, not just avoid harm.</p>
+
+  <h2>How it works</h2>
+
+  <h3>Data structure and settings shape</h3>
+
+  <p>IEEE 1547 doesn't define a <em>data format</em> per se — it defines <strong>behavior requirements</strong>. But inverters expose 1547 settings via standardized models. Here's the conceptual shape:</p>
+
+  <div style="background: linear-gradient(135deg, var(--bg-2) 0%, var(--bg-3) 100%); border: 2px solid var(--green); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem;">
+    <div style="font-size: 14px; font-weight: 600; color: var(--green); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="font-size: 18px;">⚡</span> DER_Settings (IEEE 1547 Compliance Object)
+    </div>
+
+    <!-- Nameplate -->
+    <div style="background: var(--green-50); border-left: 4px solid var(--green); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--green); margin-bottom: 0.5rem;">📋 Nameplate</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 11px; color: var(--text-2);">
+        <div><strong>rated_power_W:</strong> 5000</div>
+        <div><strong>rated_voltage_V:</strong> 240</div>
+        <div><strong>category:</strong> "A" / "B"</div>
+      </div>
+    </div>
+
+    <!-- Ride-through -->
+    <div style="background: var(--amber-50); border-left: 4px solid var(--amber); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--amber); margin-bottom: 0.65rem;">🛡️ Voltage Ride-Through</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 0.35rem;">✓ Must Remain Connected</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            0.88 pu → continuous<br>
+            0.50 pu → 0.16 sec<br>
+            0.00 pu → 0.16 sec
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--red); margin-bottom: 0.35rem;">✗ Must Trip</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            1.10 pu → 13.0 sec<br>
+            1.20 pu → 0.16 sec
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background: var(--blue-50); border-left: 4px solid var(--blue); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--blue); margin-bottom: 0.65rem;">📡 Frequency Ride-Through</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--green); margin-bottom: 0.35rem;">✓ Must Remain Connected</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            60.0 Hz → continuous<br>
+            59.3 Hz → 299 sec<br>
+            57.0 Hz → 0.16 sec
+          </div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; font-size: 11px;">
+          <div style="font-weight: 600; color: var(--red); margin-bottom: 0.35rem;">✗ Must Trip</div>
+          <div style="color: var(--text-2); line-height: 1.5;">
+            60.5 Hz → 299 sec<br>
+            61.8 Hz → 0.16 sec
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grid Support Functions -->
+    <div style="background: var(--teal-50); border-left: 4px solid var(--teal); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--teal); margin-bottom: 0.65rem;">⚙️ Grid Support Functions</div>
+      
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--teal); margin-bottom: 0.4rem;">Volt-VAR Curve (4 points)</div>
+        <div style="display: flex; gap: 0.4rem; font-size: 10px; color: var(--text-2);">
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--green-50); border-radius: 4px;">
+            0.92 pu<br><strong>+44% VAR</strong><br><span style="font-size: 9px;">inject</span>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--bg-2); border-radius: 4px;">
+            0.98 pu<br><strong>0% VAR</strong><br><span style="font-size: 9px;">deadband</span>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--bg-2); border-radius: 4px;">
+            1.02 pu<br><strong>0% VAR</strong><br><span style="font-size: 9px;">deadband</span>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--red-50); border-radius: 4px;">
+            1.08 pu<br><strong>-44% VAR</strong><br><span style="font-size: 9px;">absorb</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: var(--bg); border-radius: 6px; padding: 0.6rem;">
+        <div style="font-size: 11px; font-weight: 600; color: var(--teal); margin-bottom: 0.4rem;">Freq-Watt Curve</div>
+        <div style="display: flex; gap: 0.4rem; font-size: 10px; color: var(--text-2);">
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--green-50); border-radius: 4px;">
+            60.0 Hz<br><strong>100% P</strong>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--amber-50); border-radius: 4px;">
+            61.0 Hz<br><strong>50% P</strong>
+          </div>
+          <div style="flex: 1; text-align: center; padding: 0.3rem; background: var(--red-50); border-radius: 4px;">
+            62.0 Hz<br><strong>0% P</strong>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Real-time Status -->
+    <div style="background: var(--purple-50); border-left: 4px solid var(--purple); border-radius: 8px; padding: 0.85rem; margin-bottom: 0.75rem;">
+      <div style="font-size: 12px; font-weight: 600; color: var(--purple); margin-bottom: 0.5rem;">📊 Real-time Status</div>
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; font-size: 11px;">
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">VOLTAGE</div>
+          <div style="font-weight: 600; color: var(--green);">241.3 V</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">FREQUENCY</div>
+          <div style="font-weight: 600; color: var(--green);">59.98 Hz</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">STATUS</div>
+          <div style="font-weight: 600; color: var(--green);">CONNECTED</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">ACTIVE POWER</div>
+          <div style="font-weight: 600; color: var(--text);">4200 W</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">REACTIVE POWER</div>
+          <div style="font-weight: 600; color: var(--text);">-150 VAR</div>
+        </div>
+        <div style="background: var(--bg); border-radius: 6px; padding: 0.5rem; text-align: center;">
+          <div style="color: var(--text-3); font-size: 9px; margin-bottom: 0.2rem;">POWER FACTOR</div>
+          <div style="font-weight: 600; color: var(--text);">0.98</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Safety & Quality -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+      <div style="background: var(--red-50); border-left: 4px solid var(--red); border-radius: 8px; padding: 0.75rem;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--red); margin-bottom: 0.5rem;">🚨 Anti-Islanding</div>
+        <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+          <div><strong>enabled:</strong> true</div>
+          <div><strong>cease_to_energize:</strong> ≤ 2.0 sec</div>
+        </div>
+      </div>
+      <div style="background: var(--ieee-blue-50); border-left: 4px solid var(--ieee-blue); border-radius: 8px; padding: 0.75rem;">
+        <div style="font-size: 12px; font-weight: 600; color: var(--ieee-blue); margin-bottom: 0.5rem;">✨ Power Quality</div>
+        <div style="font-size: 11px; color: var(--text-2); line-height: 1.5;">
+          <div><strong>THD:</strong> 3.2% (< 5%)</div>
+          <div><strong>DC injection:</strong> 0.3% (< 0.5%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>How this maps to real devices</strong>
+    <p>Inverters typically expose these settings via:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li><strong>SunSpec Modbus</strong> — Models 122 (volt-VAR), 123 (freq-watt), 126 (volt-watt), 132 (grid support)</li>
+      <li><strong>IEEE 2030.5</strong> — DER control resources (DERProgram, DERCurve, DERStatus)</li>
+      <li><strong>Proprietary apps</strong> — vendor-specific monitoring portals or local WiFi config interfaces</li>
+    </ul>
+    <p style="margin-top: 0.5rem;">The <strong>utility or aggregator</strong> reads/writes these settings remotely via 2030.5 or Modbus TCP. The <strong>inverter</strong> enforces the rules internally (ride-through curves, anti-islanding, curve following) and reports status back.</p>
+  </div>
+
+  <h3>Core technical requirements</h3>
+
+  <div class="spec-grid">
+    <div class="spec-card">
+      <h4>Voltage/frequency operating range</h4>
+      <p>DER must stay connected during normal and abnormal voltage/frequency excursions (e.g., 0.88–1.10 pu voltage, 59.3–60.5 Hz). Ride-through curves define how long to stay online vs. trip for fault clearing.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Volt-VAR / Freq-Watt</h4>
+      <p>Inverters adjust reactive power (VAR) output based on local voltage to regulate feeder voltage. Frequency-watt reduces real power during over-frequency (too much generation) to prevent frequency runaway.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Anti-islanding</h4>
+      <p>DER must detect loss of utility source and cease energizing within 2 seconds (unchanged from 2003). Prevents unintended island that could shock lineworkers or damage equipment.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Power quality</h4>
+      <p>Limits on harmonics (IEEE 519 referenced), DC injection (<0.5% rated current), flicker (IEC 61000-4-15). Ensures DER doesn't degrade power quality for neighbors.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Interoperability (Annex E)</h4>
+      <p>Optional communication functions: remote monitoring, connect/disconnect, export limit changes, grid event log. Uses IEEE 2030.5 (SEP 2.0) protocol for standardized messaging.</p>
+    </div>
+    <div class="spec-card">
+      <h4>Categories A / B</h4>
+      <p>Category A (default): basic performance. Category B: enhanced capabilities (faster voltage regulation, wider ride-through). Utility can specify which category for interconnection approval.</p>
+    </div>
+  </div>
+
+  <h3>Testing and certification</h3>
+
+  <p><strong>IEEE 1547.1-2020</strong> specifies conformance test procedures. Before interconnection, DER equipment must pass:</p>
+
+  <ul>
+    <li><strong>Type testing</strong> — lab certification that inverter model meets 1547 (voltage/frequency response, ride-through, anti-islanding)</li>
+    <li><strong>Commissioning tests</strong> — field verification after installation (settings check, trip times, communication)</li>
+    <li><strong>Periodic testing</strong> — optional rechecks every few years to ensure continued compliance</li>
+  </ul>
+
+  <p>Certified test labs (e.g., CSA, UL, Intertek) perform type tests. Field commissioning is installer/utility responsibility.</p>
+
+  <h2>Relationship to other standards</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Standard</th>
+        <th>Relationship to IEEE 1547</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>IEEE 2030.5</strong> (SEP 2.0)</td>
+        <td>Communication protocol for interoperability functions (Annex E). DER uses 2030.5 to receive commands from utility DERMS or aggregator.</td>
+      </tr>
+      <tr>
+        <td><strong>UL 1741</strong></td>
+        <td>Safety certification for inverters. UL 1741 Supplement A (SA) incorporates IEEE 1547-2018 performance tests — inverter must pass both for interconnection.</td>
+      </tr>
+      <tr>
+        <td><strong>IEEE 1547.2</strong></td>
+        <td>Application guide — how to apply 1547 rules in practice (sizing, protection coordination, area EPS examples).</td>
+      </tr>
+      <tr>
+        <td><strong>IEEE 1547.3</strong></td>
+        <td>Monitoring and information exchange — telemetry for DER visibility (complements 2030.5 control messages).</td>
+      </tr>
+      <tr>
+        <td><strong>IEEE 1547.9</strong></td>
+        <td>Microgrid interconnection — extends 1547 for whole-microgrid PCC (aggregated resources, black start, seamless transfer).</td>
+      </tr>
+      <tr>
+        <td><strong>IEEE 519</strong></td>
+        <td>Harmonic limits referenced by 1547 — IEEE 1547 delegates power quality details to IEEE 519.</td>
+      </tr>
+      <tr>
+        <td><strong>SunSpec Modbus</strong></td>
+        <td>Device-level data model for inverter monitoring/control. Many inverters expose 1547 settings via SunSpec registers (Model 122, 123, 126 for volt-VAR/freq-watt curves).</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Relevance to village microgrids</h2>
+
+  <div class="callout">
+    <strong>When IEEE 1547 matters for ISV deployments</strong>
+    <p>Most village microgrids in ISV portfolio are <strong>islanded</strong> — not yet connected to utility grid. IEEE 1547 becomes relevant only at <strong>grid interconnection</strong>, typically <strong>years after</strong> initial village deployment when:</p>
+    <ul style="margin: 0.5rem 0 0;">
+      <li>National grid extension reaches the village</li>
+      <li>Microgrid wants to export excess solar or buy grid power as backup</li>
+      <li>Utility requires interconnection study and 1547 compliance for approval</li>
+    </ul>
+    <p style="margin-top: 0.5rem;"><strong>Phase 1–2 priorities</strong> (prepaid metering, STS tokens, feeder loss visibility, edge control) operate <em>before</em> grid arrival and don't require 1547 compliance. <strong>Phase 3</strong> — grid-facing protocols (1547, 2030.5, OpenADR) — activates only when the utility interconnection agreement is signed.</p>
+  </div>
+
+  <h3>ISV-specific considerations</h3>
+
+  <ul>
+    <li><strong>Size threshold</strong> — Many village microgrids are <10 kW per home, aggregate to 50–200 kW. IEEE 1547 applies to <em>all</em> DER sizes, but small systems may get simplified interconnection review.</li>
+    <li><strong>Export vs. island</strong> — If microgrid stays islanded (never exports to utility), 1547 doesn't apply. Some villages choose permanent island mode to avoid utility interconnection complexity.</li>
+    <li><strong>IEEE 1547.9 path</strong> — When grid arrives, village microgrid may interconnect as a <em>single aggregated resource</em> (one PCC) rather than individual home inverters. IEEE 1547.9 covers this case.</li>
+    <li><strong>Prepaid/STS unchanged</strong> — IEEE 1547 doesn't address village-internal revenue metering, STS tokens, or prepaid disconnect. Those remain Phase 1 concerns (DLMS/COSEM, OpenPAYGO).</li>
+  </ul>
+
+  <h2>Key takeaways</h2>
+
+  <ul>
+    <li>IEEE 1547 is the <strong>grid interconnection contract</strong> — defines how DER behaves at the utility interface</li>
+    <li>2018 revision shifted DER from <strong>passive</strong> (just disconnect) to <strong>active</strong> (support grid stability)</li>
+    <li>Mandates volt-VAR, freq-watt, ride-through — smart inverter functions now standard in NA/EU/Australia</li>
+    <li>For ISV: <strong>Phase 3 standard</strong> — relevant at grid arrival, not during islanded village operations (Phase 1–2)</li>
+    <li>Complements IEEE 2030.5 (communication), UL 1741 SA (safety), SunSpec (device models)</li>
+  </ul>
+
+  <h2>Further reading</h2>
+
+  <ul>
+    <li><a href="https://standards.ieee.org/ieee/1547/6953/" target="_blank" rel="noopener">IEEE 1547-2018 standard (purchase) ↗</a></li>
+    <li><a href="https://standards.ieee.org/ieee/1547.1/7531/" target="_blank" rel="noopener">IEEE 1547.1-2020 test procedures ↗</a></li>
+    <li><a href="https://www.energy.gov/eere/solar/sunspec-alliance-ieee-1547-2018-resources" target="_blank" rel="noopener">DOE IEEE 1547-2018 resources ↗</a></li>
+    <li><a href="https://sunspec.org/ieee-1547-2018-resources/" target="_blank" rel="noopener">SunSpec Alliance 1547 implementation guide ↗</a></li>
+    <li><a href="https://www.cpuc.ca.gov/industries-and-topics/electrical-energy/infrastructure/smart-grid/rule-21" target="_blank" rel="noopener">California Rule 21 (state adoption) ↗</a></li>
+  </ul>
+
+  <div class="footer-nav">
+    <a href="index.html#standards">← All standards</a>
+    <a href="standard-ieee-2030-5.html">IEEE 2030.5 →</a>
+  </div>
+</div>
+</body>
+</html>

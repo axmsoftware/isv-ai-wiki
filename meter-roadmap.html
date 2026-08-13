@@ -117,6 +117,58 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     </div>
   </div>
 
+  <h2>Outcome themes → primary phase</h2>
+  <p class="body-text">Six outcome clusters that village operators care about, mapped to which phase solves them. Full details: <a href="meter-solutions-map.html">Solutions map</a>.</p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Outcome theme</th>
+        <th>Main problems</th>
+        <th>Primary phase</th>
+        <th>Core capability</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Revenue collection</td>
+        <td>Per-home kWh, collect-before-use, deliver credit, show balance, token audit, O&M revenue</td>
+        <td>Phase 1</td>
+        <td>Prepaid & tokens + Operator billing platform (ThunderCloud / MPM)</td>
+      </tr>
+      <tr>
+        <td>Control</td>
+        <td>Disconnect, reconnect, multi-home pole</td>
+        <td>Phase 1 → 2</td>
+        <td>Prepaid path + Edge EMS / tenant control</td>
+      </tr>
+      <tr>
+        <td>Loss & theft visibility</td>
+        <td>Illegal taps, unmetered load, leakage, neutral imbalance, meters disagree, spot theft</td>
+        <td>Phase 2</td>
+        <td>Feeder AMI / OpenAMI + Field QA</td>
+      </tr>
+      <tr>
+        <td>Operational visibility</td>
+        <td>Voltage, instant power, serial & clock</td>
+        <td>Phase 1 → 2</td>
+        <td>Billing register model (VMRS) + Northbound telemetry</td>
+      </tr>
+      <tr>
+        <td>Cost & independence</td>
+        <td>Meter capex, MDMS cost, mixed protocols, vendor exit, inverter vs billing</td>
+        <td>Phase 1–2</td>
+        <td>Scope definition + Vendor study + open northbound</td>
+      </tr>
+      <tr>
+        <td>Comms resilience</td>
+        <td>Cloud unreachable, prepaid offline, vending down</td>
+        <td>Phase 1–2</td>
+        <td>Resilient comms design + offline token path</td>
+      </tr>
+    </tbody>
+  </table>
+
   <h2 id="phase-1">Phase 1 · Installed-base interop (detail)</h2>
   <p class="body-text">Goal: operators keep collecting revenue and controlling disconnects while open stacks learn to speak the same southbound dialects. “Legacy” here means <em>installed base</em> — STS and DLMS are not obsolete; they are the field.</p>
 
