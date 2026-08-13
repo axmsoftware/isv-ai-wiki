@@ -223,67 +223,17 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <p class="body-text">Multi-vendor integration session — connect SteamaCo, SparkMeter, and OpenAMI cabinets via MQTT aggregation. Build REST → MQTT bridges, unified Grafana dashboard, compare architectures (cost, scalability, sovereignty). Decision matrix workshop for deployment planning.</p>
   <p class="body-text"><strong>Register Day 2:</strong> <a href="https://luma.com/skhy0ib4" target="_blank" rel="noopener">Tuesday 22 Sep — INTEGRATE ↗</a></p>
 
-  <h2>Mock village hardware (3-cabinet comparison)</h2>
-  <p class="body-text">Workshop assembly scenario: Build three cabinets representing different vendor approaches, then integrate them via MQTT aggregation. Each simulates 3–5 households (~300W total load).</p>
+  <h2>What we're building</h2>
+  
+  <h3>Day 1: MAKE + CODE</h3>
+  <p class="body-text"><strong>Hardware build (11:30–16:00):</strong> Assemble <strong>EarthSpark TC2.0 reference cabinet</strong> — OpenAMI/MeshEMS v2.0 controller (ESP32), DLMS meters, CTs, contactors on DIN rail. Commission firmware, test MQTT telemetry, verify remote disconnect. Participants take home working ESP32 Street-EMS boards.</p>
+  
+  <p class="body-text"><strong>Integration challenge (16:15–18:00):</strong> Get it <strong>actually working</strong>. DLMS/COSEM meter queries over RS-485, MQTT publisher streaming real data, basic Node-RED dashboard. If time: REST → MQTT bridge pattern for closed vendor APIs.</p>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Vendor</th>
-        <th>Core Hardware (min)</th>
-        <th>Est. Cost</th>
-        <th>Key Features</th>
-        <th>Integration Method</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>SteamaCo</strong></td>
-        <td>3–5 Savi meters (60A/100A, Donsun-manufactured) · DCU (Data Concentrator Unit) · SIM card · Contactors · DIN cabinet</td>
-        <td>~$750–1,150</td>
-        <td>Proprietary prepaid (STS) · Nimbus AMI cloud (HES/MDMS) · Remote disconnect · Cellular or G3-PLC/RF-Mesh to DCU</td>
-        <td>Nimbus AMI REST API → MQTT bridge (requires partner credentials)</td>
-      </tr>
-      <tr>
-        <td><strong>SparkMeter</strong></td>
-        <td>3–5 smart meters · Base station (RF mesh or cellular) · SIM card · DIN cabinet</td>
-        <td>~$650–1,000</td>
-        <td>Prepaid (STS/mobile money) · RF mesh NAN · Cloud dashboard · Tamper alerts</td>
-        <td>REST API → MQTT bridge (requires partnership)</td>
-      </tr>
-      <tr>
-        <td><strong>OpenAMI / MeshEMS</strong></td>
-        <td>1 ESP32 PCB · 3–5 DLMS meters · CTs (100A) · Contactors · RS-485 adapter · DIN cabinet</td>
-        <td>~$725</td>
-        <td>Open-source · Local sovereignty (no cloud) · DLMS/COSEM interop · CT-based theft detection · MQTT native</td>
-        <td>Native MQTT publisher (full control)</td>
-      </tr>
-    </tbody>
-  </table>
+  <h3>Day 2: INTEGRATE</h3>
+  <p class="body-text"><strong>Multi-vendor integration:</strong> If Warren brings SteamaCo hardware, we build a REST → MQTT bridge to Nimbus AMI. Otherwise we demonstrate the <strong>pattern</strong> — how to connect any proprietary vendor API to an open MQTT backbone. Goal: participants leave knowing how to integrate <em>whatever hardware their project already bought</em> into a unified monitoring stack.</p>
 
-  <h3>Shared aggregation infrastructure</h3>
-  <ul>
-    <li><strong>Aggregator device:</strong> Raspberry Pi 4 or participant laptops (~$50)</li>
-    <li><strong>Software stack:</strong> Node-RED (visual flow), Grafana (dashboard), InfluxDB (time-series DB), Mosquitto (MQTT broker) — all free/open-source</li>
-    <li><strong>Network:</strong> Local WiFi router connecting all cabinets + aggregator</li>
-    <li><strong>Load simulation:</strong> 5 light bulbs (60W each) on switches, or resistive heater bank</li>
-    <li><strong>Power source:</strong> 240V AC from venue (simulates mini-grid feeder)</li>
-  </ul>
-
-  <h3>Workshop hardware approach</h3>
-  <p class="body-text"><strong>Balanced budget option (~$1,275):</strong></p>
-  <ul>
-    <li><strong>Build 1 full OpenAMI/MeshEMS cabinet</strong> (participants assemble, ESP32 PCBs take-home) — hands-on focus</li>
-    <li><strong>Demo 1 vendor cabinet</strong> (SteamaCo or SparkMeter pre-assembled) — partner equipment loan</li>
-    <li><strong>Simulate 3rd vendor</strong> via mock REST API (Python Flask on laptop) — zero cost, same integration pattern</li>
-    <li><strong>Result:</strong> 2 real + 1 virtual system, unified MQTT aggregation, comparative analysis</li>
-  </ul>
-
-  <p class="body-text"><strong>Day 1 — MAKE session deliverable (11:30–16:00):</strong> Functional OpenAMI/MeshEMS cabinet with DLMS meters, CTs, contactors mounted on DIN rail. Participants commission ESP32, test MQTT telemetry, verify remote disconnect. Compare with pre-built SteamaCo/SparkMeter cabinet demos.</p>
-
-  <p class="body-text"><strong>Day 1 — CODE session deliverable (16:15–18:00):</strong> Backend integration labs — DLMS/COSEM meter queries, OpenEMS aggregation pathways, REST → MQTT bridge for vendor APIs (Python or Node-RED). Optional: edge ML anomaly detection demo (TensorFlow Lite Micro on ESP32).</p>
-
-  <p class="body-text"><strong>Day 2 — INTEGRATE session deliverable:</strong> All three cabinets (SteamaCo, SparkMeter, OpenAMI) connected via common MQTT broker. Unified Grafana dashboard displaying real-time data from all vendors. Decision matrix comparing deployment cost, scalability, sovereignty, comms requirements, lifecycle sustainability. Participants leave with vendor-agnostic integration pattern applicable to any fleet.</p>
+  <p class="body-text"><strong>Decision workshop:</strong> Compare open (MeshEMS/OpenAMI) vs proprietary full-stack (SteamaCo/SparkMeter) on cost, lock-in, sovereignty, comms requirements. Honest trade-offs — not marketing.</p>
 
   <h2>Cloudless · sovereign architecture</h2>
   <p class="body-text">One evolution of Street-EMS: embedded <strong>LV feeder distributed intelligence</strong> — measure at feeder, branch, and customer; MQTT for actionable telemetry (not archive dumps). IETF <strong>Session Initiation Protocol</strong> (SIP, RFC 3261) admission dialogs are an optional <strong>Phase&nbsp;3</strong> control-plane path (grid / aggregator era), not year-one prepaid. Shifts the LV feeder from “last kilometre” to the <strong>first kilometre</strong> of community-owned electrification. Ties to <a href="index.html#village-metering/openami">OpenAMI</a>, <a href="index.html#village-metering/vmrs">OBIS · VMRS</a>, and <a href="index.html#village-metering/roadmap">roadmap</a>.</p>
@@ -329,49 +279,29 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <h2>Street-EMS hardware</h2>
   <p class="body-text">Workshop kits: <strong>NESL 865B</strong> (MeshEMS v2.0). v1 at <a href="power-africa-openami-presentation-2025.html">Power Africa 2025</a> and <a href="open-energy-hackathon-2025.html">Oakland hackathon 2025</a>. Diagram, BOM, firmware: <a href="index.html#village-metering/meshems">MeshEMS board hub</a>.</p>
 
-  <h2>Planning checklist</h2>
-  <p class="body-text">Internal organizer list — budget, room layout, shipping, materials.</p>
-
-  <h3>Hardware &amp; logistics</h3>
+  <h2>Organizer checklist</h2>
+  
+  <h3>Hardware (confirmed)</h3>
   <ul>
-    <li><strong>EMS PCBs</strong> — bench stock plus take-home units (see overview)</li>
-    <li><strong>Reference cabinets</strong> — build, ship, donate (see overview)</li>
-    <li><strong>DLMS meters</strong> — source 5–10 units (Donsun/Inhemeter/Hexing) for OpenAMI cabinet. HS code: 9028.30 (electricity meters)</li>
-    <li><strong>Current transformers</strong> — 5× 100A split-core CTs for household metering</li>
-    <li><strong>Raspberry Pi aggregator</strong> — 1–2 units with SD cards pre-loaded (Node-RED, Grafana, InfluxDB, Mosquitto)</li>
-    <li><strong>Budget</strong> — duties, shipping, HS-coded import, kit procurement (hardware target ~$1,500 for 3-cabinet demo)</li>
-    <li><strong>Room arrangement</strong> — bench layout for cabinet assembly, metering variants, mentoring stations, power outlets (240V AC)</li>
-    <li><strong>Materials</strong> — DIN rail, breakers, contactors, RS-485 adapters, wire; power rails per <a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-power">25 Jun notes</a></li>
-    <li><strong>Load bank</strong> — 5 light bulbs (60W) on switches, or portable resistive heater for consumption simulation</li>
-    <li><strong>Network equipment</strong> — WiFi router for local network, Ethernet cables</li>
-    <li><strong>HS codes &amp; AfCFTA</strong> — briefing materials for import, assembly, test, repair, export</li>
-    <li><strong>Shipping address</strong> — delivery address from Albert in Nairobi</li>
+    <li><strong>MeshEMS v2.0 PCBs</strong> — 15–20 units for take-home (NESL 865B)</li>
+    <li><strong>TC2.0 reference cabinet</strong> — EarthSpark design, DIN rail, contactors, breakers</li>
+    <li><strong>DLMS meters</strong> — 3–5 units for cabinet build (Donsun/Inhemeter/Hexing)</li>
+    <li><strong>Current transformers</strong> — 100A split-core CTs</li>
+    <li><strong>Materials</strong> — RS-485 adapters, wire, power rails (<a href="tech-comm-2026-06-25-ai-wiki-orientation.html#meshems-power">25 Jun notes</a>)</li>
+    <li><strong>Room setup</strong> — 240V AC, bench layout, power outlets</li>
+    <li><strong>Shipping</strong> — Nairobi address from Albert · HS code 9028.30 (electricity meters)</li>
   </ul>
 
-  <h3>Vendor coordination (critical)</h3>
+  <h3>Vendor coordination</h3>
   <ul>
-    <li><strong>SteamaCo:</strong> Coordinate with Warren Scott for equipment loan (2–3 Savi meters + DCU) + Nimbus AMI API access credentials for workshop. Note: Savi meters are Donsun-manufactured with SteamaCo firmware; Edge 6 is legacy (16A) product. Prefer Savi 60A/100A for realistic cabinet build.</li>
-    <li><strong>SparkMeter:</strong> Reach out to partnership team for equipment loan + API docs/credentials. <span class="todo">Contact TBD</span></li>
-    <li><strong>DLMS meter vendor:</strong> Confirm Kenya shipping timeline (4–6 weeks lead time typical). Local distributor preferred if available. Candidate vendors: Donsun (SteamaCo uses them), Inhemeter, Hexing, Calin.</li>
+    <li><strong>Warren Scott-White (SteamaCo):</strong> Guest speaker confirmed 10:50–11:20. Hardware loan TBD — if available, we demo REST → MQTT bridge to Nimbus AMI. If not, we teach the pattern with mock API.</li>
   </ul>
 
-  <h3>Software pre-configuration</h3>
+  <h3>Participant info</h3>
   <ul>
-    <li><strong>Raspberry Pi image</strong> — Pre-install Node-RED, Grafana, InfluxDB, Mosquitto. Test MQTT flows before workshop.</li>
-    <li><strong>Mock API servers</strong> — Python Flask scripts simulating SteamaCo/SparkMeter REST endpoints (if real vendor unavailable)</li>
-    <li><strong>MeshEMS firmware</strong> — Flash ESP32s with latest DLMS client code. Test with target meters beforehand.</li>
-    <li><strong>Grafana dashboards</strong> — Pre-build templates for multi-vendor visualization (kWh, voltage, current, credit balance)</li>
-    <li><strong>Decision matrix template</strong> — Spreadsheet/PDF worksheet for Day 2 INTEGRATE session</li>
-  </ul>
-
-  <h3>Participant prep</h3>
-  <ul>
-    <li><strong>Pre-workshop guide</strong> — Optional laptop setup instructions (Python, VS Code, MQTT client) for participants who want to code on own machines during CODE session</li>
-    <li><strong>Registration Day 1:</strong> <a href="https://luma.com/d7p7lqo0" target="_blank" rel="noopener">MAKE + CODE (Mon 21 Sep) ↗</a> or <a href="https://ieee-powerafrica.org/isvx/" target="_blank" rel="noopener">ISV @ PowerAfrica ↗</a></li>
-    <li><strong>Registration Day 2:</strong> <a href="https://luma.com/skhy0ib4" target="_blank" rel="noopener">INTEGRATE (Tue 22 Sep) ↗</a></li>
-    <li><strong>Arrival time Day 1</strong> — 10:50 AM for Warren Scott-White pre-session, or 11:30 AM for workshop start</li>
-    <li><strong>Laptop requirements</strong> — SSH client (PuTTY/Terminal) + web browser for MQTT dashboards</li>
-    <li><strong>No prior experience required</strong> — complete novice → functional Street-EMS cabinet in 3.5 hrs</li>
+    <li><strong>Registration:</strong> <a href="https://luma.com/d7p7lqo0" target="_blank" rel="noopener">Day 1 (Mon 21 Sep) ↗</a> · <a href="https://luma.com/skhy0ib4" target="_blank" rel="noopener">Day 2 (Tue 22 Sep) ↗</a></li>
+    <li><strong>What to bring:</strong> Laptop with SSH client + web browser</li>
+    <li><strong>Prior experience:</strong> None required</li>
   </ul>
 
   <h2>Action items (tracked)</h2>
