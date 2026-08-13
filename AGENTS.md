@@ -223,7 +223,7 @@ The study uses a **three-layer stack** (field / edge / cloud). The most **versat
 | **IEEE 2030.5** | Phase 3 — grid-facing DER gateways and utility programs — rarely the village prepaid meter. |
 | **OpenADR** | Phase 3 — utility/aggregator demand-response price/events (VTN/VEN); deferred until grid/aggregator counterpart exists. |
 | **Modbus RTU/TCP** | Phase 1–2 — EMS, hybrid inverters, Stellar Edge, DIN meters — generation/feeder and control, not STS token paths. |
-| **SIP (Session Initiation Protocol)** | IETF RFC 3261 — optional Phase 2 control-plane dialogs; OpenAMI MQTT may correlate via `sipCallId`. Not a register map. |
+| **SIP (Session Initiation Protocol)** | IETF RFC 3261 — optional Phase 3 control-plane dialogs; OpenAMI MQTT may correlate via `sipCallId`. Not a register map. |
 
 ### Northbound profile location
 

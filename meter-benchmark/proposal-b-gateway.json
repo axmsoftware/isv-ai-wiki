@@ -2,7 +2,7 @@
   "version": "proto-1",
   "prototype": "b",
   "title": "Proposal B \u00b7 Pole gateway normalization",
-  "subtitle": "DLMS south \u00b7 VMRS \u00b7 MQTT north \u00b7 optional IETF SIP (RFC 3261) for control dialogs",
+  "subtitle": "DLMS south \u00b7 VMRS \u00b7 MQTT north \u00b7 SIP (RFC 3261) deferred to Phase 3",
   "outOfScope": "STS vending at gateway, IEEE 1547, SunSpec on billing registers",
   "groups": [
     {
@@ -178,7 +178,7 @@
       ],
       "href": "meter-benchmark/northbound-mqtt-v0.1.json",
       "phase": [
-        2
+        3
       ]
     },
     {

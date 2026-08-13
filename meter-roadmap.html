@@ -112,7 +112,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
         <li>IEEE 2030.5</li>
         <li>OpenADR VTN/VEN</li>
         <li>SunSpec DER northbound</li>
-        <li class="later">SIP (RFC 3261) control dialogs — deferred until utility/aggregator counterpart exists</li>
+        <li class="later">SIP (RFC 3261) control dialogs — only if proven needed</li>
       </ul>
     </div>
   </div>
@@ -243,7 +243,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <p class="body-text">Street-EMS / MeshEMS, OpenAMI MQTT + VMRS-shaped payloads, feeder/branch/customer loss visibility, in-country kit assembly. Detail lives on <a href="index.html#village-metering/openami">OpenAMI</a> and <a href="index.html#village-metering/meshems">MeshEMS</a>.</p>
 
   <h2 id="phase-3">Phase 3 · Next-gen grid connectivity (sketch)</h2>
-  <p class="body-text">Utility and aggregator programs after “grid arrival”: IEEE&nbsp;1547, IEEE&nbsp;2030.5, OpenADR, SunSpec DER northbound. IETF SIP (RFC&nbsp;3261) deferred as an optional control-plane dialog layer until utility/aggregator counterpart exists. These are <strong>deferred</strong>, not dismissed — see <a href="index.html#standards">Standards</a>. Village prepaid priority stays Phase&nbsp;1–2 until a site has a real VTN/aggregator counterpart.</p>
+  <p class="body-text">Utility and aggregator programs after “grid arrival”: IEEE&nbsp;1547, IEEE&nbsp;2030.5, OpenADR, SunSpec DER northbound. Optional IETF SIP (RFC&nbsp;3261) control-plane dialogs (admit / authorize / correlate via <code>sipCallId</code> in northbound MQTT) only after Phase&nbsp;1–2 backends and telemetry are real — not a substitute for STS or DLMS, and not year-one prepaid. These are <strong>deferred</strong>, not dismissed — see <a href="index.html#standards">Standards</a>. Village prepaid priority stays Phase&nbsp;1–2 until a site has a real VTN/aggregator counterpart.</p>
 
   <p class="meter-footer">
     <a href="index.html#village-metering/overview">Overview</a> ·
