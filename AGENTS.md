@@ -49,6 +49,7 @@ isv-ai-wiki/
 ├── meter-village-scope.html      # Village definition · population · HDI (cited)
 ├── meter-vendor-study.html       # Cited vendor benchmark (standalone + embed)
 ├── village-worldline-day.html    # Village Simulator (Three.js hypothetical prepaid day)
+├── js/vendor/three/              # three@0.170.0 vendored — Cloudflare CSP blocks jsDelivr
 ├── meter-benchmark/
 │   ├── vmrs-registers.json       # Machine-readable VMRS register set v0.1
 │   └── northbound-mqtt-v0.1.json # Northbound JSON/MQTT profile + IETF SIP (RFC 3261) dialog correlation
