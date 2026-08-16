@@ -1,0 +1,4 @@
+three@0.170.0
+Vendored so isv.wiki CSP (script-src 'self' + Mapbox) can load Village Simulator.
+Source: https://cdn.jsdelivr.net/npm/three@0.170.0/
+License: MIT

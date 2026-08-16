@@ -234,7 +234,7 @@ html.dark .diagram-wrap { background: #f7f6f3; }
     <li>USB Gateway sees meters on the 2.4&nbsp;GHz mesh; GroundBolt talks through that Gateway.</li>
     <li>SparkNet-HTTP / Firefly plugins carry commands out and SSE (live event stream) / readings in.</li>
     <li>GroundBolt shows live kWh, power, voltage, state; can Enable/Disable and push balance (Open Code: read + toggle relays).</li>
-    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down; STS token path stays — do not redo vending.</li>
+    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down. SM meters do <strong>not</strong> decode STS / OpenPAYGO tokens — credit is a GroundBolt wallet (<code>set_balance</code> is display). Do not redo STS vending for other meter families here.</li>
     <li><strong>Meter keys ALWAYS stay on GroundBolt</strong> (never move to ThunderCloud even when cloud is enabled) — held by EarthSpark, A2EI escrow, or operator. Mishandling can brick meters.</li>
   </ul>
 
