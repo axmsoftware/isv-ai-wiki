@@ -96,8 +96,25 @@ function yWorldAt(t, now) {
   return (age / fut) * SCRUNCH_H;
 }
 
-function lastBreathY(min, hopI = 0) {
-  return yWorldAt(min, state.nowMin) + hopI * HOP_DY * 1.45;
+function hopFitK(min, hops, dy) {
+  if (hops <= 1) return 1;
+  const span = (hops - 1) * dy;
+  const base = yWorldAt(min, state.nowMin);
+  const top = isV2() ? PAST_TOP - 0.12 : v1Top() + 2;
+  const bot = isV2() ? -SCRUNCH_H + 0.12 : 0.08;
+  const room = base >= 0 ? top - base : base - bot;
+  if (span <= 0) return 1;
+  if (room <= 0.04) return 0.04 / span;
+  return span > room ? room / span : 1;
+}
+
+function stackHopWorldY(min, hopI, dyScale = 1, hops = 1) {
+  const dy = HOP_DY * dyScale;
+  return yWorldAt(min, state.nowMin) + hopI * dy * hopFitK(min, hops, dy);
+}
+
+function lastBreathY(min, hopI = 0, hops = 1) {
+  return stackHopWorldY(min, hopI, 1.45, hops);
 }
 const LINE_HANG = 1.15;
 const HOP_DY = 0.16;
@@ -154,6 +171,20 @@ function capacityColor(t) {
   const x = Math.max(0, Math.min(1, t));
   if (x < 0.5) return c.lerpColors(CAP_LO, CAP_MID, x / 0.5);
   return c.lerpColors(CAP_MID, CAP_HI, (x - 0.5) / 0.5);
+}
+
+/** Lambert + instanceColor as night glow. Patch after color_fragment so vColor is in. */
+function glowLambert(emit) {
+  const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  m.onBeforeCompile = (shader) => {
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <color_fragment>",
+      `#include <color_fragment>
+       totalEmissiveRadiance += diffuseColor.rgb * ${emit.toFixed(2)};`,
+    );
+  };
+  m.customProgramCacheKey = () => `glowL:${emit}`;
+  return m;
 }
 
 function pfColor(pf) {
@@ -290,7 +321,7 @@ const state = {
   focus: null,
   scope: { kind: "village" },
   scheme: "messages",
-  hide: { reading: true, pay: true, disconnect: false, sms: false, sync: false, mesh: false, worldline: true, rf: true, phase_xfer: false },
+  hide: { reading: true, pay: true, disconnect: false, sms: false, sync: false, mesh: true, worldline: true, rf: true, phase_xfer: false },
   anomalyOnly: true,
   houseQ: "",
   houseCluster: "all",
@@ -597,6 +628,7 @@ function boot() {
 
   timeGroup = new THREE.Group();
   timeGroup.scale.y = -1;
+  timeGroup.frustumCulled = false;
   scene.add(timeGroup);
 
   buildVillage();
@@ -662,7 +694,7 @@ function applyWindow() {
 function syncTimeLayout() {
   const v2 = isV2();
   timeUniforms.uBound.value = boundH;
-  clipPlanes[1].constant = v2 ? PAST_TOP + 0.08 : v1Top() + 4;
+  clipPlanes[1].constant = v2 ? PAST_TOP + 1.25 : v1Top() + 4;
   if (winBand) winBand.position.y = boundH;
   if (sprWin) sprWin.position.y = boundH + 0.4;
   if (nowPlane) nowPlane.position.y = v2 ? 0.04 : yWorldAt(state.nowMin, state.nowMin);
@@ -1229,9 +1261,10 @@ function buildVillage() {
 
   const hutGeo = new THREE.BoxGeometry(1, 1, 1);
   const roofGeo = new THREE.ConeGeometry(0.82, 0.48, 4);
-  hutMesh = new THREE.InstancedMesh(hutGeo, new THREE.MeshLambertMaterial({ color: 0x2e2e34 }), HOUSE_N);
-  roofMesh = new THREE.InstancedMesh(roofGeo, new THREE.MeshLambertMaterial({ color: 0x3a3a42 }), HOUSE_N);
+  hutMesh = new THREE.InstancedMesh(hutGeo, glowLambert(0.48), HOUSE_N);
+  roofMesh = new THREE.InstancedMesh(roofGeo, glowLambert(0.38), HOUSE_N);
   const dummy = new THREE.Object3D();
+  const hutCol = new THREE.Color();
   HOUSES.forEach((h, i) => {
     const s = 0.82 + (i % 5) * 0.11;
     const yaw = ((i * 17) % 11) * 0.28 - 1.1;
@@ -1246,6 +1279,9 @@ function buildVillage() {
     dummy.scale.set(s, 1, s);
     dummy.updateMatrix();
     roofMesh.setMatrixAt(i, dummy.matrix);
+    hutCol.copy(CAP_LO);
+    hutMesh.setColorAt(i, hutCol);
+    roofMesh.setColorAt(i, hutCol);
   });
   hutMesh.castShadow = true;
   hutMesh.receiveShadow = true;
@@ -1674,6 +1710,7 @@ function addMeshPacket(ids, min, color, kind, houseId, dashed, opacity = 0.9, dy
   const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat);
   if (dashed) line.computeLineDistances();
   line.userData = { kind, min, houseId, lineHops: ids.length, dyScale };
+  line.frustumCulled = false;
   addTime(line);
   eventMeshes.push(line);
   ids.forEach((id, i) => {
@@ -1684,7 +1721,8 @@ function addMeshPacket(ids, min, color, kind, houseId, dashed, opacity = 0.9, dy
       new THREE.MeshLambertMaterial({ color, transparent: true, opacity }),
     );
     bead.position.set(p.x, yAt(min) - i * dy, p.z);
-    bead.userData = { kind, min, houseId, hopI: i, dyScale };
+    bead.userData = { kind, min, houseId, hopI: i, dyScale, hops: ids.length };
+    bead.frustumCulled = false;
     addTime(bead);
     eventMeshes.push(bead);
   });
@@ -1702,6 +1740,7 @@ function addLastBreathPacket(ids, min, color, kind, houseId, dashed, opacity = 1
   const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), mat);
   if (dashed) line.computeLineDistances();
   line.userData = { kind, min, houseId };
+  line.frustumCulled = false;
   scene.add(line);
   eventMeshes.push(line);
   stackEvents.push({ mesh: line, min, hops: ids.length, line: true });
@@ -1712,22 +1751,26 @@ function addLastBreathPacket(ids, min, color, kind, houseId, dashed, opacity = 1
       new THREE.SphereGeometry(end ? 0.26 : 0.18, 10, 10),
       new THREE.MeshBasicMaterial({ color, transparent: true, opacity }),
     );
-    bead.position.set(p.x, lastBreathY(min, i), p.z);
+    bead.position.set(p.x, lastBreathY(min, i, ids.length), p.z);
     bead.userData = { kind, min, houseId };
+    bead.frustumCulled = false;
     scene.add(bead);
     eventMeshes.push(bead);
-    stackEvents.push({ mesh: bead, min, hopI: i, line: false });
+    stackEvents.push({ mesh: bead, min, hopI: i, hops: ids.length, line: false });
   });
 }
 
 function restackLastBreath() {
   for (const item of stackEvents) {
+    const hops = item.hops || 1;
     if (item.line) {
       const pos = item.mesh.geometry.getAttribute("position");
-      for (let i = 0; i < item.hops; i++) pos.setY(i, lastBreathY(item.min, i));
+      for (let i = 0; i < hops; i++) pos.setY(i, lastBreathY(item.min, i, hops));
       pos.needsUpdate = true;
+      item.mesh.geometry.computeBoundingSphere();
+      item.mesh.geometry.computeBoundingBox();
     } else {
-      item.mesh.position.y = lastBreathY(item.min, item.hopI);
+      item.mesh.position.y = lastBreathY(item.min, item.hopI, hops);
     }
   }
 }
@@ -1742,11 +1785,15 @@ function restackTimeStack() {
     const yOff = o.userData.yOff || 0;
     if (o.userData.lineHops) {
       const pos = o.geometry.getAttribute("position");
-      const dy = HOP_DY * (o.userData.dyScale || 1);
-      for (let i = 0; i < o.userData.lineHops; i++) {
-        pos.setY(i, v2 ? yAt(now) - yWorldAt(min, now) - i * dy : yWorldAt(min, now) + i * dy);
+      const hops = o.userData.lineHops;
+      const dyScale = o.userData.dyScale || 1;
+      for (let i = 0; i < hops; i++) {
+        const worldY = stackHopWorldY(min, i, dyScale, hops);
+        pos.setY(i, v2 ? yAt(now) - worldY : worldY);
       }
       pos.needsUpdate = true;
+      o.geometry.computeBoundingSphere();
+      o.geometry.computeBoundingBox();
       return;
     }
     if (o.userData.y1 != null) {
@@ -1758,8 +1805,9 @@ function restackTimeStack() {
       return;
     }
     const hop = o.userData.hopI || 0;
-    const dy = HOP_DY * (o.userData.dyScale || 1);
-    const worldY = yWorldAt(min, now) + hop * dy + yOff;
+    const dyScale = o.userData.dyScale || 1;
+    const hops = o.userData.hops || hop + 1;
+    const worldY = stackHopWorldY(min, hop, dyScale, hops) + yOff;
     if (v2) {
       if (o.userData.bakedY) o.position.y = yAt(now) - worldY - yAt(min);
       else o.position.y = yAt(now) - worldY;
@@ -1931,20 +1979,26 @@ function buildPowerLines() {
     houseId: s.houseId,
     capW: s.capW || XFMR_CAPACITY_W,
   }));
-  const pos = [];
-  const col = [];
-  for (const s of lvSegMeta) {
+  const barGeo = new THREE.BoxGeometry(1, 1, 1);
+  const barMat = glowLambert(0.72);
+  powerLineMesh = new THREE.InstancedMesh(barGeo, barMat, lvSegMeta.length);
+  const lineDummy = new THREE.Object3D();
+  const lineCol = new THREE.Color(0x3b6d11);
+  lvSegMeta.forEach((s, i) => {
     const y = s.kind === "trunk" ? LINE_HANG + 0.18 : s.kind === "primary" ? LINE_HANG + 0.08 : LINE_HANG;
-    pos.push(s.a.x, y, s.a.z, s.b.x, y, s.b.z);
-    col.push(0.23, 0.43, 0.07, 0.23, 0.43, 0.07);
-  }
-  const geo = new THREE.BufferGeometry();
-  geo.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
-  geo.setAttribute("color", new THREE.Float32BufferAttribute(col, 3));
-  powerLineMesh = new THREE.LineSegments(
-    geo,
-    new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.92 }),
-  );
+    const dx = s.b.x - s.a.x;
+    const dz = s.b.z - s.a.z;
+    const len = Math.hypot(dx, dz) || 0.2;
+    const thick = s.kind === "trunk" ? 0.18 : s.kind === "primary" ? 0.13 : 0.1;
+    lineDummy.position.set((s.a.x + s.b.x) / 2, y, (s.a.z + s.b.z) / 2);
+    lineDummy.rotation.set(0, Math.atan2(dx, dz), 0);
+    lineDummy.scale.set(thick, thick * 0.62, len);
+    lineDummy.updateMatrix();
+    powerLineMesh.setMatrixAt(i, lineDummy.matrix);
+    powerLineMesh.setColorAt(i, lineCol);
+  });
+  powerLineMesh.castShadow = true;
+  powerLineMesh.receiveShadow = true;
   scene.add(powerLineMesh);
 
   const poleGeo = new THREE.BoxGeometry(0.14, LINE_HANG, 0.14);
@@ -2094,12 +2148,32 @@ function loadsAt(min) {
   return { L, last, out, byFeeder, byXfmr };
 }
 
+function colorHouses(last) {
+  if (!hutMesh || !roofMesh) return;
+  const src = last || loadsAt(state.nowMin).last;
+  const red = new THREE.Color(COL.outage);
+  const roof = new THREE.Color();
+  for (let i = 0; i < HOUSE_N; i++) {
+    const h = HOUSES[i];
+    const r = src[h.id];
+    const out = !!(r?.feederOut || outageHit(h, state.nowMin));
+    let c;
+    if (out) c = red;
+    else if (state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
+    else c = capacityColor(r?.capacity || 0);
+    hutMesh.setColorAt(i, c);
+    roof.copy(c).multiplyScalar(0.78);
+    roofMesh.setColorAt(i, roof);
+  }
+  hutMesh.instanceColor.needsUpdate = true;
+  roofMesh.instanceColor.needsUpdate = true;
+}
+
 function colorPowerLines() {
   if (!powerLineMesh) return;
   const { last, byFeeder, byXfmr } = loadsAt(state.nowMin);
   const civic = civicW(state.nowMin);
   const civicQ = civic * Math.tan(Math.acos(CIVIC_PF));
-  const attr = powerLineMesh.geometry.getAttribute("color");
   const usePf = state.lineGrad === "pf";
   lvSegMeta.forEach((s, i) => {
     const hit = outageCovers(s, state.nowMin);
@@ -2134,10 +2208,10 @@ function colorPowerLines() {
     if (hit) c = new THREE.Color(COL.outage);
     else if (usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
     else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
-    attr.setXYZ(i * 2, c.r, c.g, c.b);
-    attr.setXYZ(i * 2 + 1, c.r, c.g, c.b);
+    powerLineMesh.setColorAt(i, c);
   });
-  attr.needsUpdate = true;
+  if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
+  colorHouses(last);
 }
 
 function applyLineLegend() {
