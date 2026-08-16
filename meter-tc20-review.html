@@ -234,7 +234,7 @@ html.dark .diagram-wrap { background: #f7f6f3; }
     <li>USB Gateway sees meters on the 2.4&nbsp;GHz mesh; GroundBolt talks through that Gateway.</li>
     <li>SparkNet-HTTP / Firefly plugins carry commands out and SSE (live event stream) / readings in.</li>
     <li>GroundBolt shows live kWh, power, voltage, state; can Enable/Disable and push balance (Open Code: read + toggle relays).</li>
-    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down; STS token path stays — do not redo vending.</li>
+    <li>CIU prepaid UX works locally even if WAN (internet uplink) is down. SM meters do <strong>not</strong> decode STS / OpenPAYGO tokens — credit is a GroundBolt wallet (<code>set_balance</code> is display). Do not redo STS vending for other meter families here.</li>
     <li><strong>Meter keys ALWAYS stay on GroundBolt</strong> (never move to ThunderCloud even when cloud is enabled) — held by EarthSpark, A2EI escrow, or operator. Mishandling can brick meters.</li>
   </ul>
 
@@ -311,9 +311,89 @@ html.dark .diagram-wrap { background: #f7f6f3; }
     </div>
   </div>
 
+  <h2 id="groundbolt">GroundBolt as site HES (from this tree)</h2>
+  <p>
+    <strong>ThunderCloud</strong> and <strong>GroundBolt</strong> are the same <code>sparkmeter</code> app.
+    On-site: <code>HEROKU</code> unset → GroundBolt. In the cloud: ThunderCloud.
+    Radio is a sibling process. GroundBolt talks HTTP commands out and SSE events in; it never sees SparkNet RF frames inside the USB Gateway.
+  </p>
+  <div class="callout">
+    <strong>Source of this section</strong>
+    Public TC2.0 developer preview in the
+    <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener"><code>thundercloud</code></a>
+    tree (Aug&nbsp;2026 pass). README: do not bill real customers. Live fleets still TC1.x managed SaaS.
+    SparkNet RF inside the Gateway is not specified in this repo.
+  </div>
+
+  <h3>Prepaid loop — pay before watts</h3>
+  <div class="flow">
+    POST /api/v0/transaction/ (cash | bonus)
+    → wallet credit
+    → set_balance → CIU
+    → configure_meter enable (if AUTO and credit &gt; 0)
+    → load draws watts
+    → SSE MeterReadingEvent every HEARTBEAT_PERIOD (15 min)
+    → add_reading → CalculateBilling → wallet debit
+    → credit ≤ 0 → configure_meter disable
+  </div>
+  <ul>
+    <li>Customer is 1:1 with meter.</li>
+    <li>Payment sources in this tree: <code>cash</code> and <code>bonus</code> only. No mobile-money plugin in-repo.</li>
+    <li><code>set_balance</code> updates the CIU display. The HES wallet in Postgres is the system of record.</li>
+    <li><code>meter_config.state = AUTO</code> → relay on iff credit (and plan) &gt; 0.</li>
+    <li>Low-balance SMS fires once per threshold, not every heartbeat.</li>
+    <li>Command queue is in-memory asyncio. Crash drops in-flight jobs; boot <code>reconcile_all()</code> rebuilds the provider roster from Postgres. Hard request→job-ID correlation still under community discussion.</li>
+  </ul>
+
+  <h3>What lives where</h3>
+  <div class="grid-2">
+    <div class="card">
+      <h3>Postgres (system of record)</h3>
+      <p>Meter, Customer, Address, MeterConfig, SparkmacNode, Wallet, Transaction, Tariff, Reading, Event, User. Readings sync ground→cloud only. SymmetricDS is optional after the site loop works.</p>
+    </div>
+    <div class="card">
+      <h3>SSE in — what GroundBolt consumes</h3>
+      <p><code>meter_reading</code> / <code>meter_reading_phased</code> → <code>add_reading</code>. <code>heartbeat_summary</code> → watchdog log. <code>log</code> → Python logging. Neighbor / network-health / command-lifecycle events exist on the wire; GroundBolt does not persist them.</p>
+    </div>
+    <div class="card">
+      <h3>Commands out</h3>
+      <p><code>configure_provider</code> (heartbeat 900&nbsp;s), <code>register_meter</code>, <code>configure_meter</code> (enable/disable, limits), <code>set_balance</code>, <code>unregister_meter</code>. Fire-and-forget via SparkNet-HTTP <code>POST /v1/commands</code>.</p>
+    </div>
+    <div class="card">
+      <h3>SparkMAC config, not a route log</h3>
+      <p><code>sparkmac_node</code> stores forwarding mode (default <code>flooding</code>), optional <code>static_routes</code>, TTL. Site UI “Routing Algorithm” is still an empty TODO. That is desired-state pushed to meters — not a hop list per heartbeat.</p>
+    </div>
+  </div>
+
+  <h3>Can you trace mesh routing per meter?</h3>
+  <p>
+    Not from stored readings. NAN is proprietary <strong>SparkMAC</strong> on 2.4&nbsp;GHz — not Z-Wave.
+    A legacy emulator can attach <code>hops[]</code> (<code>last_hop</code>, RSSI, retry) to SparkMAC replies;
+    <code>MeterReadingEvent</code> / the <code>reading</code> table drop that. Energy, volts, watts, credit, state only.
+  </p>
+  <p>
+    On-demand: <code>query_meter_neighbors</code> → SSE <code>meter_neighbors</code> (who this meter hears <em>now</em>: <code>neighbor_id</code>, RSSI, link quality).
+    CLI: <code>meter get-neighborlists</code>. <code>query_network_health</code> is packet counts + latency, not a path.
+    GroundBolt does not write those replies to Postgres. You can poll a neighbor graph <em>if</em> the USB Gateway translator implements the command (contract in this tree; live firmware not in-tree). You cannot replay “this heartbeat went hut A → hut B → USB.”
+  </p>
+  <p>
+    Hypothetical prepaid day using these rules (not live telemetry):
+    <a href="village-worldline-day.html">Village Simulator</a>.
+  </p>
+
+  <h3>Complementary to MPM / OpenAMI — not a substitute</h3>
+  <p>
+    ISV Phase&nbsp;1 parks TC2.0 as the open HES for the installed SparkMeter base.
+    <strong>MPM</strong> (MicroPowerManager) owns CRM + other prepaid families (STS tokens, OpenPAYGO SHS).
+    Posting <code>/api/v0/transaction/</code> from MPM into GroundBolt can share a wallet; running both as system of record without a split will double-count.
+    Phase&nbsp;2 OpenAMI MQTT / Street-EMS is a different track.
+  </p>
+
   <h2 id="glossary">Glossary</h2>
   <div class="grid-2">
     <div class="card">
+      <p><strong>SparkMAC</strong> — SparkMeter NAN protocol on the 2.4&nbsp;GHz mesh (not Z-Wave).</p>
+      <p><strong>AUTO</strong> — meter state: relay on iff HES credit (and plan) &gt; 0.</p>
       <p><strong>HES</strong> — head-end system: utility software that commands and reads meters.</p>
       <p><strong>CIU</strong> — Customer Interface Unit: prepaid keypad / balance display at the home.</p>
       <p><strong>USB Gateway</strong> — hardware RF interface (laptop/site) to the meter mesh.</p>
@@ -349,6 +429,7 @@ html.dark .diagram-wrap { background: #f7f6f3; }
   <h3>ISV Village Metering</h3>
   <ul class="link-list">
     <li><a href="meter-roadmap.html">Roadmap</a> — Phase 1–3 · ThunderCloud update section</li>
+    <li><a href="village-worldline-day.html">Village Simulator</a> — hypothetical 3D prepaid day (GroundBolt rules, not live telemetry)</li>
     <li><a href="index.html#notes/tech-comm-2026-08-11">11 Aug 2026 meeting notes</a> — USB Gateway · Firefly/SparkNet plugins · A2EI OMS · Nimbus</li>
     <li><a href="meter-overview.html#solutions-map">Overview · solutions map</a> — problem → hardware → software</li>
     <li><a href="meter-solutions-map.html?proto=tc20">TC2.0 solutions map proto</a></li>
@@ -358,7 +439,7 @@ html.dark .diagram-wrap { background: #f7f6f3; }
 
   <p class="foot">
     Diagrams: <code>tc20-stack-village.svg</code> · <code>village-meter-topology.svg</code>
-    · last review pass for ISV Phase&nbsp;1 open-operator path.
+    · last review pass for ISV Phase&nbsp;1 open-operator path + GroundBolt HES notes from the public TC2.0 tree (Aug&nbsp;2026).
   </p>
 </div>
 <script>

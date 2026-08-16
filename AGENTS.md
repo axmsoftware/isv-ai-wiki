@@ -48,6 +48,7 @@ isv-ai-wiki/
 ├── meter-solutions-map.html      # Visual problem ↔ solution map (SVG)
 ├── meter-village-scope.html      # Village definition · population · HDI (cited)
 ├── meter-vendor-study.html       # Cited vendor benchmark (standalone + embed)
+├── village-worldline-day.html    # Village Simulator (Three.js hypothetical prepaid day)
 ├── meter-benchmark/
 │   ├── vmrs-registers.json       # Machine-readable VMRS register set v0.1
 │   └── northbound-mqtt-v0.1.json # Northbound JSON/MQTT profile + IETF SIP (RFC 3261) dialog correlation
@@ -139,11 +140,15 @@ Registered sections (`SECTIONS` in `index.html`):
 | `#village-metering` | Village Metering — default: overview |
 | `#village-metering/overview` | Why ISV · gateway path · hardware threads (section entry) |
 | `#village-metering/roadmap` | Three-phase development roadmap (installed-base · microgrid core · grid connect) |
+| `#village-metering/tc20-review` | ThunderCloud 2.0 review · GroundBolt as site HES |
 | `#village-metering/village-scope` | Village definition · population · HDI · modernization fork (cited) |
 | `#village-metering/problems` | Field problems (Problem · Why it hurts) |
 | `#village-metering/solutions-map` | Visual problem ↔ solution diagram · `meter-benchmark/problem-solution-map.json` |
 | `#village-metering/vmrs` | Register checklist (OBIS · VMRS) |
 | `#village-metering/vendor-study` | Vendor pipeline + technical tables |
+| `#village-metering/openami` | OpenAMI stack · leakage visibility |
+| `#village-metering/meshems` | MeshEMS board |
+| `#village-metering/village-simulator` | Village Simulator (Three.js hypothetical prepaid day). Legacy `#village-metering/worldline-day` and `…/worldline-day-100` alias here |
 | `#meter-study/...` | Legacy — same as `#village-metering/...` (`problems-today` → `problems`, `scope` → `village-scope`) |
 | `#notes/{note-id}` | Tech Comm meeting note (default: `metering-2026-05-28`) |
 | `#events/{note-id}` | In-person event planning (workshops, hackathons; default: `power-africa-2026-workshop-planning`). Legacy `#power-africa/...` still resolves. |

@@ -17,7 +17,9 @@
     'solutions-map': 'overview',
     'tc20-stack': 'tc20-review',
     'village-topology': 'tc20-review',
-    scope: 'village-scope'
+    scope: 'village-scope',
+    'worldline-day': 'village-simulator',
+    'worldline-day-100': 'village-simulator'
   };
 
   var PAGE_BY_ID = {
@@ -28,7 +30,8 @@
     vmrs: 'meter-vmrs.html',
     'vendor-study': 'meter-vendor-study.html',
     openami: 'openami.html',
-    meshems: 'meshems.html'
+    meshems: 'meshems.html',
+    'village-simulator': 'village-worldline-day.html'
   };
 
   var ID_BY_FILE = Object.keys(PAGE_BY_ID).reduce(function (acc, id) {
