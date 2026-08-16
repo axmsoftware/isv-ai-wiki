@@ -1439,6 +1439,7 @@ code {
       <div class="nav-sub-item" data-meter-page="vendor-study" onclick="showMeterPage('vendor-study')">Vendor Study</div>
       <div class="nav-sub-item" data-meter-page="openami" onclick="showMeterPage('openami')">OpenAMI</div>
       <div class="nav-sub-item" data-meter-page="meshems" onclick="showMeterPage('meshems')">MeshEMS board</div>
+      <div class="nav-sub-item" data-meter-page="village-simulator" onclick="showMeterPage('village-simulator')">Village Simulator</div>
     </div>
     <div class="nav-item" data-section="notes" onclick="showSection('notes')">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -2241,7 +2242,9 @@ const METER_PAGE_ALIASES = {
   'solutions-map': 'overview',
   'tc20-stack': 'tc20-review',
   'village-topology': 'tc20-review',
-  scope: 'village-scope'
+  scope: 'village-scope',
+  'worldline-day': 'village-simulator',
+  'worldline-day-100': 'village-simulator'
 };
 function resolveMeterPageId(id) {
   if (!id) return 'overview';
@@ -2262,8 +2265,8 @@ const METER_BENCHMARK_PAGES = {
   },
   'tc20-review': {
     title: 'TC2.0 review',
-    sub: 'Ideal architecture · stack + village · EarthSpark links',
-    src: 'meter-tc20-review.html?embed=1&v=20260811f',
+    sub: 'Ideal architecture · GroundBolt HES · stack + village',
+    src: 'meter-tc20-review.html?embed=1&v=20260813gb',
     standalone: 'meter-tc20-review.html'
   },
   'village-scope': {
@@ -2295,6 +2298,12 @@ const METER_BENCHMARK_PAGES = {
     sub: 'Multi-tenant edge metering · workshops & deployments · OpenAMI',
     src: 'meshems.html?embed=1&v=20260629',
     standalone: 'meshems.html'
+  },
+  'village-simulator': {
+    title: 'Village Simulator',
+    sub: 'Hypothetical 3D prepaid day · Circaevum graphics · not live telemetry',
+    src: 'village-worldline-day.html?embed=1&v=20260815sim',
+    standalone: 'village-worldline-day.html'
   }
 };
 let activeMeterPageId = 'overview';
