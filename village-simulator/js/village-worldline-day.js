@@ -32,6 +32,7 @@ import {
   BOARDS,
   STATIONS,
   HOMES_PER_BOARD,
+  LEAKS,
   CIVIC_PF,
   PF_POOR,
   civicW,
@@ -41,7 +42,7 @@ import {
   outageHit,
   rfEdges,
   simulateDay,
-} from "./village-worldline-sim.js?v=20260814fsload";
+} from "./village-worldline-sim.js?v=20260816leak";
 
 const COL = {
   site: 0x3b6d11,
@@ -65,8 +66,21 @@ const COL = {
   lastbreath_lost: 0xff9a40,
   dtm: 0x2bb6a3,
   phase_xfer: 0x5c7cfa,
+  leak: 0xe85dff,
   bg: 0x121214,
   ground: 0x1a1a1d,
+};
+
+/** Physical plant — one hue per asset class. */
+const ASSET = {
+  home: 0x9aa8b8,
+  lateral: 0x5ee0a0,
+  board: 0xff6a2a,
+  feeder: 0x3d8bfd,
+  station: 0xffe566,
+  dtm: 0x2ee6d0,
+  xfmr: 0xd45aa0,
+  breaker: 0xff3355,
 };
 
 const WINDOW_MIN = 120;
@@ -211,7 +225,7 @@ function osiLayerForReading(r) {
 }
 
 function osiLayerForKind(kind) {
-  if (kind === "outage" || kind === "repair" || kind === "restore" || kind === "knob") return 1;
+  if (kind === "outage" || kind === "repair" || kind === "restore" || kind === "knob" || kind === "leak") return 1;
   if (kind === "lastbreath") return 4;
   if (kind === "mesh") return 3;
   if (kind === "sync") return 5;
@@ -224,6 +238,7 @@ function eventBaseHex(kind) {
   if (kind === "pay" || kind === "credit") return COL.money;
   if (kind === "reconnect") return COL.meter;
   if (kind === "lastbreath") return COL.lastbreath;
+  if (kind === "leak_clear") return COL.restore;
   if (COL[kind] != null) return COL[kind];
   return COL.ops;
 }
@@ -242,6 +257,7 @@ function colorForReading(r) {
     return capacityColor(r.capacity);
   }
   if (state.scheme === "osi") return new THREE.Color(OSI[osiLayerForReading(r)].hex);
+  if (state.scheme === "asset") return new THREE.Color(ASSET.home);
   return new THREE.Color(r.on ? COL.reading : COL.off);
 }
 
@@ -286,6 +302,11 @@ function applySchemeColors() {
   document.querySelectorAll("[data-legend]").forEach((el) => {
     el.hidden = el.getAttribute("data-legend") !== state.scheme;
   });
+  const lineLeg = document.getElementById("wl-line-legend");
+  if (lineLeg) lineLeg.hidden = state.scheme === "asset";
+  const lineGrad = document.getElementById("wl-linegrad");
+  if (lineGrad) lineGrad.hidden = state.scheme === "asset";
+  colorPowerLines();
   applyVisibility();
 }
 
@@ -321,7 +342,7 @@ const state = {
   focus: null,
   scope: { kind: "village" },
   scheme: "messages",
-  hide: { reading: true, pay: true, disconnect: false, sms: false, sync: false, mesh: true, worldline: true, rf: true, phase_xfer: false },
+  hide: { reading: true, pay: true, disconnect: false, sms: false, sync: false, mesh: true, worldline: true, rf: true, phase_xfer: false, leak: false },
   anomalyOnly: true,
   houseQ: "",
   houseCluster: "all",
@@ -341,7 +362,12 @@ let knobMesh;
 let powerLineMesh;
 let lvSegMeta = [];
 let dtmBars = [];
+let dtmParts = [];
 let emsMesh;
+let xfmrMesh;
+let breakerMesh;
+let stationMeshes = [];
+let leakMeshes = [];
 let timeGroup;
 let nowPlane;
 let winBand;
@@ -681,7 +707,7 @@ function timeSprite(text, color = "#9a9990", width = 256) {
 function applySizeCopy() {
   document.title = "Village Simulator · ISV";
   const back = document.querySelector(".back a");
-  if (back) back.href = "index.html#village-metering/village-simulator";
+  if (back) back.href = "../index.html#village-metering/village-simulator";
 }
 
 function applyWindow() {
@@ -785,12 +811,18 @@ function buildGenPad(x, z) {
 }
 
 function buildMainXfmr(x, z) {
+  stationMeshes = [];
+  const keep = (m, hex) => {
+    m.userData.baseHex = hex;
+    stationMeshes.push(m);
+    return m;
+  };
   const parts = [
-    box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.08, z),
-    addMesh(new THREE.CylinderGeometry(0.36, 0.4, 1.12, 14), 0x5c5c4a, x, 0.68, z),
+    keep(box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.08, z), 0x3a3a38),
+    keep(addMesh(new THREE.CylinderGeometry(0.36, 0.4, 1.12, 14), 0x5c5c4a, x, 0.68, z), 0x5c5c4a),
   ];
   for (const dx of [-0.16, 0, 0.16]) {
-    parts.push(addMesh(new THREE.CylinderGeometry(0.032, 0.032, 0.26, 8), 0xc9a227, x + dx, 1.36, z));
+    parts.push(keep(addMesh(new THREE.CylinderGeometry(0.032, 0.032, 0.26, 8), 0xc9a227, x + dx, 1.36, z), 0xc9a227));
   }
   const st = STATIONS[0];
   for (const m of parts) {
@@ -1237,6 +1269,7 @@ function buildVillage() {
   buildPowerLines();
   buildDtms();
   buildEmsBoards();
+  buildLeaks();
 
   buildGenPad(LANDMARKS.gen.x, LANDMARKS.gen.z);
   buildMainXfmr(LANDMARKS.xfmr.x, LANDMARKS.xfmr.z);
@@ -1689,6 +1722,31 @@ function buildEvents() {
       addTime(dest);
       eventMeshes.push(dest);
     }
+    if (e.kind === "leak" || e.kind === "leak_clear") {
+      const lk = LEAKS.find((x) => x.id === e.leakId);
+      if (!lk) continue;
+      const hex = e.kind === "leak" ? COL.leak : COL.restore;
+      const mid = new THREE.Mesh(
+        e.kind === "leak" ? new THREE.OctahedronGeometry(0.48) : new THREE.SphereGeometry(0.22, 10, 10),
+        new THREE.MeshBasicMaterial({ color: hex }),
+      );
+      mid.position.set(lk.x, y, lk.z);
+      mid.userData = { kind: e.kind, min: e.min, houseId: null };
+      addTime(mid);
+      eventMeshes.push(mid);
+      if (e.kind === "leak") {
+        const line = curve(
+          new THREE.Vector3(lk.ax, y, lk.az),
+          new THREE.Vector3(lk.bx, y, lk.bz),
+          0.15,
+          COL.leak,
+          true,
+        );
+        line.userData = { kind: "leak", min: e.min, houseId: null };
+        addTime(line);
+        eventMeshes.push(line);
+      }
+    }
   }
 }
 
@@ -2023,18 +2081,20 @@ function buildPowerLines() {
   scene.add(poleMesh);
 
   const xfmrGeo = new THREE.BoxGeometry(0.62, 0.72, 0.48);
-  const xfmrMat = new THREE.MeshLambertMaterial({ color: 0xc9a227 });
-  const xfmrMesh = new THREE.InstancedMesh(xfmrGeo, xfmrMat, TRANSFORMERS.length);
+  xfmrMesh = new THREE.InstancedMesh(xfmrGeo, glowLambert(0.42), TRANSFORMERS.length);
+  const xfmrCol = new THREE.Color(0xc9a227);
   TRANSFORMERS.forEach((t, i) => {
     dummy.position.set(t.x, LINE_HANG + 0.28, t.z);
     dummy.rotation.set(0, (i * 0.7) % 1.2, 0);
     dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     xfmrMesh.setMatrixAt(i, dummy.matrix);
+    xfmrMesh.setColorAt(i, xfmrCol);
   });
   xfmrMesh.castShadow = true;
   xfmrMesh.receiveShadow = true;
   scene.add(xfmrMesh);
+  buildBreakers();
 
   for (const f of FEEDERS) {
     const spr = timeSprite(f.label, "#c9a227", 320);
@@ -2051,14 +2111,40 @@ function buildPowerLines() {
 
 const PHASE_COL = { A: 0xe6c84a, B: 0x3d8bfd, C: 0x9b4dca };
 
+function buildBreakers() {
+  const n = 1 + FEEDERS.length + TRANSFORMERS.length;
+  breakerMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(0.16, 0.28, 0.12), glowLambert(0.62), n);
+  const dummy = new THREE.Object3D();
+  const c = new THREE.Color(ASSET.breaker);
+  let i = 0;
+  const plant = (x, z, y = LINE_HANG + 0.22) => {
+    dummy.position.set(x, y, z);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    breakerMesh.setMatrixAt(i, dummy.matrix);
+    breakerMesh.setColorAt(i, c);
+    i += 1;
+  };
+  plant(LANDMARKS.xfmr.x + 0.58, LANDMARKS.xfmr.z - 0.24, 0.92);
+  for (const f of FEEDERS) plant(f.x - 0.52, f.z - 0.22);
+  for (const t of TRANSFORMERS) plant(t.x + 0.44, t.z - 0.22);
+  breakerMesh.count = i;
+  breakerMesh.castShadow = true;
+  breakerMesh.visible = false;
+  scene.add(breakerMesh);
+}
+
 function buildDtms() {
   dtmBars = [];
+  dtmParts = [];
   for (const d of DTMS) {
     const scope = { kind: "feeder", id: d.feederId };
     const body = box(0.62, 0.16, 0.48, 0x1a3340, d.x, LINE_HANG + 0.5, d.z);
     const lid = box(0.5, 0.05, 0.36, 0x2bb6a3, d.x, LINE_HANG + 0.6, d.z);
     body.userData.scope = scope;
     lid.userData.scope = scope;
+    dtmParts.push({ body, lid });
     const spr = timeSprite(d.label, "#7ee0d0", 220);
     spr.scale.set(5.4, 1.2, 1);
     spr.position.set(d.x, LINE_HANG + 1.35, d.z);
@@ -2080,20 +2166,78 @@ function buildDtms() {
 function buildEmsBoards() {
   if (!BOARDS.length) return;
   const geo = new THREE.BoxGeometry(0.36, 0.26, 0.14);
-  const mat = new THREE.MeshLambertMaterial({ color: 0xff6a2a });
-  emsMesh = new THREE.InstancedMesh(geo, mat, BOARDS.length);
+  emsMesh = new THREE.InstancedMesh(geo, glowLambert(0.55), BOARDS.length);
   emsMesh.userData.pickBoards = true;
   const dummy = new THREE.Object3D();
+  const boardCol = new THREE.Color(ASSET.board);
   BOARDS.forEach((b, i) => {
     dummy.position.set(b.x, LINE_HANG + 0.38, b.z);
     dummy.rotation.set(0, 0, 0);
     dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     emsMesh.setMatrixAt(i, dummy.matrix);
+    emsMesh.setColorAt(i, boardCol);
   });
   emsMesh.castShadow = true;
   emsMesh.instanceMatrix.needsUpdate = true;
   scene.add(emsMesh);
+}
+
+function buildLeaks() {
+  leakMeshes = [];
+  for (const lk of LEAKS) {
+    const dx = lk.bx - lk.ax;
+    const dz = lk.bz - lk.az;
+    const len = Math.hypot(dx, dz) || 1;
+    const bar = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({ color: COL.leak, transparent: true, opacity: 0.88 }),
+    );
+    bar.position.set((lk.ax + lk.bx) / 2, LINE_HANG + 0.1, (lk.az + lk.bz) / 2);
+    bar.rotation.y = Math.atan2(dx, dz);
+    bar.scale.set(0.32, 0.24, len);
+    bar.userData = { kind: "leak", leakId: lk.id };
+    scene.add(bar);
+    leakMeshes.push(bar);
+    for (const [x, z] of [
+      [lk.ax, lk.az],
+      [lk.bx, lk.bz],
+    ]) {
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(0.48, 0.08, 8, 18),
+        new THREE.MeshBasicMaterial({ color: COL.leak }),
+      );
+      ring.rotation.x = Math.PI / 2;
+      ring.position.set(x, LINE_HANG + 0.48, z);
+      ring.userData = { kind: "leak", leakId: lk.id };
+      scene.add(ring);
+      leakMeshes.push(ring);
+    }
+    const spr = timeSprite(`LEAK ${lk.leakW} W`, "#f0b0ff", 260);
+    spr.scale.set(6.8, 1.45, 1);
+    spr.position.set(lk.x, LINE_HANG + 1.6, lk.z);
+    spr.userData = { kind: "leak", leakId: lk.id };
+    scene.add(spr);
+    leakMeshes.push(spr);
+  }
+  updateLeakViz();
+}
+
+function updateLeakViz() {
+  const show = !state.hide.leak;
+  for (const m of leakMeshes) {
+    const lk = LEAKS.find((x) => x.id === m.userData.leakId);
+    if (!show || !lk) {
+      m.visible = false;
+      continue;
+    }
+    m.visible = true;
+    const live = state.nowMin >= lk.min && state.nowMin < lk.restore;
+    if (m.material && "opacity" in m.material) {
+      m.material.transparent = true;
+      m.material.opacity = live ? 0.95 : 0.32;
+    }
+  }
 }
 
 function updateDtmBars() {
@@ -2148,18 +2292,51 @@ function loadsAt(min) {
   return { L, last, out, byFeeder, byXfmr };
 }
 
+function tintInstanced(mesh, hex) {
+  if (!mesh) return;
+  const c = new THREE.Color(hex);
+  if (mesh.instanceColor) {
+    for (let i = 0; i < mesh.count; i++) mesh.setColorAt(i, c);
+    mesh.instanceColor.needsUpdate = true;
+  } else if (mesh.material?.color) {
+    mesh.material.color.setHex(hex);
+  }
+}
+
+function assetLineKind(s) {
+  if (s.houseId || s.kind === "secondary") return "lateral";
+  if (s.kind === "primary" || s.feederId) return "feeder";
+  return "station";
+}
+
+function colorHardware() {
+  const asset = state.scheme === "asset";
+  tintInstanced(emsMesh, asset ? ASSET.board : 0xff6a2a);
+  tintInstanced(xfmrMesh, asset ? ASSET.xfmr : 0xc9a227);
+  tintInstanced(breakerMesh, ASSET.breaker);
+  if (breakerMesh) breakerMesh.visible = asset;
+  for (const p of dtmParts) {
+    p.body.material.color.setHex(asset ? 0x145048 : 0x1a3340);
+    p.lid.material.color.setHex(asset ? ASSET.dtm : 0x2bb6a3);
+  }
+  for (const m of stationMeshes) {
+    m.material.color.setHex(asset ? ASSET.station : m.userData.baseHex);
+  }
+}
+
 function colorHouses(last) {
   if (!hutMesh || !roofMesh) return;
   const src = last || loadsAt(state.nowMin).last;
   const red = new THREE.Color(COL.outage);
   const roof = new THREE.Color();
+  const asset = state.scheme === "asset";
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
     const out = !!(r?.feederOut || outageHit(h, state.nowMin));
     let c;
     if (out) c = red;
-    else if (state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
+    else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
     else c = capacityColor(r?.capacity || 0);
     hutMesh.setColorAt(i, c);
     roof.copy(c).multiplyScalar(0.78);
@@ -2175,6 +2352,7 @@ function colorPowerLines() {
   const civic = civicW(state.nowMin);
   const civicQ = civic * Math.tan(Math.acos(CIVIC_PF));
   const usePf = state.lineGrad === "pf";
+  const asset = state.scheme === "asset";
   lvSegMeta.forEach((s, i) => {
     const hit = outageCovers(s, state.nowMin);
     let p = 0;
@@ -2205,13 +2383,15 @@ function colorPowerLines() {
       cap = XFMR_CAPACITY_W;
     }
     let c;
-    if (hit) c = new THREE.Color(COL.outage);
+    if (asset) c = new THREE.Color(ASSET[assetLineKind(s)]);
+    else if (hit) c = new THREE.Color(COL.outage);
     else if (usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
     else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
     powerLineMesh.setColorAt(i, c);
   });
   if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
   colorHouses(last);
+  colorHardware();
 }
 
 function applyLineLegend() {
@@ -2247,6 +2427,7 @@ function setNow(min) {
   lastUiMin = imin;
   colorPowerLines();
   updateDtmBars();
+  updateLeakViz();
   const clock = document.getElementById("wl-clock");
   if (clock) clock.textContent = fmtClock(state.nowMin);
   const scrub = document.getElementById("wl-scrub");
@@ -2266,7 +2447,7 @@ function applyVisibility() {
   for (const m of eventMeshes) {
     const kind = m.userData.kind;
     if (!kind) continue;
-    const hideType = !!state.hide[kind];
+    const hideType = !!state.hide[kind] || ((kind === "leak" || kind === "leak_clear") && state.hide.leak);
     const dim = state.focus && m.userData.houseId && m.userData.houseId !== state.focus;
     m.visible = !hideType;
     if (m.material && "opacity" in m.material) {
@@ -2275,6 +2456,7 @@ function applyVisibility() {
       m.material.opacity = dim ? 0.18 : base;
     }
   }
+  updateLeakViz();
 }
 
 function setScope(scope) {
@@ -2562,6 +2744,7 @@ function fillStats() {
     <h3 class="stat-sec">Anomalies</h3>
     <div class="stat-grid">
       ${statCard("fault", STAT_ICO.alert, "outages", (s.outages || []).length, `${s.lastBreathArrived} GB · ${s.lastBreathSilent} silent`)}
+      ${statCard("fault", STAT_ICO.alert, "leakage", s.leaks ?? LEAKS.length, `${s.leakW ?? 0} W ΔP spans`)}
       ${statCard("fault", STAT_ICO.alert, "cap 80 / 100%", `${s.cap80 ?? 0} / ${s.cap100 ?? 0}`)}
       ${statCard("pf", STAT_ICO.wave, "PF warn", s.pfWarns ?? 0, `&lt; ${PF_POOR}`)}
       ${statCard("mesh", STAT_ICO.sms, "SMS / reconnect", `${s.sms} / ${s.reconnects}`)}

@@ -31,7 +31,7 @@
     'vendor-study': 'meter-vendor-study.html',
     openami: 'openami.html',
     meshems: 'meshems.html',
-    'village-simulator': 'village-worldline-day.html'
+    'village-simulator': 'village-simulator/index.html'
   };
 
   var ID_BY_FILE = Object.keys(PAGE_BY_ID).reduce(function (acc, id) {

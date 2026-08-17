@@ -34,7 +34,8 @@ import {
   BOARDS,
   STATIONS,
   HOMES_PER_BOARD,
-} from "./village-worldline-layout.js?v=20260814fsload";
+  LEAKS,
+} from "./village-worldline-layout.js?v=20260816leak";
 
 export {
   BESS,
@@ -59,6 +60,7 @@ export {
   BOARDS,
   STATIONS,
   HOMES_PER_BOARD,
+  LEAKS,
 };
 
 export const TARIFF_PER_KWH = 200;
@@ -940,6 +942,23 @@ export function simulateDay() {
     }
   }
 
+  for (const lk of LEAKS) {
+    events.push({
+      min: lk.min,
+      kind: "leak",
+      leakId: lk.id,
+      houseId: null,
+      note: `${lk.note} · span ${lk.label}`,
+    });
+    events.push({
+      min: lk.restore,
+      kind: "leak_clear",
+      leakId: lk.id,
+      houseId: null,
+      note: `Leak clear · ${lk.label} · ΔP back inside noise`,
+    });
+  }
+
   events.sort((a, b) => a.min - b.min || String(a.kind).localeCompare(b.kind));
 
   const kWh = readings.reduce((s, r) => s + r.energyWh, 0) / 1000;
@@ -969,6 +988,8 @@ export function simulateDay() {
     pfWarns: pfWarnN,
     reconnects: recN,
     sms: smsN,
+    leaks: LEAKS.length,
+    leakW: LEAKS.reduce((s, lk) => s + (lk.leakW || 0), 0),
     kWh: Math.round(kWh * 1000) / 1000,
     billed: Math.round(kWh * TARIFF_PER_KWH * 100) / 100,
     readings: readings.length,

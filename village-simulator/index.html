@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Village Simulator · ISV</title>
+<link rel="icon" href="../assets/favicon.ico" sizes="any">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&family=DM+Mono:wght@400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../css/isv-theme.css?v=20260629">
+<link rel="stylesheet" href="../css/meter-focus.css">
+<script src="../js/isv-theme.js"></script>
+<script src="../js/meter-embed.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.5; }
+a { color: var(--green); }
+.wrap { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.back a { text-decoration: none; }
+h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; }
+.callout { border-left: 3px solid var(--amber); background: var(--amber-50); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin-bottom: 0.85rem; font-size: 12px; line-height: 1.45; }
+.callout > strong:first-child { color: var(--amber); display: block; margin-bottom: 0.2rem; }
+.legend { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; font-size: 11px; color: var(--text-2); margin-bottom: 0.75rem; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
+.cap-bar {
+  display: inline-block; width: 140px; height: 9px; border-radius: 4px; vertical-align: middle; margin-right: 6px;
+  background: linear-gradient(90deg, #3b6d11 0%, #e6c84a 50%, #b42318 100%);
+}
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem; align-items: stretch; }
+.wl-stage-col { position: relative; min-width: 0; height: 70vh; min-height: 480px; }
+#wl-stage { position: relative; height: 100%; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #121214; }
+.circa-mark {
+  position: absolute; left: 8px; bottom: 8px; z-index: 6;
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 4px 8px 5px; border-radius: 4px;
+  background: rgba(18, 18, 20, 0.58);
+  color: #e8e6dc; text-decoration: none;
+  line-height: 1.15; pointer-events: auto;
+}
+.circa-mark:hover { background: rgba(18, 18, 20, 0.82); color: #fff; }
+.circa-mark svg { display: block; flex-shrink: 0; opacity: 0.92; }
+.circa-mark-txt { display: flex; flex-direction: column; }
+.circa-mark-txt b { font-size: 11px; font-weight: 500; letter-spacing: 0.02em; }
+.circa-mark-txt span { font-size: 9px; color: #9a9990; font-weight: 400; }
+.circa-mark:hover .circa-mark-txt span { color: #c8c6bc; }
+#wl-stage canvas { display: block; width: 100%; height: 100%; }
+.wl-win {
+  position: absolute;
+  right: 8px;
+  top: 28px;
+  bottom: 28px;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  pointer-events: none;
+}
+.wl-win span {
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: 10px;
+  color: #d8dee6;
+  text-shadow: 0 1px 4px #121214;
+  pointer-events: none;
+}
+.wl-win input[type="range"] {
+  pointer-events: auto;
+  flex: 1;
+  width: 22px;
+  margin: 0;
+  padding: 0;
+  writing-mode: vertical-lr;
+  direction: rtl;
+  appearance: slider-vertical;
+  -webkit-appearance: slider-vertical;
+  accent-color: #c9a227;
+  cursor: ns-resize;
+}
+#wl-theater:fullscreen,
+#wl-theater:-webkit-full-screen {
+  width: 100vw; height: 100vh; background: #121214;
+  display: flex; flex-direction: column; padding: 0.55rem 0.7rem 0.7rem; box-sizing: border-box;
+}
+#wl-theater:fullscreen .controls,
+#wl-theater:-webkit-full-screen .controls { margin-bottom: 0.45rem; }
+#wl-theater:fullscreen .stage,
+#wl-theater:-webkit-full-screen .stage { flex: 1; min-height: 0; }
+#wl-theater:fullscreen .wl-stage-col,
+#wl-theater:-webkit-full-screen .wl-stage-col {
+  height: 100%; min-height: 0; flex: 1;
+}
+#wl-theater:fullscreen #wl-stage,
+#wl-theater:-webkit-full-screen #wl-stage {
+  border: 0; border-radius: 8px;
+}
+#wl-fs-load { display: none; }
+#wl-theater:fullscreen #wl-fs-load,
+#wl-theater:-webkit-full-screen #wl-fs-load {
+  display: flex; flex-direction: column; flex-shrink: 0;
+  height: 176px; margin-top: 0.4rem; padding: 0.35rem 0.55rem 0.3rem;
+  border: 1px solid #2a2a2e; border-radius: 8px; background: #121214; color: #e8e6dc;
+}
+.fs-load-head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.75rem; flex-shrink: 0; }
+.fs-load-head h2 { font-size: 12px; font-weight: 500; margin: 0; border: 0; padding: 0; color: #e8e6dc; }
+.fs-load-head p { font-size: 11px; color: #9a9990; margin: 0; }
+.fs-load-leg { display: flex; flex-wrap: wrap; gap: 0.25rem 0.65rem; font-size: 10px; color: #9a9990; justify-content: flex-end; }
+.fs-load-leg i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+#wl-fs-load-cv { display: block; width: 100%; height: 132px; flex: 1; min-height: 0; }
+.side { display: flex; flex-direction: column; gap: 0.65rem; min-height: 0; overflow: auto; }
+.panel { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); padding: 0.65rem 0.75rem; font-size: 12px; }
+.panel h2 { font-size: 11px; font-weight: 500; color: var(--text-2); margin: 0 0 0.4rem; border: 0; padding: 0; display: flex; align-items: center; gap: 0.4rem; }
+.panel h2::before { content: ""; width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+.panel-play h2::before { background: #2bb6a3; }
+.panel-stats h2::before { background: #3b6d11; }
+.panel-log h2::before { background: #c9a227; }
+#wl-stats { display: flex; flex-direction: column; gap: 0.5rem; }
+.stat-hero, .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; }
+.stat {
+  display: flex; gap: 0.4rem; align-items: flex-start;
+  padding: 0.42rem 0.48rem; border-radius: 8px;
+  background: var(--bg); border: 1px solid var(--border);
+}
+.stat-ico {
+  width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+  display: grid; place-items: center; color: #fff;
+}
+.stat-ico svg { display: block; }
+.stat.site .stat-ico { background: #3b6d11; }
+.stat.dtm .stat-ico { background: #2bb6a3; }
+.stat.energy .stat-ico { background: #175cd3; }
+.stat.money .stat-ico { background: #c9a227; }
+.stat.fault .stat-ico { background: #b42318; }
+.stat.pf .stat-ico { background: #3d8bfd; }
+.stat.ops .stat-ico { background: #8a8a82; }
+.stat.mesh .stat-ico { background: #ff4d1a; }
+.stat-k { display: block; font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; }
+.stat-v { display: block; font-size: 13px; font-weight: 500; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.stat-s { display: block; font-size: 10px; color: var(--text-2); font-style: normal; margin-top: 0.05rem; }
+.stat-sec { font-size: 10px; font-weight: 500; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin: 0.1rem 0 0; }
+.stat-note { font-size: 10px; color: var(--text-2); line-height: 1.35; margin: 0; }
+.controls { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin-bottom: 0.75rem; }
+.controls button, .controls select, [data-hide] {
+  font-family: inherit; font-size: 12px; padding: 0.3rem 0.65rem; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer;
+}
+.controls button.primary { background: var(--green); color: #fff; border-color: var(--green); }
+.wl-skip { min-width: 2.35rem; font-size: 15px; line-height: 1; padding: 0.28rem 0.55rem; }
+.controls button.on { border-color: var(--blue); background: var(--bg-2); }
+#wl-clock {
+  font-family: "DM Mono", ui-monospace, monospace;
+  font-size: 18px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  width: 6ch;
+  min-width: 6ch;
+  flex-shrink: 0;
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+#wl-fs { flex-shrink: 0; }
+#wl-scrub { flex: 1; min-width: 140px; }
+#wl-houses { display: flex; flex-direction: column; gap: 0.3rem; max-height: 38vh; overflow: auto; }
+#wl-house-q {
+  width: 100%; font-family: inherit; font-size: 12px; padding: 0.35rem 0.5rem; margin-bottom: 0.4rem;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text);
+}
+.house-clusters { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-bottom: 0.35rem; }
+.house-clusters button {
+  font-family: inherit; font-size: 10px; padding: 0.15rem 0.45rem; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-2); cursor: pointer;
+}
+.house-clusters button.on { border-color: var(--blue); color: var(--text); background: var(--bg-2); }
+.house-count { font-size: 10px; color: var(--text-3); margin: 0 0 0.3rem; }
+.house {
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.2rem 0.5rem;
+  text-align: left; font-family: inherit; font-size: 12px; padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); cursor: pointer;
+}
+.house code { font-size: 10px; color: var(--text-3); }
+.house span { width: 100%; color: var(--teal); font-size: 11px; }
+.house.is-off span { color: var(--red); }
+.house.is-outage span { color: var(--amber); }
+.house.active { border-color: var(--blue); }
+#wl-log { list-style: none; max-height: 180px; overflow: auto; }
+#wl-log li {
+  margin-bottom: 0.35rem; color: var(--text-2); line-height: 1.35;
+  padding: 0.35rem 0.45rem; border-radius: 8px; background: var(--bg);
+  border: 1px solid var(--border); border-left-width: 3px;
+}
+#wl-log time { font-family: var(--mono); color: var(--text); }
+#wl-log li.k-pay { border-left-color: #c9a227; }
+#wl-log li.k-disconnect, #wl-log li.k-overload, #wl-log li.k-cap_warn { border-left-color: #b42318; }
+#wl-log li.k-outage, #wl-log li.k-lastbreath { border-left-color: #ff4d1a; }
+#wl-log li.k-pf_warn { border-left-color: #3d8bfd; }
+#wl-log li.k-sms { border-left-color: #c45b8a; }
+#wl-log li.k-reconnect, #wl-log li.k-restore { border-left-color: #3b6d11; }
+#wl-log li.k-phase_xfer { border-left-color: #2bb6a3; }
+#wl-log li.k-leak, #wl-log li.k-leak_clear { border-left-color: #e85dff; }
+.stream-panel { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-2); padding: 0.65rem 0.75rem; margin-top: 0.75rem; }
+.stream-panel h2 { font-size: 11px; font-weight: 500; color: var(--text-2); margin: 0 0 0.25rem; border: 0; padding: 0; }
+.stream-note { font-size: 11px; color: var(--text-3); margin-bottom: 0.4rem; }
+#wl-stream { display: block; width: 100%; height: 168px; border-radius: 8px; background: #121214; }
+#wl-stream-legend { margin-top: 0.45rem; margin-bottom: 0; }
+.tbl-wrap { overflow: auto; max-height: 280px; border: 1px solid var(--border); border-radius: 10px; margin-top: 0.85rem; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 0.35rem 0.55rem; text-align: left; border-bottom: 1px solid var(--border); }
+th { color: var(--text-3); font-weight: 500; }
+tr.k-pay td:nth-child(2) { color: #a88620; }
+tr.k-disconnect td:nth-child(2) { color: var(--red); }
+tr.k-outage td:nth-child(2) { color: #ff2d4a; }
+tr.k-repair td:nth-child(2) { color: #a88620; }
+tr.k-shed td:nth-child(2) { color: #ba7517; }
+tr.k-restore td:nth-child(2) { color: var(--green); }
+tr.k-lastbreath td:nth-child(2) { color: #ff4d1a; }
+tr.k-lastbreath_lost td:nth-child(2) { color: #ff9a40; }
+tr.k-reconnect td:nth-child(2) { color: var(--blue); }
+tr.k-sms td:nth-child(2) { color: #c45b8a; }
+tr.k-sync td:nth-child(2) { color: var(--text-3); }
+tr.k-leak td:nth-child(2), tr.k-leak_clear td:nth-child(2) { color: #e85dff; }
+[data-hide].off { opacity: 0.4; text-decoration: line-through; }
+html.embed .back { display: none; }
+html.embed .wrap { padding: 0.75rem 1.15rem 1.25rem; max-width: none; }
+html.embed h1 { font-size: 18px; }
+html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
+@media (max-width: 900px) {
+  .stage { grid-template-columns: 1fr; }
+  .wl-stage-col { height: 55vh; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="back"><a href="../index.html#village-metering/village-simulator">Village Metering</a> · Village Simulator</p>
+  <h1>Village Simulator</h1>
+  <p class="sub">Three.js spacetime stack. v2 (default): ground = now, worldlines rise, last 2 h stretched. v1: day stack stays put, now-plane climbs midnight→24:00. Green pad, brown yards, sun-cast shadows. Red knobs = still dark from a feeder/xfmr outage, every 5 min. Dark LV traces at trip (top) and restore (bottom). Hot red = FAULT / last breath. Default: anomaly events, worldlines off, readings off, payments off, mesh hops off, RF net off. PV is fixed-tilt (south). WASD trucks look-at. Hypothetical day, not live telemetry.</p>
+  <div class="callout">
+    <strong>Not live telemetry</strong>
+    Schematic mini-grid day using GroundBolt rules: 15 min heartbeat, tariff 200 / kWh (abstract units),
+    <code>POST /transaction/</code> then <code>set_balance</code>, then watts. <code>meter_config.state = AUTO</code>
+    → relay off when <code>credit_wallet &le; 0</code>. Four local outages (west spur, east pole xfmr, south lateral, market feeder overload) — rest of village stays live.
+    One DitroniX DTM (IPEM-class) per feeder: 3φ compare on the pole bars; imbalance can command a schematic phase-transfer.
+    Topology: ~10 homes / MeshEMS board, ~10 boards / feeder (~100 customers).
+    Leakage detection: MeshEMS ΔP localizes unmetered load to the feeder span between two boards.
+    Anomalies include PF &lt; 0.80 and capacity ≥ 80%. Allotment trip: 30 min ≥ 100% or 15 min ≥ 150% → <code>STATE_OFF</code>.
+    SM meters do not decode STS / OpenPAYGO tokens.
+    <span id="wl-fault-note"></span>
+  </div>
+  <div class="legend" data-legend="messages">
+    <span><i style="background:#c9a227"></i>pay / set_balance (kiosk · agent · phone · CIU)</span>
+    <span><i style="background:#2aa8b8"></i>reading (on)</span>
+    <span><i style="background:#3a3a38"></i>reading (off)</span>
+    <span><i style="background:#b42318"></i>disconnect</span>
+    <span><i style="background:#ba7517"></i>capacity 80% / 100%</span>
+    <span><i style="background:#3d8bfd"></i>PF &lt; 0.80</span>
+    <span><i style="background:#b42318"></i>overload trip</span>
+    <span><i style="background:#b42318;border-radius:50%"></i>outage knob (5 min still dark)</span>
+    <span><i style="background:#b42318"></i>dark LV slice at trip</span>
+    <span><i style="background:#3b6d11"></i>LV slice at restore</span>
+    <span><i style="background:#ff2d4a"></i>FAULT origin / tripped primary</span>
+    <span><i style="background:#175cd3"></i>configure_meter on</span>
+    <span><i style="background:#c45b8a"></i>low-balance SMS</span>
+    <span><i style="background:#8a8a82"></i>SymmetricDS</span>
+    <span><i style="background:#175cd3"></i>mesh path to USB / ops</span>
+    <span><i style="background:#c9a227"></i>repair dispatch</span>
+    <span><i style="background:#ba7517"></i>load shed</span>
+    <span><i style="background:#3b6d11"></i>feeder restore</span>
+    <span><i style="background:#ff4d1a"></i>last breath reached GB</span>
+    <span><i style="background:#ff9a40"></i>last breath died mid-mesh / channel</span>
+    <span id="wl-lv-lo"><i style="background:#3b6d11"></i>LV flow idle</span>
+    <span id="wl-lv-hi"><i style="background:#b42318"></i>LV flow at xfmr cap</span>
+    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
+    <span><i style="background:#2bb6a3"></i>DTM (DitroniX 3φ)</span>
+    <span><i style="background:#e6c84a"></i>phase A</span>
+    <span><i style="background:#3d8bfd"></i>phase B</span>
+    <span><i style="background:#9b4dca"></i>phase C</span>
+    <span><i style="background:#5c7cfa"></i>phase transfer</span>
+    <span><i style="background:#e85dff"></i>leakage · MeshEMS ΔP span</span>
+    <span><i style="background:#1a2740"></i>PV night / idle</span>
+    <span><i style="background:#40b8ff"></i>PV producing</span>
+    <span><i style="background:#2c4a3c"></i>BESS / home battery</span>
+    <span><i style="background:#9aa8b4"></i>village compass N E S W</span>
+  </div>
+  <div class="legend" data-legend="load" hidden>
+    <span><i style="background:#e6c84a"></i>lighting</span>
+    <span><i style="background:#c0392b"></i>heating</span>
+    <span><i style="background:#0f9b8e"></i>refrigeration</span>
+    <span><i style="background:#3d8bfd"></i>computer / internet</span>
+    <span><i style="background:#5b8def"></i>laundry</span>
+    <span><i style="background:#ba7517"></i>cooking</span>
+    <span><i style="background:#2b6cb0"></i>water pump</span>
+    <span><i style="background:#6a994e"></i>agriculture</span>
+    <span><i style="background:#9b4dca"></i>tools / weld</span>
+    <span><i style="background:#3a3a38"></i>standby / off</span>
+  </div>
+  <div class="legend" data-legend="osi" hidden>
+    <span><i style="background:#c4783a"></i>L1 Physical · feeder / xfmr / outage</span>
+    <span><i style="background:#e24b4b"></i>L2 Data link · RF channel / last-breath drop</span>
+    <span><i style="background:#f0a202"></i>L3 Network · mesh hops</span>
+    <span><i style="background:#e8e04a"></i>L4 Transport · last breath reached GB</span>
+    <span><i style="background:#3bb273"></i>L5 Session · SymmetricDS sync</span>
+    <span><i style="background:#3d8bfd"></i>L6 Presentation · SMS encode</span>
+    <span><i style="background:#9b4dca"></i>L7 Application · pay / AUTO / DTM xfer / heartbeat</span>
+  </div>
+  <div class="legend" data-legend="capacity" hidden>
+    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
+    <span>0% idle</span>
+    <span>50% mid</span>
+    <span>100% at limit</span>
+  </div>
+  <div class="legend" data-legend="asset" hidden>
+    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
+    <span>homes: 0% → 100% cap</span>
+    <span><i style="background:#5ee0a0"></i>home lateral → MeshEMS</span>
+    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
+    <span><i style="background:#3d8bfd"></i>feeder</span>
+    <span><i style="background:#ffe566"></i>station</span>
+    <span><i style="background:#2ee6d0"></i>DTM (DitroniX 3φ)</span>
+    <span><i style="background:#d45aa0"></i>pole xfmr</span>
+    <span><i style="background:#ff3355"></i>circuit breaker</span>
+  </div>
+  <div class="legend" id="wl-line-legend">
+    <span class="cap-bar" title="true_power_inst / line or meter cap"></span>
+    <span id="wl-line-lo">0% idle</span>
+    <span id="wl-line-mid">50% mid</span>
+    <span id="wl-line-hi">100% at cap</span>
+    <span>power lines</span>
+  </div>
+  <div id="wl-theater">
+  <div class="controls">
+    <span id="wl-clock">00:00</span>
+    <button type="button" class="wl-skip" id="wl-play" title="Play" aria-label="Play">▶</button>
+    <input id="wl-scrub" type="range" min="0" max="1440" value="0" />
+    <button type="button" class="wl-skip" id="wl-rev" title="Play reverse" aria-label="Play reverse">◀</button>
+    <select id="wl-viz" aria-label="Time layout">
+      <option value="v2" selected>v2 · worldlines rise</option>
+      <option value="v1">v1 · rising now-plane</option>
+    </select>
+    <select id="wl-sky" aria-label="Sky">
+      <option value="dark" selected>Sky: dark</option>
+      <option value="bright">Sky: bright</option>
+    </select>
+    <select id="wl-scheme" aria-label="Color scheme">
+      <option value="messages">Color: message types</option>
+      <option value="load">Color: load types</option>
+      <option value="capacity">Color: capacity proximity</option>
+      <option value="osi">Color: OSI stack</option>
+      <option value="asset">Color: asset type</option>
+    </select>
+    <select id="wl-linegrad" aria-label="Power line gradient">
+      <option value="capacity" selected>Lines: capacity</option>
+      <option value="pf">Lines: power factor</option>
+    </select>
+    <select id="wl-speed" aria-label="Playback speed">
+      <option value="15">15× min/s</option>
+      <option value="30" selected>30× min/s</option>
+      <option value="60">60× min/s</option>
+      <option value="120">120× min/s</option>
+    </select>
+    <button type="button" data-hide="pay" class="off">payments</button>
+    <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip">anomalies</button>
+    <button type="button" data-hide="leak" title="MeshEMS ΔP localizes leak to a feeder span between two boards">leakage</button>
+    <button type="button" data-hide="worldline" class="off">worldlines</button>
+    <button type="button" data-hide="reading" class="off">readings</button>
+    <button type="button" data-hide="disconnect">cutoffs</button>
+    <button type="button" data-hide="sms">SMS</button>
+    <button type="button" data-hide="sync">sync</button>
+    <button type="button" data-hide="mesh" class="off">mesh hops</button>
+    <button type="button" data-hide="phase_xfer">phase xfer</button>
+    <button type="button" data-hide="rf" class="off">RF net</button>
+    <button type="button" id="wl-fs" title="Fullscreen (F)">Fullscreen</button>
+  </div>
+  <div class="stage">
+    <div class="wl-stage-col">
+      <div id="wl-stage" role="img" aria-label="Village Simulator 3D scene, now at ground, past rises into the sky">
+        <a class="circa-mark" href="https://circaevum.com/" target="_blank" rel="noopener noreferrer" title="Powered by Circaevum graphics library">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+            <circle cx="8" cy="8" r="2.1" fill="currentColor"/>
+            <ellipse cx="8" cy="8" rx="6.3" ry="2.35" fill="none" stroke="currentColor" stroke-width="1.15"/>
+            <ellipse cx="8" cy="8" rx="6.3" ry="2.35" fill="none" stroke="currentColor" stroke-width="1.15" transform="rotate(60 8 8)"/>
+            <ellipse cx="8" cy="8" rx="6.3" ry="2.35" fill="none" stroke="currentColor" stroke-width="1.15" transform="rotate(120 8 8)"/>
+          </svg>
+          <span class="circa-mark-txt"><b>Circaevum</b><span>graphics library</span></span>
+        </a>
+      </div>
+      <label class="wl-win" id="wl-win" title="Height of stretch / scrunch boundary">
+        <span id="wl-win-hi">past</span>
+        <input id="wl-window" type="range" min="8" max="42" step="1" value="36" aria-label="Stretch / scrunch boundary height" />
+        <span id="wl-win-val">−2h</span>
+      </label>
+    </div>
+    <div class="side">
+      <div class="panel panel-play">
+        <h2>At playhead</h2>
+        <input id="wl-house-q" type="search" placeholder="search name / serial" autocomplete="off" />
+        <div id="wl-house-clusters" class="house-clusters"></div>
+        <p id="wl-house-count" class="house-count"></p>
+        <div id="wl-houses"></div>
+      </div>
+      <div class="panel panel-stats">
+        <h2>Day totals</h2>
+        <div id="wl-stats"></div>
+      </div>
+      <div class="panel panel-log">
+        <h2>Recent events</h2>
+        <ul id="wl-log"></ul>
+      </div>
+    </div>
+  </div>
+  <div id="wl-fs-load">
+    <header class="fs-load-head">
+      <div>
+        <h2 id="wl-fs-load-title">Village load</h2>
+        <p id="wl-fs-load-sub">none selected · all homes</p>
+      </div>
+      <div id="wl-fs-load-leg" class="fs-load-leg"></div>
+    </header>
+    <canvas id="wl-fs-load-cv" width="960" height="132" aria-label="Daily load profile"></canvas>
+  </div>
+  </div>
+  <div id="wl-stream-panel" class="stream-panel" hidden>
+    <h2>Load signature · <span id="wl-stream-name"></span></h2>
+    <p class="stream-note">Stacked stream of end-use watts (viz-only). Fridge holds a baseline; cooking, laundry, pump, tools fire in short successive bursts — not all appliances on all day. Grows with playhead. Click house in 3D or list.</p>
+    <svg id="wl-stream" viewBox="0 0 720 168" role="img" aria-label="Load signature streamgraph"></svg>
+    <div id="wl-stream-legend" class="legend"></div>
+  </div>
+  <div class="tbl-wrap">
+    <table>
+      <thead><tr><th>t</th><th>kind</th><th>who</th><th>event</th></tr></thead>
+      <tbody id="wl-ledger"></tbody>
+    </table>
+  </div>
+</div>
+<script type="importmap">
+{
+  "imports": {
+    "three": "./js/vendor/three/three.module.js",
+    "three/addons/": "./js/vendor/three/addons/"
+  }
+}
+</script>
+<script type="module" src="js/village-worldline-day.js?v=20260816dir"></script>
+</body>
+</html>

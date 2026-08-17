@@ -1,5 +1,6 @@
 /**
  * Procedural village footprint. Default ~1000 homes.
+ * Topology: ~10 homes / MeshEMS board, ~10 boards / feeder (~100 customers).
  * `?homes=N` or `window.WL_SIZE` override. Core 24 stay named anchors.
  */
 
@@ -23,6 +24,9 @@ function sizeFromPage() {
 const VILLAGE_SIZE = sizeFromPage();
 export const TARGET_HOMES = VILLAGE_SIZE.homes;
 export const VILLAGE_PEOPLE = VILLAGE_SIZE.people;
+export const HOMES_PER_BOARD = 10;
+export const BOARDS_PER_FEEDER = 10;
+export const HOMES_PER_FEEDER = HOMES_PER_BOARD * BOARDS_PER_FEEDER;
 
 const PROFILES = [
   { nightW: 25, dayW: 70, eveW: 130, loadLimitW: 220, nightLoad: "lighting", dayLoad: "fridge", eveLoad: "lighting" },
@@ -52,6 +56,16 @@ export const CLUSTERS = [
   { id: "south", label: "south", x: 10, z: 52, r: 14 },
   { id: "east", label: "east", x: 40, z: 12, r: 11 },
 ];
+
+/** Hamlet share of homes (10 parts → 10×100 at default 1000). */
+const CLUSTER_WEIGHTS = [3, 2, 1, 2, 2];
+
+/** Matches sim LANDMARKS.xfmr — feeder trunks start here. */
+export const MAIN_XFMR = { x: -18.0, z: -6.0 };
+export const MAIN_GEN = { x: -26.0, z: -11.0 };
+
+/** Filled by buildSites: feeder heads + board poles. */
+const FEEDER_SPECS = [];
 
 const CORE_SITES = [
   [-5.0, 2.4, "market"],
@@ -118,50 +132,6 @@ function tryAdd(sites, x, z, minD, cluster) {
   return true;
 }
 
-function blob(sites, cx, cz, n, sig, minD, rand, cluster) {
-  let added = 0;
-  let guard = 0;
-  while (added < n && guard++ < n * 24) {
-    const ang = rand() * Math.PI * 2;
-    const r = Math.abs(gauss(rand)) * sig;
-    const x = cx + Math.cos(ang) * r;
-    const z = cz + Math.sin(ang) * r;
-    if (tryAdd(sites, x, z, minD, cluster)) added += 1;
-  }
-}
-
-function along(sites, pts, n, jitter, minD, rand) {
-  if (pts.length < 2 || n <= 0) return;
-  const seg = [];
-  let total = 0;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const d = Math.hypot(pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]);
-    seg.push(d);
-    total += d;
-  }
-  for (let k = 0; k < n; k++) {
-    const t = ((k + 0.37 + rand() * 0.5) / n) * total;
-    let acc = 0;
-    let i = 0;
-    while (i < seg.length - 1 && acc + seg[i] < t) {
-      acc += seg[i];
-      i += 1;
-    }
-    const u = (t - acc) / (seg[i] || 1);
-    const ax = pts[i][0];
-    const az = pts[i][1];
-    const bx = pts[i + 1][0];
-    const bz = pts[i + 1][1];
-    const px = ax + (bx - ax) * u;
-    const pz = az + (bz - az) * u;
-    const dx = bx - ax;
-    const dz = bz - az;
-    const len = Math.hypot(dx, dz) || 1;
-    const off = (rand() - 0.5) * 2 * jitter;
-    tryAdd(sites, px + (-dz / len) * off, pz + (dx / len) * off, minD, null);
-  }
-}
-
 function pickCoreSites(n) {
   if (n >= CORE_SITES.length) return CORE_SITES.map((s) => s.slice());
   const order = ["market", "west", "south", "clinic", "east"];
@@ -186,88 +156,127 @@ function pickCoreSites(n) {
   return out;
 }
 
+function splitEven(n, k) {
+  const m = Math.max(1, k);
+  const base = Math.floor(n / m);
+  const extra = n - base * m;
+  return Array.from({ length: m }, (_, i) => base + (i < extra ? 1 : 0));
+}
+
+function apportion(weights, total) {
+  const sum = weights.reduce((s, w) => s + w, 0);
+  const raw = weights.map((w) => (w / sum) * total);
+  const floor = raw.map(Math.floor);
+  let left = total - floor.reduce((s, x) => s + x, 0);
+  const order = raw.map((r, i) => [r - floor[i], i]).sort((a, b) => b[0] - a[0]);
+  for (let i = 0; i < left; i++) floor[order[i][1]] += 1;
+  return floor;
+}
+
+function feederIdFor(cluster, fi) {
+  return fi === 0 ? `f-${cluster}` : `f-${cluster}-${fi + 1}`;
+}
+
+function placeHomesAround(sites, bx, bz, n, minD, rand, cluster, feederId, boardIdx) {
+  let added = 0;
+  let guard = 0;
+  while (added < n && guard++ < n * 40) {
+    const ang = ((added + rand() * 0.35) / n) * Math.PI * 2;
+    const rad = 1.35 + Math.abs(gauss(rand)) * 0.9;
+    if (tryAdd(sites, bx + Math.cos(ang) * rad, bz + Math.sin(ang) * rad, minD, cluster)) {
+      const s = sites[sites.length - 1];
+      s[3] = feederId;
+      s[4] = boardIdx;
+      added += 1;
+    }
+  }
+  while (added < n) {
+    const ang = (added / n) * Math.PI * 2;
+    const rad = 1.25 + added * 0.07;
+    sites.push([bx + Math.cos(ang) * rad, bz + Math.sin(ang) * rad, cluster, feederId, boardIdx]);
+    added += 1;
+  }
+}
+
+function tagCoreFeeder(sites) {
+  FEEDER_SPECS.length = 0;
+  for (const s of sites) {
+    s[3] = `f-${s[2]}`;
+    s[4] = 0;
+  }
+  for (const c of CLUSTERS) {
+    const hs = sites.filter((s) => s[2] === c.id);
+    if (!hs.length) continue;
+    const mx = hs.reduce((a, s) => a + s[0], 0) / hs.length;
+    const mz = hs.reduce((a, s) => a + s[1], 0) / hs.length;
+    const id = `f-${c.id}`;
+    FEEDER_SPECS.push({
+      id,
+      cluster: c.id,
+      label: `${c.label} feeder`,
+      x: c.x + (MAIN_XFMR.x - c.x) * 0.28,
+      z: c.z + (MAIN_XFMR.z - c.z) * 0.28,
+      boards: [{ x: mx, z: mz, n: hs.length }],
+    });
+  }
+}
+
 function buildSites() {
   const rand = mulberry(20260813);
   const target = TARGET_HOMES;
   if (target <= CORE_SITES.length) {
-    return pickCoreSites(target);
+    const sites = pickCoreSites(target);
+    tagCoreFeeder(sites);
+    return sites;
   }
-  const sites = CORE_SITES.map((s) => s.slice());
-  if (target < 400) {
-    const extra = target - sites.length;
-    const plan = [
-      [-5, 3, 0.28, 5.5, 1.2, "market"],
-      [16, -1, 0.1, 4.0, 1.15, "clinic"],
-      [40, 11, 0.16, 6.0, 1.2, "east"],
-      [-50, 20, 0.18, 11, 1.6, "west"],
-      [9, 54, 0.16, 10, 1.5, "south"],
-      [8, 18, 0.12, 8, 1.35, "south"],
-    ];
-    for (const [cx, cz, frac, sig, minD, cl] of plan) {
-      const left = target - sites.length;
-      if (left <= 0) break;
-      blob(sites, cx, cz, Math.min(left, Math.max(0, Math.round(extra * frac))), sig, minD, rand, cl);
-    }
-    let g = 0;
-    while (sites.length < target && g++ < 8000) {
-      tryAdd(sites, -40 + rand() * 80, -8 + rand() * 70, 1.4, null);
-    }
-    return sites.slice(0, target);
-  }
-  blob(sites, -5, 3, 180, 6.2, 1.15, rand, "market");
-  blob(sites, 3, 9, 70, 7.5, 1.2, rand, "market");
-  blob(sites, 16, -1, 48, 4.2, 1.15, rand, "clinic");
-  blob(sites, 40, 11, 95, 6.8, 1.2, rand, "east");
-  blob(sites, 48, 22, 40, 5.5, 1.25, rand, "east");
-  blob(sites, -50, 20, 70, 13, 1.6, rand, "west");
-  blob(sites, -38, 36, 45, 9, 1.5, rand, "west");
-  blob(sites, 9, 54, 65, 12, 1.55, rand, "south");
-  blob(sites, 22, 42, 40, 8, 1.4, rand, "south");
-  blob(sites, -22, -14, 35, 9, 1.7, rand, "west");
-  blob(sites, 8, 18, 55, 9.5, 1.35, rand, "south");
-  along(
-    sites,
-    [
-      [-58, 8],
-      [-36, 14],
-      [-14, 7],
-      [6, 16],
-      [24, 11],
-      [44, 18],
-    ],
-    55,
-    3.8,
-    1.25,
-    rand,
-  );
-  along(
-    sites,
-    [
-      [-8, 28],
-      [4, 41],
-      [18, 38],
-      [12, 58],
-      [28, 64],
-    ],
-    40,
-    4.2,
-    1.35,
-    rand,
-  );
-  let iso = 0;
-  let g = 0;
-  while (iso < 55 && g++ < 4000) {
-    const x = -70 + rand() * 140;
-    const z = -20 + rand() * 100;
-    if (tryAdd(sites, x, z, 6.5, null)) iso += 1;
-  }
-  g = 0;
-  while (sites.length < TARGET_HOMES && g++ < 25000) {
-    const x = -72 + rand() * 148;
-    const z = -22 + rand() * 108;
-    tryAdd(sites, x, z, 1.2, null);
-  }
-  return sites.slice(0, TARGET_HOMES);
+
+  FEEDER_SPECS.length = 0;
+  const sites = [];
+  const homesByCluster = apportion(CLUSTER_WEIGHTS, target);
+  CLUSTERS.forEach((c, ci) => {
+    const nHomes = homesByCluster[ci];
+    if (nHomes <= 0) return;
+    const nFeeders = Math.max(1, Math.round(nHomes / HOMES_PER_FEEDER));
+    const feederSizes = splitEven(nHomes, nFeeders);
+    const ux = c.x - MAIN_XFMR.x;
+    const uz = c.z - MAIN_XFMR.z;
+    const len = Math.hypot(ux, uz) || 1;
+    const tx = ux / len;
+    const tz = uz / len;
+    const nx = -tz;
+    const nz = tx;
+    feederSizes.forEach((nh, fi) => {
+      const feederId = feederIdFor(c.id, fi);
+      const nBoards = Math.max(1, Math.round(nh / HOMES_PER_BOARD));
+      const boardSizes = splitEven(nh, nBoards);
+      const spread = (fi - (nFeeders - 1) / 2) * 9.4;
+      const headDist = len * 0.2;
+      const head = {
+        x: MAIN_XFMR.x + tx * headDist + nx * spread,
+        z: MAIN_XFMR.z + tz * headDist + nz * spread,
+      };
+      const span = Math.max(c.r * 1.2, 5.6 * nBoards);
+      const boards = [];
+      boardSizes.forEach((bn, bi) => {
+        const t = (bi + 0.7) / (nBoards + 0.25);
+        const wobble = Math.sin(bi * 1.15 + fi * 0.7) * 2.1;
+        const bx = head.x + tx * span * t + nx * (spread * 0.12 + wobble);
+        const bz = head.z + tz * span * t + nz * (spread * 0.12 + wobble);
+        boards.push({ x: bx, z: bz, n: bn });
+        placeHomesAround(sites, bx, bz, bn, 1.05, rand, c.id, feederId, bi);
+      });
+      const base = c.label;
+      FEEDER_SPECS.push({
+        id: feederId,
+        cluster: c.id,
+        label: nFeeders <= 1 ? `${base} feeder` : `${base} feeder ${fi + 1}`,
+        x: head.x,
+        z: head.z,
+        boards,
+      });
+    });
+  });
+  return sites.slice(0, target);
 }
 
 function houseName(i) {
@@ -311,6 +320,8 @@ function buildHouses() {
       x: site[0],
       z: site[1],
       cluster: site[2],
+      feederId: site[3] || `f-${site[2]}`,
+      boardIdx: site[4] ?? 0,
       startCredit: i === 3 ? 80 : 0,
       ...p,
       ...loadTraits(i, rural),
@@ -353,10 +364,6 @@ function buildHouses() {
 }
 
 export const HOUSES = buildHouses();
-
-/** Matches sim LANDMARKS.xfmr — feeder trunks start here. */
-export const MAIN_XFMR = { x: -18.0, z: -6.0 };
-export const MAIN_GEN = { x: -26.0, z: -11.0 };
 
 function findParent(parent, a) {
   return parent[a] === a ? a : (parent[a] = findParent(parent, parent[a]));
@@ -406,34 +413,11 @@ function densifySegs(edges, step, extra) {
   return { segs: out, poles };
 }
 
-function farthestSeeds(hs, k) {
-  const seeds = [hs[0]];
-  while (seeds.length < k && seeds.length < hs.length) {
-    let best = hs[0];
-    let bd = -1;
-    for (const h of hs) {
-      let md = Infinity;
-      for (const s of seeds) {
-        const d = (h.x - s.x) ** 2 + (h.z - s.z) ** 2;
-        if (d < md) md = d;
-      }
-      if (md > bd) {
-        bd = md;
-        best = h;
-      }
-    }
-    seeds.push(best);
-  }
-  return seeds.map((s) => ({ x: s.x, z: s.z }));
-}
-
 function buildGrid(houses) {
   const feeders = [];
   const transformers = [];
   const segs = [];
   const poles = [];
-  const byCluster = Object.fromEntries(CLUSTERS.map((c) => [c.id, []]));
-  for (const h of houses) (byCluster[h.cluster] || (byCluster[h.cluster] = [])).push(h);
 
   segs.push({
     ax: MAIN_GEN.x,
@@ -446,77 +430,57 @@ function buildGrid(houses) {
     capW: 68000,
   });
 
-  for (const c of CLUSTERS) {
-    const hs = byCluster[c.id] || [];
-    if (!hs.length) continue;
-    const feederId = `f-${c.id}`;
-    const head = {
-      x: c.x + (MAIN_XFMR.x - c.x) * 0.28,
-      z: c.z + (MAIN_XFMR.z - c.z) * 0.28,
-    };
-    feeders.push({ id: feederId, cluster: c.id, label: `${c.label} feeder`, x: head.x, z: head.z });
+  const specs = FEEDER_SPECS.length
+    ? FEEDER_SPECS
+    : CLUSTERS.map((c) => ({
+        id: `f-${c.id}`,
+        cluster: c.id,
+        label: `${c.label} feeder`,
+        x: c.x + (MAIN_XFMR.x - c.x) * 0.28,
+        z: c.z + (MAIN_XFMR.z - c.z) * 0.28,
+        boards: [],
+      }));
 
+  for (const spec of specs) {
+    const hs = houses.filter((h) => h.feederId === spec.id);
+    if (!hs.length) continue;
+    const head = { x: spec.x, z: spec.z };
+    feeders.push({ id: spec.id, cluster: spec.cluster, label: spec.label, x: head.x, z: head.z });
     segs.push({
       ax: MAIN_XFMR.x,
       az: MAIN_XFMR.z,
       bx: head.x,
       bz: head.z,
       kind: "trunk",
-      feederId,
+      feederId: spec.id,
       xfmrId: null,
       capW: Math.max(8000, hs.length * 180),
     });
 
-    const k = Math.max(2, Math.round(hs.length / 14));
-    let cents = farthestSeeds(hs, k);
-    const assign = () => {
-      for (const h of hs) {
-        let bi = 0;
-        let bd = Infinity;
-        for (let i = 0; i < cents.length; i++) {
-          const d = (h.x - cents[i].x) ** 2 + (h.z - cents[i].z) ** 2;
-          if (d < bd) {
-            bd = d;
-            bi = i;
-          }
-        }
-        h._ti = bi;
-      }
-    };
-    for (let iter = 0; iter < 4; iter++) {
-      assign();
-      const nx = cents.map(() => ({ x: 0, z: 0, n: 0 }));
-      for (const h of hs) {
-        nx[h._ti].x += h.x;
-        nx[h._ti].z += h.z;
-        nx[h._ti].n += 1;
-      }
-      cents = nx.map((p, i) => (p.n ? { x: p.x / p.n, z: p.z / p.n } : cents[i]));
+    const byBoard = [];
+    for (const h of hs) {
+      const i = h.boardIdx ?? 0;
+      (byBoard[i] ||= []).push(h);
     }
-    assign();
-
-    const group = cents.map(() => []);
-    for (const h of hs) group[h._ti].push(h);
-
-    const xfmrNodes = [{ id: `${feederId}-head`, x: head.x, z: head.z }];
-    group.forEach((ghs, i) => {
-      if (!ghs.length) return;
+    const groups = byBoard.filter((g) => g && g.length);
+    const xfmrList = [];
+    groups.forEach((ghs, i) => {
+      const planned = spec.boards[i];
+      const mx = planned ? planned.x : ghs.reduce((s, h) => s + h.x, 0) / ghs.length;
+      const mz = planned ? planned.z : ghs.reduce((s, h) => s + h.z, 0) / ghs.length;
       const t = {
-        id: `t-${c.id}-${i}`,
-        feederId,
-        cluster: c.id,
-        x: cents[i].x,
-        z: cents[i].z,
+        id: `t-${spec.id}-${i}`,
+        feederId: spec.id,
+        cluster: spec.cluster,
+        x: mx,
+        z: mz,
         n: ghs.length,
         capW: Math.max(1200, ghs.length * 220),
-        label: `pole xfmr · ${c.id} ${i + 1}`,
+        label: `pole xfmr · ${spec.label} ${i + 1}`,
       };
       transformers.push(t);
-      xfmrNodes.push({ id: t.id, x: t.x, z: t.z });
-      for (const h of ghs) {
-        h.feederId = feederId;
-        h.xfmrId = t.id;
-      }
+      xfmrList.push(t);
+      for (const h of ghs) h.xfmrId = t.id;
       const secNodes = [{ id: t.id, x: t.x, z: t.z }, ...ghs.map((h) => ({ id: h.id, x: h.x, z: h.z }))];
       for (const e of kruskal(secNodes)) {
         const houseId = e.a.startsWith("h") ? e.a : e.b.startsWith("h") ? e.b : null;
@@ -526,7 +490,7 @@ function buildGrid(houses) {
           bx: e.bx,
           bz: e.bz,
           kind: "secondary",
-          feederId,
+          feederId: spec.id,
           xfmrId: t.id,
           houseId,
           capW: t.capW,
@@ -534,9 +498,18 @@ function buildGrid(houses) {
       }
     });
 
-    const prim = densifySegs(kruskal(xfmrNodes), 7.2, { kind: "primary", feederId, xfmrId: null, capW: hs.length * 180 });
-    segs.push(...prim.segs);
-    for (const p of prim.poles) poles.push({ ...p, feederId });
+    const chain = [{ x: head.x, z: head.z }, ...xfmrList];
+    for (let i = 1; i < chain.length; i++) {
+      const a = chain[i - 1];
+      const b = chain[i];
+      const prim = densifySegs(
+        [{ ax: a.x, az: a.z, bx: b.x, bz: b.z, d: (b.x - a.x) ** 2 + (b.z - a.z) ** 2 }],
+        7.2,
+        { kind: "primary", feederId: spec.id, xfmrId: null, capW: hs.length * 180 },
+      );
+      segs.push(...prim.segs);
+      for (const p of prim.poles) poles.push({ ...p, feederId: spec.id });
+    }
   }
 
   return { feeders, transformers, segs, poles };
@@ -550,14 +523,18 @@ export const POLES = GRID.poles;
 
 export const VENDORS = [
   { id: "v-kiosk", label: "market kiosk", x: -3.0, z: 0.2, kind: "kiosk" },
-  ...FEEDERS.map((f) => ({
-    id: `v-agent-${f.cluster}`,
-    label: `${CLUSTERS.find((c) => c.id === f.cluster)?.label || f.cluster} agent`,
-    x: f.x + 1.5,
-    z: f.z - 1.2,
-    kind: "agent",
-    cluster: f.cluster,
-  })),
+  ...CLUSTERS.map((c) => {
+    const f = FEEDERS.find((x) => x.cluster === c.id);
+    if (!f) return null;
+    return {
+      id: `v-agent-${c.id}`,
+      label: `${c.label} agent`,
+      x: f.x + 1.5,
+      z: f.z - 1.2,
+      kind: "agent",
+      cluster: c.id,
+    };
+  }).filter(Boolean),
 ];
 
 for (const h of HOUSES) {
@@ -586,54 +563,51 @@ for (let i = 0; i < HOUSES.length; i++) {
 
 /** One DitroniX DTM (IPEM-class 3φ monitor) at each feeder takeoff. */
 export const DTMS = FEEDERS.map((f) => ({
-  id: `dtm-${f.cluster}`,
+  id: `dtm-${f.id}`,
   feederId: f.id,
   cluster: f.cluster,
   x: f.x + 0.85,
   z: f.z + 0.55,
-  label: `DTM · ${f.cluster}`,
+  label: `DTM · ${f.label.replace(/ feeder$/, "")}`,
 }));
-
-/** Pole MeshEMS: 10 homes / board, grouped along each feeder. Last board may be short. */
-export const HOMES_PER_BOARD = 10;
 
 function buildBoards(houses) {
   const boards = [];
-  const byFeeder = {};
-  for (const h of houses) (byFeeder[h.feederId || "_"] ||= []).push(h);
+  const groups = new Map();
+  for (const h of houses) {
+    const key = `${h.feederId || "_"}:${h.boardIdx ?? 0}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(h);
+  }
   let n = 0;
-  for (const group of Object.values(byFeeder)) {
-    const cx = group.reduce((s, h) => s + h.x, 0) / group.length;
-    const cz = group.reduce((s, h) => s + h.z, 0) / group.length;
-    group.sort((a, b) => Math.atan2(a.z - cz, a.x - cx) - Math.atan2(b.z - cz, b.x - cx));
-    for (let i = 0; i < group.length; i += HOMES_PER_BOARD) {
-      const hs = group.slice(i, i + HOMES_PER_BOARD);
-      n += 1;
-      const id = `ems-${n}`;
-      const mx = hs.reduce((s, h) => s + h.x, 0) / hs.length;
-      const mz = hs.reduce((s, h) => s + h.z, 0) / hs.length;
-      const xf = TRANSFORMERS.find((t) => t.id === hs[0].xfmrId);
-      let x = mx;
-      let z = mz;
-      if (xf) {
-        const dx = xf.x - mx;
-        const dz = xf.z - mz;
-        const len = Math.hypot(dx, dz) || 1;
-        x = mx + (dx / len) * 0.85;
-        z = mz + (dz / len) * 0.85;
-      }
-      boards.push({
-        id,
-        feederId: hs[0].feederId,
-        xfmrId: hs[0].xfmrId,
-        cluster: hs[0].cluster,
-        x,
-        z,
-        houseIds: hs.map((h) => h.id),
-        label: `MeshEMS · ${hs[0].cluster} ${n}`,
-      });
-      for (const h of hs) h.boardId = id;
+  for (const hs of groups.values()) {
+    if (!hs.length) continue;
+    n += 1;
+    const id = `ems-${n}`;
+    const mx = hs.reduce((s, h) => s + h.x, 0) / hs.length;
+    const mz = hs.reduce((s, h) => s + h.z, 0) / hs.length;
+    const xf = TRANSFORMERS.find((t) => t.id === hs[0].xfmrId);
+    let x = mx;
+    let z = mz;
+    if (xf) {
+      const dx = xf.x - mx;
+      const dz = xf.z - mz;
+      const len = Math.hypot(dx, dz) || 1;
+      x = mx + (dx / len) * 0.55;
+      z = mz + (dz / len) * 0.55;
     }
+    boards.push({
+      id,
+      feederId: hs[0].feederId,
+      xfmrId: hs[0].xfmrId,
+      cluster: hs[0].cluster,
+      boardIdx: hs[0].boardIdx ?? 0,
+      x,
+      z,
+      houseIds: hs.map((h) => h.id),
+      label: `MeshEMS · ${hs[0].cluster} ${n}`,
+    });
+    for (const h of hs) h.boardId = id;
   }
   return boards;
 }
@@ -744,3 +718,57 @@ export const OUTAGES = [
     label: "market feeder",
   },
 ];
+
+function boardsOnFeeder(feederId) {
+  return BOARDS.filter((b) => b.feederId === feederId).sort((a, b) => (a.boardIdx ?? 0) - (b.boardIdx ?? 0));
+}
+
+/** Hypothetical unmetered span: DTM vs MeshEMS ΔP localizes to the primary between two boards. */
+function leakSpan(feederId, i, j, spec) {
+  const row = boardsOnFeeder(feederId);
+  const a = row[i];
+  const b = row[j];
+  if (!a || !b) return null;
+  return {
+    ...spec,
+    feederId,
+    fromBoardId: a.id,
+    toBoardId: b.id,
+    fromIdx: a.boardIdx ?? i,
+    toIdx: b.boardIdx ?? j,
+    ax: a.x,
+    az: a.z,
+    bx: b.x,
+    bz: b.z,
+    x: (a.x + b.x) / 2,
+    z: (a.z + b.z) / 2,
+    label: `${a.label} → ${b.label}`,
+  };
+}
+
+export const LEAKS = [
+  leakSpan("f-west", 3, 4, {
+    id: "lk-west",
+    min: 9 * 60 + 45,
+    restore: 13 * 60 + 20,
+    leakW: 420,
+    kind: "tap",
+    note: "Illegal tap · upstream MeshEMS − downstream MeshEMS − billed laterals = +420 W",
+  }),
+  leakSpan("f-south", 1, 2, {
+    id: "lk-south",
+    min: 5 * 60 + 30,
+    restore: 8 * 60,
+    leakW: 180,
+    kind: "earth",
+    note: "Earth leak (wet insulation) · ΔP pins south feeder between MeshEMS 2 and 3",
+  }),
+  leakSpan("f-market", 5, 6, {
+    id: "lk-market",
+    min: 18 * 60 + 45,
+    restore: 21 * 60 + 30,
+    leakW: 680,
+    kind: "unmetered",
+    note: "Unmetered evening load · market feeder MeshEMS 6→7 only (rest of feeder balances)",
+  }),
+].filter(Boolean);
