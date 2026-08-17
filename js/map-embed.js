@@ -11,6 +11,8 @@ if (!window.MAPBOX_TOKEN) {
   showMapError('Map not configured locally — add js/map-config.js (see js/map-config.example.js).');
 } else {
   mapboxgl.accessToken = window.MAPBOX_TOKEN;
+  // isv.wiki CSP blocks blob: workers. Dedicated CSP worker loads from api.mapbox.com (already allowed).
+  mapboxgl.workerUrl = 'https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl-csp-worker.js';
 
   var map = new mapboxgl.Map({
     container: 'map',
@@ -20,7 +22,8 @@ if (!window.MAPBOX_TOKEN) {
     zoom: 1
   });
 
-  map.on('load', function() {
+  function addProjectDots() {
+    if (map.getSource('projects')) return;
     map.addSource('projects', {
       type: 'geojson',
       data: 'https://raw.githubusercontent.com/overview-solutions/RemoteMonitorMap/master/projects.geojson'
@@ -69,7 +72,10 @@ if (!window.MAPBOX_TOKEN) {
     });
 
     map.resize();
-  });
+  }
+
+  map.on('style.load', addProjectDots);
+  map.on('load', addProjectDots);
 
   map.on('error', function(e) {
     if (e.error && e.error.message) showMapError(e.error.message);

@@ -68,6 +68,8 @@ isv-ai-wiki/
 
 **Live base URL:** `https://isv.wiki/` (GitHub Pages mirror: `https://overview-solutions.github.io/isv-ai-wiki/`)
 
+**Map CSP:** Cloudflare Transform Rule `isv-wiki-security-headers` must allow Mapbox GL. Embed uses `mapbox-gl-csp.js` + `mapbox-gl-csp-worker.js` because `blob:` workers are blocked. Keep `script-src` / `connect-src` including `https://api.mapbox.com`. Project GeoJSON must come from `raw.githubusercontent.com` (github.io is not in `connect-src`).
+
 **Local preview:** `./preview.sh` → `http://localhost:8765/index.html`
 
 ---
