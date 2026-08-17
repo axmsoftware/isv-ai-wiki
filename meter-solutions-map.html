@@ -338,12 +338,12 @@ html.embed.panel .meter-footer { display: none; }
   <div class="map-proto-banner" id="map-proto-banner" hidden></div>
 
   <div class="view-toggle-bar">
-    <button type="button" class="view-toggle-btn active" data-view="story">Story</button>
+    <button type="button" class="view-toggle-btn" data-view="story">Story</button>
     <button type="button" class="view-toggle-btn" data-view="force">Force graph</button>
-    <button type="button" class="view-toggle-btn" data-view="full">Full diagram</button>
+    <button type="button" class="view-toggle-btn active" data-view="full">Full diagram</button>
   </div>
 
-  <div id="story-view" class="story-view">
+  <div id="story-view" class="story-view" hidden>
     <p class="lead">Same village problems, four stacks. Empty / italic = not documented this pass. OpenAMI column is <strong>could</strong> — proposed compose, not a live product claim. Evidence: <a href="index.html#village-metering/vendor-study">vendor study</a> · <a href="index.html#village-metering/tc20-review">TC2.0 review</a> · <a href="index.html#village-metering/openami">OpenAMI</a>.</p>
     <div class="story-grid" id="story-grid"></div>
   </div>
@@ -360,7 +360,7 @@ html.embed.panel .meter-footer { display: none; }
     </div>
   </div>
 
-  <div id="full-graph-view" class="full-graph-view" hidden>
+  <div id="full-graph-view" class="full-graph-view">
     <div class="map-roadmap-note" id="map-roadmap-note">
       <strong>Four stacks</strong> tag software nodes —
       <strong>SteamaCo</strong> Nimbus + Savi ·
@@ -399,7 +399,7 @@ html.embed.panel .meter-footer { display: none; }
 (function () {
   var PARAMS = new URLSearchParams(location.search);
   var PROTO = (PARAMS.get('proto') || '').toLowerCase();
-  var currentView = 'story';
+  var currentView = 'full';
   var PHASE_PARAM = (PARAMS.get('phase') || '').trim();
   var TRACK_PARAM = (PARAMS.get('track') || '').trim();
   var HOST_PARAM = (PARAMS.get('host') || '').toLowerCase().trim();
@@ -1865,7 +1865,7 @@ html.embed.panel .meter-footer { display: none; }
 
   buildStoryView();
   bindViewToggle();
-  switchView('story');
+  switchView('full');
 
   fetch(MAP_URL)
     .then(function (r) { if (!r.ok) throw new Error('map load failed'); return r.json(); })
