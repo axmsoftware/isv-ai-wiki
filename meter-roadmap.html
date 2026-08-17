@@ -70,12 +70,13 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
 
   <div class="callout">
     <strong>Discipline</strong>
-    <p><strong>Phase 1</strong> keeps operators billing on gear that already exists. <strong>Phase 2</strong> builds the open mini-grid core (Street-EMS / OpenAMI). <strong>Phase 3</strong> adds grid-arrival and aggregator paths (2030.5, OpenADR, 1547). PAC workshops ≈ Phase&nbsp;1 + a thin Phase&nbsp;2 slice. Maps:
+    <p><strong>Phase 1</strong> keeps operators billing on gear that already exists. <strong>Phase 2</strong> builds the open mini-grid core (Street-EMS / OpenAMI). <strong>Phase 3</strong> adds grid-arrival and aggregator paths (2030.5, OpenADR, 1547). PAC workshops ≈ Phase&nbsp;1 + a thin Phase&nbsp;2 slice.       Maps:
       <a href="meter-tc20-review.html">TC2.0 review</a> ·
       <a href="meter-tc20-review.html?host=full">TC2.0 + cloud</a> ·
-      phase filter <a href="meter-solutions-map.html?phase=1">P1</a> ·
-      <a href="meter-solutions-map.html?phase=2">P2</a> ·
-      <a href="meter-solutions-map.html?phase=3">P3</a>
+      stack filter <a href="meter-solutions-map.html?track=steamaco">SteamaCo</a> ·
+      <a href="meter-solutions-map.html?track=sparkmeter">SparkMeter</a> ·
+      <a href="meter-solutions-map.html?track=enaccess">EnAccess</a> ·
+      <a href="meter-solutions-map.html?track=openami">OpenAMI</a>
       (also on <a href="meter-overview.html#solutions-map">Overview</a>).</p>
   </div>
 
@@ -117,54 +118,68 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
     </div>
   </div>
 
-  <h2>Outcome themes → primary phase</h2>
-  <p class="body-text">Six outcome clusters that village operators care about, mapped to which phase solves them. Full details: <a href="meter-solutions-map.html">Solutions map</a>.</p>
+  <h2>Outcome themes → stacks</h2>
+  <p class="body-text">Six outcome clusters village operators care about, mapped to who addresses them (documented vs <em>could</em>). Empty = not documented this pass. Full diagram: <a href="meter-solutions-map.html">Solutions map</a>.</p>
 
   <table>
     <thead>
       <tr>
         <th>Outcome theme</th>
         <th>Main problems</th>
-        <th>Primary phase</th>
-        <th>Core capability</th>
+        <th>SteamaCo</th>
+        <th>SparkMeter</th>
+        <th>EnAccess</th>
+        <th>OpenAMI (could)</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td>Revenue collection</td>
-        <td>Per-home kWh, collect-before-use, deliver credit, show balance, token audit, O&M revenue</td>
-        <td>Phase 1</td>
-        <td>Prepaid & tokens + Operator billing platform (ThunderCloud / MPM)</td>
+        <td>Per-home kWh, collect-before-use, deliver credit, show balance, token audit, O&amp;M revenue</td>
+        <td>Savi STS + Nimbus vending / mobile money</td>
+        <td>GroundBolt wallet + CIU (not STS / OpenPAYGO); ThunderCloud billing</td>
+        <td>MPM prepaid; OpenPAYGO tokens (SHS-class); OpenSmartMeter GSM</td>
+        <td>Compose MPM / OpenPAYGO on VMRS + MQTT — not a new token scheme</td>
       </tr>
       <tr>
         <td>Control</td>
         <td>Disconnect, reconnect, multi-home pole</td>
-        <td>Phase 1 → 2</td>
-        <td>Prepaid path + Edge EMS / tenant control</td>
+        <td>STS cutoffs at Savi. Multi-home pole not documented this pass</td>
+        <td>GroundBolt Enable/Disable. Multi-home pole not in TC2.0 scope</td>
+        <td>MPM commands (Steama plugin); OpenPAYGO enable/disable. No pole-tenant EMS</td>
+        <td>Tenant cutoffs at Street EMS / MeshEMS pole</td>
       </tr>
       <tr>
-        <td>Loss & theft visibility</td>
+        <td>Loss &amp; theft visibility</td>
         <td>Illegal taps, unmetered load, leakage, neutral imbalance, meters disagree, spot theft</td>
-        <td>Phase 2</td>
-        <td>Feeder AMI / OpenAMI + Field QA</td>
+        <td>No public feeder-AMI / ΔP leakage docs this pass</td>
+        <td>Meter tamper flags only — not feeder AMI</td>
+        <td>Billing + meter tools, not feeder AMI</td>
+        <td>Leakage at feeder / branch / customer via geo model + MeshEMS</td>
       </tr>
       <tr>
         <td>Operational visibility</td>
-        <td>Voltage, instant power, serial & clock</td>
-        <td>Phase 1 → 2</td>
-        <td>Billing register model (VMRS) + Northbound telemetry</td>
+        <td>Voltage, instant power, serial &amp; clock</td>
+        <td>Nimbus is AMI-class; no public meter ICD this pass</td>
+        <td>GroundBolt live kWh, power, voltage, state</td>
+        <td>MPM reporting; OpenSmartMeter API</td>
+        <td>VMRS registers + MQTT northbound</td>
       </tr>
       <tr>
-        <td>Cost & independence</td>
+        <td>Cost &amp; independence</td>
         <td>Meter capex, MDMS cost, mixed protocols, vendor exit, inverter vs billing</td>
-        <td>Phase 1–2</td>
-        <td>Scope definition + Vendor study + open northbound</td>
+        <td>DLMS-interop HES claim; partner stack does not solve vendor-exit</td>
+        <td>TC2.0 opens HES (partial); meters stay SparkNet</td>
+        <td>MPM as open backend; OpenSmartMeter; OpenPAYGO avoids STS license</td>
+        <td>OEM-agnostic gateway + open northbound; MPM as backend option</td>
       </tr>
       <tr>
         <td>Comms resilience</td>
         <td>Cloud unreachable, prepaid offline, vending down</td>
-        <td>Phase 1–2</td>
-        <td>Resilient comms design + offline token path</td>
+        <td>Savi GPRS/PLC/RF; STS credit at meter without cloud</td>
+        <td>CIU if WAN down; GroundBolt keeps local prepaid + control</td>
+        <td>OpenPAYGO without continuous cloud; Cicada-FW; OpenSmartMeter GSM</td>
+        <td>MeshEMS NAN when cloud down + compose OpenPAYGO/STS for local credit</td>
       </tr>
     </tbody>
   </table>

@@ -45,7 +45,7 @@ isv-ai-wiki/
 ├── meter-overview.html           # Village Metering — context, hardware threads (default embed)
 ├── meter-roadmap.html            # Three-phase development roadmap (+ ThunderCloud Phase 1 note)
 ├── meter-problems-today.html     # Field problems → solutions
-├── meter-solutions-map.html      # Visual problem ↔ solution map (SVG)
+├── meter-solutions-map.html      # Visual problem ↔ stack map (SteamaCo · SparkMeter · EnAccess · OpenAMI)
 ├── meter-village-scope.html      # Village definition · population · HDI (cited)
 ├── meter-vendor-study.html       # Cited vendor benchmark (standalone + embed)
 ├── village-worldline-day.html    # Village Simulator (Three.js hypothetical prepaid day)
@@ -143,7 +143,7 @@ Registered sections (`SECTIONS` in `index.html`):
 | `#village-metering/tc20-review` | ThunderCloud 2.0 review · GroundBolt as site HES |
 | `#village-metering/village-scope` | Village definition · population · HDI · modernization fork (cited) |
 | `#village-metering/problems` | Field problems (Problem · Why it hurts) |
-| `#village-metering/solutions-map` | Visual problem ↔ solution diagram · `meter-benchmark/problem-solution-map.json` |
+| `#village-metering/solutions-map` | Visual problem ↔ stack diagram (SteamaCo · SparkMeter · EnAccess · OpenAMI) · `meter-benchmark/problem-solution-map.json` |
 | `#village-metering/vmrs` | Register checklist (OBIS · VMRS) |
 | `#village-metering/vendor-study` | Vendor pipeline + technical tables |
 | `#village-metering/openami` | OpenAMI stack · leakage visibility |

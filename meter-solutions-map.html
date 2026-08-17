@@ -14,7 +14,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.55; }
 a { color: var(--green); }
-.wrap { max-width: 960px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
 .back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
 .back a { text-decoration: none; }
 h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
@@ -37,6 +37,10 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-filter[data-tone="phase1"].active { background: var(--green-50); border-color: var(--green); color: var(--green); }
 .map-filter[data-tone="phase2"].active { background: var(--teal-50); border-color: var(--teal); color: var(--teal); }
 .map-filter[data-tone="phase3"].active { background: var(--ieee-blue-50); border-color: var(--ieee-blue); color: var(--ieee-blue); }
+.map-filter[data-tone="steamaco"].active { background: var(--amber-50); border-color: var(--amber); color: var(--amber); }
+.map-filter[data-tone="sparkmeter"].active { background: var(--green-50); border-color: var(--green); color: var(--green); }
+.map-filter[data-tone="enaccess"].active { background: var(--purple-50); border-color: var(--purple); color: var(--purple); }
+.map-filter[data-tone="openami"].active { background: var(--teal-50); border-color: var(--teal); color: var(--teal); }
 .map-toolbar + .map-toolbar { margin-top: -0.25rem; }
 .map-roadmap-note {
   font-size: 12px; padding: 0.5rem 0.65rem; border-radius: 8px;
@@ -71,6 +75,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .link-deploy-tone-scope { stroke: var(--text-3); }
 .map-frame .link-deploy-tone-gateway { stroke: var(--teal); }
 .map-frame .link-deploy-tone-groundbolt { stroke: var(--green); }
+.map-frame .link-deploy-tone-site-hes { stroke: var(--green); }
 .map-frame .link-deploy.on { opacity: 0.55; }
 .map-frame .link-deploy.focus { opacity: 0.9; stroke-width: 1.25; stroke-dasharray: none; }
 .map-frame .link-deploy.dim { opacity: 0.03; }
@@ -138,6 +143,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-scope { fill: var(--bg-3); }
 .map-frame .layer-band-gateway { fill: var(--teal-50); }
 .map-frame .layer-band-groundbolt { fill: var(--green-50); }
+.map-frame .layer-band-site-hes { fill: var(--green-50); }
 .map-frame .layer-band-stripe { stroke: none; }
 .map-frame .layer-band-stripe-meter { fill: var(--amber); }
 .map-frame .layer-band-stripe-ciu { fill: var(--purple); }
@@ -148,6 +154,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-stripe-scope { fill: var(--text-3); }
 .map-frame .layer-band-stripe-gateway { fill: var(--teal); }
 .map-frame .layer-band-stripe-groundbolt { fill: var(--green); }
+.map-frame .layer-band-stripe-site-hes { fill: var(--green); }
 .map-frame .layer-band-title { font-size: 9px; font-weight: 600; letter-spacing: 0.02em; pointer-events: none; }
 .map-frame .layer-band-title-meter { fill: var(--amber); }
 .map-frame .layer-band-title-ciu { fill: var(--purple); }
@@ -157,6 +164,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .layer-band-title-cloud { fill: var(--blue); }
 .map-frame .layer-band-title-gateway { fill: var(--teal); }
 .map-frame .layer-band-title-groundbolt { fill: var(--green); }
+.map-frame .layer-band-title-site-hes { fill: var(--green); }
 .map-frame .sw-band { stroke: none; transition: opacity 0.15s; }
 .map-frame .sw-band.dim { opacity: 0.08; }
 .map-frame .sw-band-stripe.dim { opacity: 0.12; }
@@ -167,6 +175,10 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-platform { fill: var(--blue-50); }
 .map-frame .sw-band-feeder { fill: var(--red-50); }
 .map-frame .sw-band-planning { fill: var(--bg-3); }
+.map-frame .sw-band-steamaco { fill: var(--amber-50); }
+.map-frame .sw-band-sparkmeter { fill: var(--green-50); }
+.map-frame .sw-band-enaccess { fill: var(--purple-50); }
+.map-frame .sw-band-openami { fill: var(--teal-50); }
 .map-frame .sw-band-driver { fill: var(--teal-50); }
 .map-frame .sw-band-sync { fill: var(--amber-50, #fff7e6); }
 .map-frame .sw-band-ops { fill: var(--bg-3); }
@@ -177,6 +189,10 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-stripe-platform { fill: var(--blue); }
 .map-frame .sw-band-stripe-feeder { fill: var(--red); }
 .map-frame .sw-band-stripe-planning { fill: var(--text-3); }
+.map-frame .sw-band-stripe-steamaco { fill: var(--amber); }
+.map-frame .sw-band-stripe-sparkmeter { fill: var(--green); }
+.map-frame .sw-band-stripe-enaccess { fill: var(--purple); }
+.map-frame .sw-band-stripe-openami { fill: var(--teal); }
 .map-frame .sw-band-stripe-driver { fill: var(--teal); }
 .map-frame .sw-band-stripe-sync { fill: var(--amber); }
 .map-frame .sw-band-stripe-ops { fill: var(--text-3); }
@@ -187,6 +203,10 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .map-frame .sw-band-title-platform { fill: var(--blue); }
 .map-frame .sw-band-title-feeder { fill: var(--red); }
 .map-frame .sw-band-title-planning { fill: var(--text-3); }
+.map-frame .sw-band-title-steamaco { fill: var(--amber); }
+.map-frame .sw-band-title-sparkmeter { fill: var(--green); }
+.map-frame .sw-band-title-enaccess { fill: var(--purple); }
+.map-frame .sw-band-title-openami { fill: var(--teal); }
 .map-frame .sw-band-title-driver { fill: var(--teal); }
 .map-frame .sw-band-title-sync { fill: var(--amber); }
 .map-frame .sw-band-title-ops { fill: var(--text-3); }
@@ -205,8 +225,7 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .story-grid {
   display: grid; grid-template-columns: 1fr; gap: 0.75rem; margin-top: 0.85rem;
 }
-@media (min-width: 640px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (min-width: 920px) { .story-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 860px) { .story-grid { grid-template-columns: repeat(2, 1fr); } }
 .story-card {
   border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 0.95rem;
   background: var(--bg-2); font-size: 12px; line-height: 1.5; transition: border-color 0.12s, box-shadow 0.12s;
@@ -228,6 +247,24 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .story-caps li::before { content: "→"; position: absolute; left: 0; color: var(--green); font-weight: 600; }
 .story-caps a { color: var(--text-2); text-decoration: none; border-bottom: 1px dotted var(--border-2); }
 .story-caps a:hover { color: var(--green); border-bottom-color: var(--green); }
+.story-tracks {
+  display: grid; gap: 0.4rem; margin-top: 0.15rem;
+}
+@media (min-width: 640px) { .story-tracks { grid-template-columns: 1fr 1fr; } }
+.story-track {
+  border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem 0.5rem;
+  background: var(--bg);
+}
+.story-track-name {
+  font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  margin-bottom: 0.2rem;
+}
+.story-track-steamaco .story-track-name { color: var(--amber); }
+.story-track-sparkmeter .story-track-name { color: var(--green); }
+.story-track-enaccess .story-track-name { color: var(--purple); }
+.story-track-openami .story-track-name { color: var(--teal); }
+.story-gap { font-size: 10px; color: var(--text-3); font-style: italic; line-height: 1.35; }
+.story-mode { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; margin-left: 0.25rem; color: var(--text-3); }
 .force-view { margin-bottom: 0.85rem; }
 .force-controls {
   display: flex; gap: 1rem; align-items: center; margin-bottom: 0.65rem; padding: 0.5rem 0.75rem;
@@ -258,6 +295,10 @@ h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
 .force-node-affordability { fill: var(--purple); }
 .force-node-comms { fill: var(--blue); }
 .force-node-integration { fill: var(--ieee-blue); }
+.force-node-steamaco { fill: var(--amber); }
+.force-node-sparkmeter { fill: var(--green); }
+.force-node-enaccess { fill: var(--purple); }
+.force-node-openami { fill: var(--teal); }
 .force-link { stroke: var(--border-2); stroke-opacity: 0.4; stroke-width: 1; }
 .force-link-hardware { stroke: var(--teal); stroke-dasharray: 3 2; }
 .force-label { font-size: 9px; fill: var(--text); pointer-events: none; text-anchor: middle; font-weight: 500; }
@@ -290,8 +331,8 @@ html.embed.panel .meter-footer { display: none; }
 <div class="wrap">
   <div class="back"><a href="index.html#village-metering">← Village Metering</a></div>
 
-  <h1 id="map-title">Problem → hardware → software map</h1>
-  <p class="sub" id="map-sub">Field problem · equipment type · software layer (generic types, not brands)</p>
+  <h1 id="map-title">Problem → stack map</h1>
+  <p class="sub" id="map-sub">Field problem · hardware · how SteamaCo, SparkMeter, EnAccess, and an OpenAMI version address it</p>
 
   <div class="map-proto-nav" id="map-proto-nav" hidden></div>
   <div class="map-proto-banner" id="map-proto-banner" hidden></div>
@@ -303,12 +344,12 @@ html.embed.panel .meter-footer { display: none; }
   </div>
 
   <div id="story-view" class="story-view">
-    <p class="lead">Six outcome themes that reinforce the <a href="meter-roadmap.html">3-phase roadmap</a> — from installed-base prepaid (Phase 1) through next-gen microgrid core (Phase 2) to grid connectivity (Phase 3).</p>
+    <p class="lead">Same village problems, four stacks. Empty / italic = not documented this pass. OpenAMI column is <strong>could</strong> — proposed compose, not a live product claim. Evidence: <a href="index.html#village-metering/vendor-study">vendor study</a> · <a href="index.html#village-metering/tc20-review">TC2.0 review</a> · <a href="index.html#village-metering/openami">OpenAMI</a>.</p>
     <div class="story-grid" id="story-grid"></div>
   </div>
 
   <div id="force-view" class="force-view" hidden>
-    <p class="lead">Interactive force-directed graph — drag nodes to explore connections. <strong>Problems</strong> (amber) → <strong>Software</strong> (green). Node size reflects connection count. Hover for details.</p>
+    <p class="lead">Interactive force-directed graph — drag nodes to explore connections. <strong>Problems</strong> (amber by group) → <strong>stacks</strong> (SteamaCo amber · SparkMeter green · EnAccess purple · OpenAMI teal). Node size reflects connection count. Hover for details.</p>
     <div class="force-controls">
       <label><input type="checkbox" id="force-show-hardware" checked> Show hardware layer</label>
       <label><input type="checkbox" id="force-show-groups" checked> Color by problem group</label>
@@ -321,30 +362,31 @@ html.embed.panel .meter-footer { display: none; }
 
   <div id="full-graph-view" class="full-graph-view" hidden>
     <div class="map-roadmap-note" id="map-roadmap-note">
-      <strong>Roadmap phases</strong> tag software nodes —
-      <strong>1</strong> installed-base interop ·
-      <strong>2</strong> microgrid core ·
-      <strong>3</strong> grid connectivity.
-      Filter below, or read the <a href="index.html#village-metering/roadmap">development roadmap</a>.
+      <strong>Four stacks</strong> tag software nodes —
+      <strong>SteamaCo</strong> Nimbus + Savi ·
+      <strong>SparkMeter</strong> / EarthSpark TC2.0 ·
+      <strong>EnAccess</strong> MPM · OpenPAYGO · OpenSmartMeter · Cicada-FW ·
+      <strong>OpenAMI</strong> proposed (MeshEMS · MQTT · geo leakage).
+      Filter below. Roadmap phases still live on the <a href="index.html#village-metering/roadmap">development roadmap</a>.
       <span id="map-tc20-entry"> · SparkMeter / TC2.0:
         <a href="meter-tc20-review.html">TC2.0 review</a> ·
         <a href="meter-solutions-map.html?proto=tc20">Classic graph</a>
       </span>
     </div>
 
-    <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> (meter, CIU, Street EMS, MeshEMS/DCU, feeder, cloud) → <strong>software</strong> (register models, prepaid stack, edge EMS, billing platform, etc.). Solid = problem→hardware (category color) · dashed = hardware→software. Planning-only items with no equipment link straight to software.</p>
+    <p class="lead" id="map-lead">Read left to right: <strong>problem</strong> → <strong>associated hardware</strong> → <strong>stack</strong> (SteamaCo, SparkMeter, EnAccess, OpenAMI). Solid = problem→hardware (category color) · dashed = hardware→software. OpenAMI nodes marked <strong>could</strong>.</p>
 
-    <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by roadmap phase"></div>
+    <div class="map-toolbar" id="map-phase-filters" role="tablist" aria-label="Filter by stack"></div>
     <div class="map-toolbar" id="map-host-filters" role="tablist" aria-label="Filter by hosting path" hidden></div>
     <div class="map-toolbar" id="map-filters" role="tablist" aria-label="Filter by problem group"></div>
-    <p class="map-hint" id="map-hint">Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
+    <p class="map-hint" id="map-hint">Stack filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus</p>
 
     <div class="map-frame" id="map-frame">
       <svg id="map-svg" role="img" aria-label="Problem to solution connection diagram"></svg>
     </div>
   </div>
 
-  <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links / <code>phase</code> tags there to update this diagram. · <a href="meter-solutions-map-prototypes.html">Prototypes (TC2.0 · A–D)</a> · <a href="index.html#village-metering/roadmap">Roadmap</a></p>
+  <p class="map-legend">Source data: <a id="map-data-link" href="meter-benchmark/problem-solution-map.json">problem-solution-map.json</a> — edit links / <code>track</code> tags there to update this diagram. Empty cells = not documented this pass. · <a href="meter-solutions-map-prototypes.html">Prototypes (TC2.0 · A–D)</a> · <a href="index.html#village-metering/vendor-study">Vendor study</a></p>
 
   <p class="meter-footer">
     <a href="index.html#village-metering/overview">Overview</a> ·
@@ -359,6 +401,7 @@ html.embed.panel .meter-footer { display: none; }
   var PROTO = (PARAMS.get('proto') || '').toLowerCase();
   var currentView = 'story';
   var PHASE_PARAM = (PARAMS.get('phase') || '').trim();
+  var TRACK_PARAM = (PARAMS.get('track') || '').trim();
   var HOST_PARAM = (PARAMS.get('host') || '').toLowerCase().trim();
   var PROTO_FILES = {
     a: { file: 'proposal-a-prepaid.json', cache: '20260811a' },
@@ -370,7 +413,7 @@ html.embed.panel .meter-footer { display: none; }
   var protoMeta = PROTO_FILES[PROTO] || null;
   var MAP_URL = protoMeta
     ? 'meter-benchmark/' + protoMeta.file + '?v=' + protoMeta.cache
-    : 'meter-benchmark/problem-solution-map.json?v=20260811';
+    : 'meter-benchmark/problem-solution-map.json?v=20260816';
   var PROBLEMS_PAGE = 'index.html#village-metering/overview';
   var SVG_W = 920;
   var STRIPE_W = 5;
@@ -399,6 +442,7 @@ html.embed.panel .meter-footer { display: none; }
   var data = null;
   var activeGroup = 'all';
   var activePhase = 'all';
+  var activeTrack = 'all';
   var activeHost = 'full';
   var mapJsonMeta = null;
   var hoverId = null;
@@ -507,7 +551,7 @@ html.embed.panel .meter-footer { display: none; }
         { id: 'planning', label: 'Planning & architecture', short: 'Planning' }
       ];
     }
-    if (!json.roadmap) {
+    if (!json.roadmap && !json.tracks) {
       json.roadmap = {
         href: 'index.html#village-metering/roadmap',
         phases: [
@@ -519,6 +563,7 @@ html.embed.panel .meter-footer { display: none; }
     }
     json.software.forEach(function (s) {
       s.phase = normalizePhaseList(s.phase);
+      s.track = normalizeTrackList(s.track, s.kind, json.tracks);
     });
     if (!Array.isArray(json.problems)) {
       throw new Error('map data missing problems array');
@@ -532,9 +577,86 @@ html.embed.panel .meter-footer { display: none; }
     return json;
   }
 
+  function capItem(c) {
+    var li = document.createElement('li');
+    if (c.href) {
+      var a = document.createElement('a');
+      a.href = c.href;
+      a.textContent = c.label;
+      li.appendChild(a);
+    } else {
+      li.textContent = c.label;
+      li.style.color = 'var(--text-3)';
+    }
+    if (c.mode) {
+      var mode = document.createElement('span');
+      mode.className = 'story-mode';
+      mode.textContent = c.mode;
+      li.appendChild(mode);
+    }
+    return li;
+  }
+
+  function buildTrackStory(themes, tracks) {
+    var grid = document.getElementById('story-grid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    themes.forEach(function (t) {
+      var card = document.createElement('div');
+      card.className = 'story-card';
+      var header = document.createElement('div');
+      header.className = 'story-card-header';
+      var theme = document.createElement('div');
+      theme.className = 'story-theme';
+      theme.textContent = t.theme;
+      header.appendChild(theme);
+      var probs = document.createElement('div');
+      probs.className = 'story-problems';
+      probs.textContent = t.problems;
+      var wrap = document.createElement('div');
+      wrap.className = 'story-tracks';
+      tracks.forEach(function (tr) {
+        var cell = document.createElement('div');
+        cell.className = 'story-track story-track-' + tr.id;
+        var name = document.createElement('div');
+        name.className = 'story-track-name';
+        name.textContent = tr.short || tr.label;
+        cell.appendChild(name);
+        var items = (t.tracks && t.tracks[tr.id]) || [];
+        var gap = t.gaps && t.gaps[tr.id];
+        if (items.length) {
+          var ul = document.createElement('ul');
+          ul.className = 'story-caps';
+          items.forEach(function (c) { ul.appendChild(capItem(c)); });
+          cell.appendChild(ul);
+        }
+        if (gap) {
+          var g = document.createElement('div');
+          g.className = 'story-gap';
+          g.textContent = gap;
+          cell.appendChild(g);
+        } else if (!items.length) {
+          var empty = document.createElement('div');
+          empty.className = 'story-gap';
+          empty.textContent = 'Not documented this pass';
+          cell.appendChild(empty);
+        }
+        wrap.appendChild(cell);
+      });
+      card.appendChild(header);
+      card.appendChild(probs);
+      card.appendChild(wrap);
+      grid.appendChild(card);
+    });
+  }
+
   function buildStoryView() {
     var grid = document.getElementById('story-grid');
     if (!grid) return;
+    if (data && data.storyThemes && data.tracks && data.tracks.length) {
+      buildTrackStory(data.storyThemes, data.tracks);
+      return;
+    }
     grid.innerHTML = '';
     STORY_THEMES.forEach(function (t) {
       var card = document.createElement('div');
@@ -645,7 +767,8 @@ html.embed.panel .meter-footer { display: none; }
         id: s.id,
         label: s.label,
         type: 'software',
-        group: 'software',
+        group: s.kind || 'software',
+        track: (s.track && s.track[0]) || s.kind || '',
         radius: 10
       };
       nodes.push(node);
@@ -717,6 +840,9 @@ html.embed.panel .meter-footer { display: none; }
       .data(nodes)
       .join('circle')
       .attr('class', function (d) {
+        if (d.type === 'software' && d.track) {
+          return 'force-node force-node-' + d.track;
+        }
         if (!showGroups || d.type !== 'problem') {
           return 'force-node force-node-' + d.type;
         }
@@ -739,8 +865,9 @@ html.embed.panel .meter-footer { display: none; }
     var tooltip = d3.select(frame).append('div').attr('class', 'force-tooltip');
 
     node.on('mouseover', function (event, d) {
-      tooltip.html('<strong>' + d.label + '</strong>' + 
+      tooltip.html('<strong>' + d.label + '</strong>' +
         (d.type === 'problem' ? '<br>Group: ' + d.group : '') +
+        (d.track ? '<br>Stack: ' + d.track : '') +
         '<br>Type: ' + d.type)
         .style('left', (event.pageX - frame.offsetLeft + 10) + 'px')
         .style('top', (event.pageY - frame.offsetTop - 10) + 'px')
@@ -788,8 +915,12 @@ html.embed.panel .meter-footer { display: none; }
     });
 
     document.getElementById('force-show-groups').addEventListener('change', function () {
+      var grouped = document.getElementById('force-show-groups').checked;
       node.attr('class', function (d) {
-        if (!document.getElementById('force-show-groups').checked || d.type !== 'problem') {
+        if (d.type === 'software' && d.track) {
+          return 'force-node force-node-' + d.track;
+        }
+        if (!grouped || d.type !== 'problem') {
           return 'force-node force-node-' + d.type;
         }
         return 'force-node force-node-' + d.group;
@@ -859,8 +990,26 @@ html.embed.panel .meter-footer { display: none; }
     return [];
   }
 
+  function normalizeTrackList(track, kind, tracks) {
+    var ids = {};
+    (tracks || []).forEach(function (t) { ids[t.id] = true; });
+    var list = [];
+    if (Array.isArray(track)) list = track.slice();
+    else if (typeof track === 'string' && track) list = [track];
+    if (!list.length && kind && ids[kind]) list = [kind];
+    return list.filter(function (id) { return !tracks || !tracks.length || ids[id]; });
+  }
+
   function softwarePhases(sw) {
     return (sw && sw.phase) ? sw.phase : [];
+  }
+
+  function softwareTracks(sw) {
+    return (sw && sw.track) ? sw.track : [];
+  }
+
+  function usesTrackFilter() {
+    return !!(data && data.tracks && data.tracks.length);
   }
 
   function phaseLabel(sw) {
@@ -871,8 +1020,11 @@ html.embed.panel .meter-footer { display: none; }
 
   function softwareSubline(sw) {
     var bits = [];
-    var pl = phaseLabel(sw);
-    if (pl) bits.push(pl);
+    if (sw.mode) bits.push(sw.mode);
+    if (!usesTrackFilter()) {
+      var pl = phaseLabel(sw);
+      if (pl) bits.push(pl);
+    }
     if (sw.specs && sw.specs.length) bits.push(sw.specs.join(' · '));
     return bits.join(' · ');
   }
@@ -975,18 +1127,57 @@ html.embed.panel .meter-footer { display: none; }
   function buildPhaseFilters() {
     var bar = document.getElementById('map-phase-filters');
     if (!bar) return;
+    if (usesTrackFilter()) {
+      bar.setAttribute('aria-label', 'Filter by stack');
+      bar.innerHTML = '<span class="map-toolbar-label">Stack</span>';
+      var allBtn = document.createElement('button');
+      allBtn.type = 'button';
+      allBtn.className = 'map-filter' + (activeTrack === 'all' ? ' active' : '');
+      allBtn.textContent = 'All stacks';
+      allBtn.dataset.track = 'all';
+      bar.appendChild(allBtn);
+      data.tracks.forEach(function (t) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'map-filter' + (activeTrack === t.id ? ' active' : '');
+        b.textContent = t.short || t.label;
+        b.dataset.track = t.id;
+        b.dataset.tone = t.id;
+        b.title = t.label || b.textContent;
+        bar.appendChild(b);
+      });
+      var study = document.createElement('a');
+      study.href = 'index.html#village-metering/vendor-study';
+      study.textContent = 'Vendor study →';
+      study.style.fontSize = '11px';
+      study.style.marginLeft = '0.35rem';
+      bar.appendChild(study);
+      bar.addEventListener('click', function (e) {
+        var btn = e.target.closest('.map-filter');
+        if (!btn || !btn.dataset.track) return;
+        activeTrack = btn.dataset.track;
+        bar.querySelectorAll('.map-filter').forEach(function (b) {
+          b.classList.toggle('active', b === btn);
+        });
+        hoverId = null;
+        hoverSide = null;
+        render();
+      });
+      return;
+    }
     var phases = (data.roadmap && data.roadmap.phases) || [
       { id: 1, short: 'Phase 1', label: 'Installed-base interop' },
       { id: 2, short: 'Phase 2', label: 'Next-gen microgrid core' },
       { id: 3, short: 'Phase 3', label: 'Next-gen grid connectivity' }
     ];
+    bar.setAttribute('aria-label', 'Filter by roadmap phase');
     bar.innerHTML = '<span class="map-toolbar-label">Roadmap</span>';
-    var allBtn = document.createElement('button');
-    allBtn.type = 'button';
-    allBtn.className = 'map-filter' + (activePhase === 'all' ? ' active' : '');
-    allBtn.textContent = 'All phases';
-    allBtn.dataset.phase = 'all';
-    bar.appendChild(allBtn);
+    var allPhase = document.createElement('button');
+    allPhase.type = 'button';
+    allPhase.className = 'map-filter' + (activePhase === 'all' ? ' active' : '');
+    allPhase.textContent = 'All phases';
+    allPhase.dataset.phase = 'all';
+    bar.appendChild(allPhase);
     phases.forEach(function (p) {
       var b = document.createElement('button');
       b.type = 'button';
@@ -1026,7 +1217,7 @@ html.embed.panel .meter-footer { display: none; }
       bar.hidden = true;
       bar.innerHTML = '';
       if (hint) {
-        hint.textContent = 'Phase filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus';
+        hint.textContent = 'Stack filter narrows software (and linked problems) · category filter narrows problem groups · solid = problem category · dashed = hardware type · hover to focus';
       }
       if (tcEntry) tcEntry.hidden = false;
       return;
@@ -1034,7 +1225,7 @@ html.embed.panel .meter-footer { display: none; }
     bar.hidden = false;
     if (tcEntry) tcEntry.hidden = true;
     if (hint) {
-      hint.textContent = 'Phase filter narrows software · Hosting toggles Full stack vs GroundBolt-only (no cloud) · category filter narrows problem groups · hover to focus';
+      hint.textContent = 'Stack filter narrows software · Hosting toggles Full stack vs GroundBolt-only (no cloud) · category filter narrows problem groups · hover to focus';
     }
     bar.innerHTML = '<span class="map-toolbar-label">Hosting</span>';
     views.forEach(function (v) {
@@ -1127,18 +1318,35 @@ html.embed.panel .meter-footer { display: none; }
     });
   }
 
+  function softwareMatchingTrack(list) {
+    if (activeTrack === 'all') return list.slice();
+    return list.filter(function (s) {
+      return softwareTracks(s).indexOf(activeTrack) !== -1;
+    });
+  }
+
+  function sliceIsAll() {
+    if (usesTrackFilter()) return activeTrack === 'all';
+    return activePhase === 'all';
+  }
+
+  function softwareMatchingSlice(list) {
+    if (usesTrackFilter()) return softwareMatchingTrack(list);
+    return softwareMatchingPhase(list);
+  }
+
   function visibleSlice() {
     var groupProbs = visibleProblemsByGroup().filter(matchesHost);
     var groupProbIds = new Set(groupProbs.map(function (p) { return p.id; }));
     var software;
     var problems;
-    if (activePhase === 'all') {
+    if (sliceIsAll()) {
       problems = groupProbs;
       software = activeGroup === 'all'
         ? softwareMatchingHost(data.software)
         : softwareMatchingHost(connectedSoftware(groupProbIds));
     } else {
-      software = softwareMatchingHost(softwareMatchingPhase(data.software));
+      software = softwareMatchingHost(softwareMatchingSlice(data.software));
       if (activeGroup !== 'all') {
         var allowed = new Set(connectedSoftware(groupProbIds).map(function (s) { return s.id; }));
         software = software.filter(function (s) { return allowed.has(s.id); });
@@ -1146,7 +1354,7 @@ html.embed.panel .meter-footer { display: none; }
       var swIds = new Set(software.map(function (s) { return s.id; }));
       problems = connectedProblems(swIds).filter(matchesHost);
     }
-    if (activeHost !== 'full' || activePhase !== 'all') {
+    if (activeHost !== 'full' || !sliceIsAll()) {
       var keepSw = new Set(software.map(function (s) { return s.id; }));
       problems = problems.filter(function (p) {
         return data.links.some(function (pair) {
@@ -1414,7 +1622,7 @@ html.embed.panel .meter-footer { display: none; }
 
     el('text', { class: 'grp-label', x: PROB_LEFT, y: 18 }, svg).textContent = 'Problems';
     el('text', { class: 'grp-label', x: HW_LEFT + 4, y: 18 }, svg).textContent = 'Associated hardware';
-    el('text', { class: 'grp-label', x: SW_LEFT, y: 18 }, svg).textContent = 'Software';
+    el('text', { class: 'grp-label', x: SW_LEFT, y: 18 }, svg).textContent = usesTrackFilter() ? 'Stacks' : 'Software';
 
     var hi = highlightSet();
     var bandHi = activeBandGroups(hi);
@@ -1648,6 +1856,9 @@ html.embed.panel .meter-footer { display: none; }
   if (PHASE_PARAM === '1' || PHASE_PARAM === '2' || PHASE_PARAM === '3') {
     activePhase = PHASE_PARAM;
   }
+  if (TRACK_PARAM === 'steamaco' || TRACK_PARAM === 'sparkmeter' || TRACK_PARAM === 'enaccess' || TRACK_PARAM === 'openami') {
+    activeTrack = TRACK_PARAM;
+  }
   if (HOST_PARAM === 'ground' || HOST_PARAM === 'full') {
     activeHost = HOST_PARAM;
   }
@@ -1661,6 +1872,7 @@ html.embed.panel .meter-footer { display: none; }
     .then(function (json) {
       data = normalizeData(json);
       applyProtoChrome(json);
+      buildStoryView();
       buildPhaseFilters();
       buildHostFilters();
       buildFilters();
