@@ -14,12 +14,15 @@
     #legend { display: none; }
   </style>
   <script src="https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl-csp.js"></script>
+  <script>
+    mapboxgl.workerUrl = 'https://api.mapbox.com/mapbox-gl-js/v2.11.0/mapbox-gl-csp-worker.js';
+  </script>
 </head>
 <body>
   <div id="map"></div>
   <div id="legend"></div>
   <script>window.MAPBOX_TOKEN = '';</script>
   <script src="js/map-config.js"></script>
-  <script src="js/map-embed.js"></script>
+  <script src="js/map-embed.js?v=20260817csp"></script>
 </body>
 </html>
