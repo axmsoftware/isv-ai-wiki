@@ -234,7 +234,7 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
 <div class="wrap">
   <p class="back"><a href="../index.html#village-metering/village-simulator">Village Metering</a> · Village Simulator</p>
   <h1>Village Simulator</h1>
-  <p class="sub">Three.js spacetime stack. v2 (default): ground = now, worldlines rise, last 2 h stretched. v1: day stack stays put, now-plane climbs midnight→24:00. Green pad, brown yards, sun-cast shadows. Red knobs = still dark from a feeder/xfmr outage, every 5 min. Dark LV traces at trip (top) and restore (bottom). Hot red = FAULT / last breath. Default: anomaly events, worldlines off, readings off, payments off, mesh hops off, RF net off. PV is fixed-tilt (south). WASD trucks look-at. Hypothetical day, not live telemetry.</p>
+  <p class="sub">Three.js spacetime stack. v2 (default): ground = now, worldlines rise, last 2 h stretched. v1: day stack stays put, now-plane climbs midnight→24:00. Light fill (default) keeps the village readable at any hour; lamps = occupancy windows + pole bulbs; sun = playhead day/night. Green pad, brown yards, sun-cast shadows. Red knobs = still dark from a feeder/xfmr outage, every 5 min. Dark LV traces at trip (top) and restore (bottom). Hot red = FAULT / last breath. Default: anomaly events, worldlines off, readings off, payments off, mesh hops off, RF net off. PV is fixed-tilt (south). WASD trucks look-at. Hypothetical day, not live telemetry.</p>
   <div class="callout">
     <strong>Not live telemetry</strong>
     Schematic mini-grid day using GroundBolt rules: 15 min heartbeat, tariff 200 / kWh (abstract units),
@@ -280,6 +280,8 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
     <span><i style="background:#1a2740"></i>PV night / idle</span>
     <span><i style="background:#40b8ff"></i>PV producing</span>
     <span><i style="background:#2c4a3c"></i>BESS / home battery</span>
+    <span><i style="background:#ffe29a"></i>lamp window (home on)</span>
+    <span><i style="background:#1c1b18"></i>lamp dark (home off)</span>
     <span><i style="background:#9aa8b4"></i>village compass N E S W</span>
   </div>
   <div class="legend" data-legend="load" hidden>
@@ -340,6 +342,11 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
     <select id="wl-sky" aria-label="Sky">
       <option value="dark" selected>Sky: dark</option>
       <option value="bright">Sky: bright</option>
+    </select>
+    <select id="wl-light" aria-label="Village lighting">
+      <option value="fill" selected>Light: fill</option>
+      <option value="lamps">Light: lamps</option>
+      <option value="sun">Light: sun</option>
     </select>
     <select id="wl-scheme" aria-label="Color scheme">
       <option value="messages">Color: message types</option>
@@ -440,6 +447,6 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260816dir"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260827light"></script>
 </body>
 </html>

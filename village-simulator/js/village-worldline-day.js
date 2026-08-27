@@ -187,18 +187,37 @@ function capacityColor(t) {
   return c.lerpColors(CAP_MID, CAP_HI, (x - 0.5) / 0.5);
 }
 
-/** Lambert + instanceColor as night glow. Patch after color_fragment so vColor is in. */
+/** Lambert + instanceColor as night glow. `uGlow` scales with lighting mode. */
+const glowMats = [];
 function glowLambert(emit) {
   const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  m.userData.baseEmit = emit;
+  m.userData.glow = emit;
   m.onBeforeCompile = (shader) => {
+    shader.uniforms.uGlow = { value: m.userData.glow };
+    m.userData.glowUniform = shader.uniforms.uGlow;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <common>",
+      `#include <common>
+       uniform float uGlow;`,
+    );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
       `#include <color_fragment>
-       totalEmissiveRadiance += diffuseColor.rgb * ${emit.toFixed(2)};`,
+       totalEmissiveRadiance += diffuseColor.rgb * uGlow;`,
     );
   };
   m.customProgramCacheKey = () => `glowL:${emit}`;
+  glowMats.push(m);
   return m;
+}
+
+function setGlowScale(mode) {
+  const k = mode === "fill" ? 0.22 : mode === "lamps" ? 1.12 : 1;
+  for (const m of glowMats) {
+    m.userData.glow = m.userData.baseEmit * k;
+    if (m.userData.glowUniform) m.userData.glowUniform.value = m.userData.glow;
+  }
 }
 
 function pfColor(pf) {
@@ -349,6 +368,7 @@ const state = {
   viz: "v2",
   lineGrad: "capacity",
   sky: "dark",
+  light: "fill",
 };
 
 const eventMeshes = [];
@@ -392,6 +412,9 @@ let hutMesh;
 let roofMesh;
 let sunLight;
 let ambientLight;
+let fillLight;
+let moonLight;
+let civicLights = [];
 let sunMesh;
 let sunBead;
 const compassSprites = [];
@@ -399,6 +422,11 @@ let pvMat;
 let pvMesh;
 let hemiLight;
 let sky;
+let windowMesh;
+let streetLampMesh;
+const hutPose = [];
+const lampWarm = new THREE.Color(0xffe29a);
+const lampDark = new THREE.Color(0x1c1b18);
 const pvSlots = [];
 const pvDummy = new THREE.Object3D();
 const skyNight = new THREE.Color(0x121214);
@@ -644,6 +672,28 @@ function boot() {
   sunLight.target.position.set(COMPASS.x, 0, COMPASS.z);
   scene.add(sunLight);
   scene.add(sunLight.target);
+  fillLight = new THREE.DirectionalLight(0xf4f0e6, 0);
+  fillLight.position.set(COMPASS.x - 36, 72, COMPASS.z + 28);
+  fillLight.target.position.set(COMPASS.x, 0, COMPASS.z);
+  scene.add(fillLight);
+  scene.add(fillLight.target);
+  moonLight = new THREE.DirectionalLight(0xa8c4e8, 0);
+  moonLight.position.set(COMPASS.x - 42, 58, COMPASS.z - 24);
+  moonLight.target.position.set(COMPASS.x, 0, COMPASS.z);
+  scene.add(moonLight);
+  scene.add(moonLight.target);
+  civicLights = [
+    LANDMARKS.market,
+    LANDMARKS.clinic,
+    LANDMARKS.kiosk,
+    LANDMARKS.ops,
+    LANDMARKS.gen,
+  ].map((s) => {
+    const l = new THREE.PointLight(0xffc878, 0, 24, 1.55);
+    l.position.set(s.x, 3.15, s.z);
+    scene.add(l);
+    return l;
+  });
   sunMesh = new THREE.Mesh(
     new THREE.SphereGeometry(2.4, 16, 16),
     new THREE.MeshBasicMaterial({ color: 0xffe7a8 }),
@@ -930,19 +980,59 @@ function placeSun(min) {
   const z = cz + Math.sin(Math.PI * u) * R * (NORTH.z < 0 ? 1 : -1);
   const elev = up ? Math.sin(Math.PI * u) : 0;
   const y = up ? 8 + elev * 58 : -14;
-  sunLight.position.set(x, Math.max(y, 4), z);
-  sunLight.castShadow = up;
+  const mode = state.light === "lamps" || state.light === "sun" ? state.light : "fill";
   sunMesh.position.set(x, y, z);
   sunMesh.visible = y > 3;
-  sunLight.intensity = 0.28 + elev * 1.85;
-  ambientLight.intensity = 0.08 + elev * 0.14;
-  if (hemiLight) {
-    hemiLight.intensity = 0.06 + elev * 0.32;
-    hemiLight.color.setHex(elev > 0.25 ? 0x8eb8dc : 0xc48a58);
-    hemiLight.groundColor.setHex(elev > 0.12 ? 0x3d6230 : 0x1a2414);
-  }
-  sunLight.color.setHex(elev > 0.18 ? 0xfff2d4 : 0xffb070);
   sunMesh.material.color.setHex(elev > 0.25 ? 0xffe7a8 : 0xffc078);
+  if (mode === "fill") {
+    sunLight.position.set(cx + 28, 62, cz + 18);
+    sunLight.castShadow = true;
+    sunLight.intensity = 1.12;
+    sunLight.color.setHex(0xfff6e8);
+    ambientLight.color.setHex(0xe8e4dc);
+    ambientLight.intensity = 0.44;
+    if (hemiLight) {
+      hemiLight.intensity = 0.58;
+      hemiLight.color.setHex(0xb8d0e8);
+      hemiLight.groundColor.setHex(0x4a6a38);
+    }
+    if (fillLight) fillLight.intensity = 0.48;
+    if (moonLight) moonLight.intensity = 0;
+    for (const l of civicLights) l.intensity = 0;
+  } else if (mode === "lamps") {
+    sunLight.position.set(x, Math.max(y, 6), z);
+    sunLight.castShadow = false;
+    sunLight.intensity = up ? 0.1 + elev * 0.28 : 0.03;
+    sunLight.color.setHex(0xffb070);
+    ambientLight.color.setHex(0x6a7a90);
+    ambientLight.intensity = 0.11;
+    if (hemiLight) {
+      hemiLight.intensity = 0.24;
+      hemiLight.color.setHex(0x3a4a68);
+      hemiLight.groundColor.setHex(0x1c1810);
+    }
+    if (fillLight) fillLight.intensity = 0;
+    if (moonLight) moonLight.intensity = up ? 0.06 : 0.34;
+    for (const l of civicLights) l.intensity = 1.05;
+  } else {
+    sunLight.position.set(x, Math.max(y, 4), z);
+    sunLight.castShadow = up;
+    sunLight.intensity = 0.28 + elev * 1.85;
+    sunLight.color.setHex(elev > 0.18 ? 0xfff2d4 : 0xffb070);
+    ambientLight.color.setHex(0xe8e4dc);
+    ambientLight.intensity = 0.08 + elev * 0.14;
+    if (hemiLight) {
+      hemiLight.intensity = 0.06 + elev * 0.32;
+      hemiLight.color.setHex(elev > 0.25 ? 0x8eb8dc : 0xc48a58);
+      hemiLight.groundColor.setHex(elev > 0.12 ? 0x3d6230 : 0x1a2414);
+    }
+    if (fillLight) fillLight.intensity = 0;
+    if (moonLight) moonLight.intensity = 0;
+    for (const l of civicLights) l.intensity = 0;
+  }
+  setGlowScale(mode);
+  if (windowMesh) windowMesh.visible = mode === "lamps";
+  if (streetLampMesh) streetLampMesh.visible = mode === "lamps";
   const bright = state.sky === "bright";
   if (sky) {
     if (bright) {
@@ -1296,6 +1386,7 @@ function buildVillage() {
   const roofGeo = new THREE.ConeGeometry(0.82, 0.48, 4);
   hutMesh = new THREE.InstancedMesh(hutGeo, glowLambert(0.48), HOUSE_N);
   roofMesh = new THREE.InstancedMesh(roofGeo, glowLambert(0.38), HOUSE_N);
+  hutPose.length = 0;
   const dummy = new THREE.Object3D();
   const hutCol = new THREE.Color();
   HOUSES.forEach((h, i) => {
@@ -1315,6 +1406,7 @@ function buildVillage() {
     hutCol.copy(CAP_LO);
     hutMesh.setColorAt(i, hutCol);
     roofMesh.setColorAt(i, hutCol);
+    hutPose.push({ x: h.x, z: h.z, yaw, bh, s });
   });
   hutMesh.castShadow = true;
   hutMesh.receiveShadow = true;
@@ -1324,6 +1416,7 @@ function buildVillage() {
   roofMesh.userData.pickHuts = true;
   scene.add(hutMesh);
   scene.add(roofMesh);
+  buildHouseLamps();
 
   buildPvAndStorage();
   buildCompass();
@@ -2079,6 +2172,7 @@ function buildPowerLines() {
   poleMesh.castShadow = true;
   poleMesh.receiveShadow = true;
   scene.add(poleMesh);
+  buildStreetLamps();
 
   const xfmrGeo = new THREE.BoxGeometry(0.62, 0.72, 0.48);
   xfmrMesh = new THREE.InstancedMesh(xfmrGeo, glowLambert(0.42), TRANSFORMERS.length);
@@ -2324,12 +2418,95 @@ function colorHardware() {
   }
 }
 
+function buildHouseLamps() {
+  const geo = new THREE.PlaneGeometry(0.3, 0.22);
+  windowMesh = new THREE.InstancedMesh(
+    geo,
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false,
+    }),
+    HOUSE_N,
+  );
+  windowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const dummy = new THREE.Object3D();
+  dummy.scale.set(0.001, 0.001, 1);
+  dummy.updateMatrix();
+  for (let i = 0; i < HOUSE_N; i++) {
+    windowMesh.setMatrixAt(i, dummy.matrix);
+    windowMesh.setColorAt(i, lampDark);
+  }
+  windowMesh.visible = false;
+  windowMesh.frustumCulled = false;
+  scene.add(windowMesh);
+}
+
+function buildStreetLamps() {
+  const n = POLES.length;
+  if (!n) return;
+  const geo = new THREE.SphereGeometry(0.12, 8, 8);
+  streetLampMesh = new THREE.InstancedMesh(
+    geo,
+    new THREE.MeshBasicMaterial({ color: 0xffe7b0 }),
+    n,
+  );
+  const dummy = new THREE.Object3D();
+  POLES.forEach((p, i) => {
+    dummy.position.set(p.x, LINE_HANG + 0.1, p.z);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    streetLampMesh.setMatrixAt(i, dummy.matrix);
+  });
+  streetLampMesh.visible = false;
+  streetLampMesh.castShadow = false;
+  scene.add(streetLampMesh);
+}
+
+function updateLampWindows(last) {
+  if (!windowMesh || !hutPose.length) return;
+  const lamps = state.light === "lamps";
+  windowMesh.visible = lamps;
+  if (streetLampMesh) streetLampMesh.visible = lamps;
+  if (!lamps) return;
+  const dummy = new THREE.Object3D();
+  const col = new THREE.Color();
+  for (let i = 0; i < HOUSE_N; i++) {
+    const p = hutPose[i];
+    const r = last[HOUSES[i].id];
+    const on = !!(r?.on && !r?.feederOut);
+    const face = 0.48 * p.s;
+    dummy.position.set(
+      p.x + Math.sin(p.yaw) * face,
+      p.bh * 0.52,
+      p.z + Math.cos(p.yaw) * face,
+    );
+    dummy.rotation.set(0, p.yaw, 0);
+    dummy.scale.set(on ? 1 : 0.001, on ? 1 : 0.001, 1);
+    dummy.updateMatrix();
+    windowMesh.setMatrixAt(i, dummy.matrix);
+    if (on) {
+      const t = Math.min(1, (r.powerW || 40) / 180);
+      col.copy(lampWarm).lerp(new THREE.Color(0xfff6d2), t);
+    } else {
+      col.copy(lampDark);
+    }
+    windowMesh.setColorAt(i, col);
+  }
+  windowMesh.instanceMatrix.needsUpdate = true;
+  if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
+}
+
 function colorHouses(last) {
   if (!hutMesh || !roofMesh) return;
   const src = last || loadsAt(state.nowMin).last;
   const red = new THREE.Color(COL.outage);
   const roof = new THREE.Color();
   const asset = state.scheme === "asset";
+  const lamps = state.light === "lamps";
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
@@ -2338,12 +2515,18 @@ function colorHouses(last) {
     if (out) c = red;
     else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
     else c = capacityColor(r?.capacity || 0);
+    if (lamps && !out) {
+      const on = !!(r?.on && !r?.feederOut);
+      if (on) c = c.clone().lerp(lampWarm, 0.28);
+      else c = lampDark.clone();
+    }
     hutMesh.setColorAt(i, c);
-    roof.copy(c).multiplyScalar(0.78);
+    roof.copy(c).multiplyScalar(lamps && !out && !(r?.on) ? 0.45 : 0.78);
     roofMesh.setColorAt(i, roof);
   }
   hutMesh.instanceColor.needsUpdate = true;
   roofMesh.instanceColor.needsUpdate = true;
+  updateLampWindows(src);
 }
 
 function colorPowerLines() {
@@ -2622,6 +2805,12 @@ function bindUi() {
   document.getElementById("wl-sky")?.addEventListener("change", (e) => {
     state.sky = e.target.value === "bright" ? "bright" : "dark";
     placeSun(state.nowMin);
+  });
+  document.getElementById("wl-light")?.addEventListener("change", (e) => {
+    const v = e.target.value;
+    state.light = v === "lamps" || v === "sun" ? v : "fill";
+    placeSun(state.nowMin);
+    colorPowerLines();
   });
   document.querySelectorAll("[data-hide]").forEach((btn) => {
     btn.addEventListener("click", () => {
