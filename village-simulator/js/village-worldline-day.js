@@ -1007,15 +1007,15 @@ function placeSun(min) {
     sunLight.intensity = up ? 0.1 + elev * 0.28 : 0.03;
     sunLight.color.setHex(0xffb070);
     ambientLight.color.setHex(0x6a7a90);
-    ambientLight.intensity = 0.11;
+    ambientLight.intensity = 0.2;
     if (hemiLight) {
-      hemiLight.intensity = 0.24;
+      hemiLight.intensity = 0.34;
       hemiLight.color.setHex(0x3a4a68);
       hemiLight.groundColor.setHex(0x1c1810);
     }
     if (fillLight) fillLight.intensity = 0;
-    if (moonLight) moonLight.intensity = up ? 0.06 : 0.34;
-    for (const l of civicLights) l.intensity = 1.05;
+    if (moonLight) moonLight.intensity = up ? 0.1 : 0.48;
+    for (const l of civicLights) l.intensity = 1.15;
   } else {
     sunLight.position.set(x, Math.max(y, 4), z);
     sunLight.castShadow = up;
@@ -1037,8 +1037,8 @@ function placeSun(min) {
       groundMesh.material.emissive.setHex(0x244a16);
       groundMesh.material.emissiveIntensity = 0.32;
     } else if (mode === "lamps") {
-      groundMesh.material.emissive.setHex(0x0c1410);
-      groundMesh.material.emissiveIntensity = 0.18;
+      groundMesh.material.emissive.setHex(0x10180e);
+      groundMesh.material.emissiveIntensity = 0.28;
     } else {
       groundMesh.material.emissive.setHex(0x000000);
       groundMesh.material.emissiveIntensity = 0;
