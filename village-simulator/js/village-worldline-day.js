@@ -213,7 +213,7 @@ function glowLambert(emit) {
 }
 
 function setGlowScale(mode) {
-  const k = mode === "fill" ? 0.22 : mode === "lamps" ? 1.12 : 1;
+  const k = mode === "fill" ? 0.5 : mode === "lamps" ? 1.2 : 1;
   for (const m of glowMats) {
     m.userData.glow = m.userData.baseEmit * k;
     if (m.userData.glowUniform) m.userData.glowUniform.value = m.userData.glow;
@@ -424,6 +424,7 @@ let hemiLight;
 let sky;
 let windowMesh;
 let streetLampMesh;
+let groundMesh;
 const hutPose = [];
 const lampWarm = new THREE.Color(0xffe29a);
 const lampDark = new THREE.Color(0x1c1b18);
@@ -722,8 +723,9 @@ function boot() {
   fillLedger();
   fillStats();
   fillHouses();
+  const startMin = applyQuery();
   applySchemeColors();
-  setNow(0);
+  setNow(startMin);
   applyVizMode();
   resize();
   window.addEventListener("resize", resize);
@@ -987,16 +989,16 @@ function placeSun(min) {
   if (mode === "fill") {
     sunLight.position.set(cx + 28, 62, cz + 18);
     sunLight.castShadow = true;
-    sunLight.intensity = 1.12;
+    sunLight.intensity = 1.45;
     sunLight.color.setHex(0xfff6e8);
-    ambientLight.color.setHex(0xe8e4dc);
-    ambientLight.intensity = 0.44;
+    ambientLight.color.setHex(0xf0ece4);
+    ambientLight.intensity = 0.62;
     if (hemiLight) {
-      hemiLight.intensity = 0.58;
-      hemiLight.color.setHex(0xb8d0e8);
-      hemiLight.groundColor.setHex(0x4a6a38);
+      hemiLight.intensity = 0.78;
+      hemiLight.color.setHex(0xc5def0);
+      hemiLight.groundColor.setHex(0x5a7a40);
     }
-    if (fillLight) fillLight.intensity = 0.48;
+    if (fillLight) fillLight.intensity = 0.62;
     if (moonLight) moonLight.intensity = 0;
     for (const l of civicLights) l.intensity = 0;
   } else if (mode === "lamps") {
@@ -1029,6 +1031,18 @@ function placeSun(min) {
     if (fillLight) fillLight.intensity = 0;
     if (moonLight) moonLight.intensity = 0;
     for (const l of civicLights) l.intensity = 0;
+  }
+  if (groundMesh?.material) {
+    if (mode === "fill") {
+      groundMesh.material.emissive.setHex(0x244a16);
+      groundMesh.material.emissiveIntensity = 0.32;
+    } else if (mode === "lamps") {
+      groundMesh.material.emissive.setHex(0x0c1410);
+      groundMesh.material.emissiveIntensity = 0.18;
+    } else {
+      groundMesh.material.emissive.setHex(0x000000);
+      groundMesh.material.emissiveIntensity = 0;
+    }
   }
   setGlowScale(mode);
   if (windowMesh) windowMesh.visible = mode === "lamps";
@@ -1312,12 +1326,15 @@ function buildVillage() {
     new THREE.MeshLambertMaterial({
       map: bakeGroundTexture(),
       color: 0xffffff,
+      emissive: 0x000000,
+      emissiveIntensity: 0,
     }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(cx, 0, cz);
   ground.receiveShadow = true;
   scene.add(ground);
+  groundMesh = ground;
   addPolarGrid(0.03, 0.28, false);
 
   const west = CLUSTERS.find((c) => c.id === "west");
@@ -2770,6 +2787,18 @@ function togglePlay(dir) {
     state.playing = true;
   }
   syncPlayBtn();
+}
+
+function applyQuery() {
+  const q = new URLSearchParams(location.search);
+  const light = q.get("light");
+  if (light === "lamps" || light === "sun" || light === "fill") {
+    state.light = light;
+    const el = document.getElementById("wl-light");
+    if (el) el.value = light;
+  }
+  const t = Number(q.get("t"));
+  return Number.isFinite(t) ? Math.max(0, Math.min(DAY_MIN, t)) : 0;
 }
 
 function bindUi() {
