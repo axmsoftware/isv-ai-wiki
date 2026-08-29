@@ -230,8 +230,8 @@ tr.k-sync td:nth-child(2) { color: var(--text-3); }
 tr.k-leak td:nth-child(2), tr.k-leak_clear td:nth-child(2) { color: #e85dff; }
 [data-hide].off { opacity: 0.4; text-decoration: line-through; }
 html.embed .back { display: none; }
-html.embed .wrap { padding: 0.35rem 0.7rem 0.75rem; max-width: none; height: 100%; }
-html.embed #wl-theater { min-height: 0; flex: 1; }
+html.embed .wrap { padding: 0.35rem 0.7rem 0.75rem; max-width: none; height: auto; min-height: 100%; }
+html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
 @media (max-width: 900px) {
   .stage { grid-template-columns: 1fr; }
   .wl-stage-col { height: 65vh; min-height: 360px; }
