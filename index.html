@@ -2511,7 +2511,7 @@ function showNote(noteId, updateHash = true) {
   if (updateHash) history.replaceState(null, '', `#${sectionId}/${noteId}`);
 }
 
-function refreshMeterPreview(pageId) {
+function refreshMeterPreview(pageId, requested) {
   const page = METER_BENCHMARK_PAGES[pageId];
   if (!page) return;
   document.querySelectorAll('.nav-sub-item[data-meter-page]').forEach(el => {
@@ -2523,12 +2523,14 @@ function refreshMeterPreview(pageId) {
   const toolbar = document.getElementById('meter-study-toolbar-standalone');
   if (frame) {
     bindMeterStudyFrameGuard(frame);
-    frame.src = page.src;
+    let src = page.src;
+    if (requested === 'worldline-day-100') src += (src.includes('?') ? '&' : '?') + 'homes=100';
+    frame.src = src;
   }
   if (label) label.textContent = page.title;
   if (sub) sub.textContent = page.sub || '';
   if (toolbar) {
-    toolbar.href = page.standalone;
+    toolbar.href = requested === 'worldline-day-100' ? `${page.standalone}?homes=100` : page.standalone;
     toolbar.textContent = 'Full page';
   }
   const sec = document.getElementById('sec-village-metering');
@@ -2556,11 +2558,12 @@ function bindMeterStudyFrameGuard(frame) {
 }
 
 function showMeterPage(pageId, updateHash = true) {
+  const requested = pageId;
   pageId = resolveMeterPageId(pageId);
   if (!METER_BENCHMARK_PAGES[pageId]) return;
   activeMeterPageId = pageId;
   showSection('village-metering', { skipMeterRefresh: true, skipHash: true });
-  refreshMeterPreview(pageId);
+  refreshMeterPreview(pageId, requested);
   if (updateHash) history.replaceState(null, '', `#village-metering/${pageId}`);
 }
 
@@ -2575,8 +2578,9 @@ function initFromHash() {
     return;
   }
   if (raw === 'village-metering' || raw.startsWith('village-metering/') || raw === 'meter-study' || raw.startsWith('meter-study/')) {
-    const pageId = resolveMeterPageId(raw.split('/')[1]);
-    if (METER_BENCHMARK_PAGES[pageId]) showMeterPage(pageId, false);
+    const rawPage = raw.split('/')[1];
+    const pageId = resolveMeterPageId(rawPage);
+    if (METER_BENCHMARK_PAGES[pageId]) showMeterPage(rawPage || 'overview', false);
     else showMeterPage('overview', false);
     return;
   }
