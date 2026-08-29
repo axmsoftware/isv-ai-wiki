@@ -22,6 +22,9 @@ import {
   LAST_BREATH_MAX_HOPS,
   RF_CHANNEL_CAP,
   TARGET_HOMES,
+  TARIFF_PER_KWH,
+  LOW_BALANCE,
+  hopsToUsb,
   TRANSFORMERS,
   VENDORS,
   VILLAGE_PEOPLE,
@@ -369,6 +372,9 @@ const state = {
   lineGrad: "capacity",
   sky: "dark",
   light: "fill",
+  role: "ops",
+  you: HOUSES[0]?.id || "h0",
+  emsId: null,
 };
 
 const eventMeshes = [];
@@ -727,6 +733,7 @@ function boot() {
   applySchemeColors();
   setNow(startMin);
   applyVizMode();
+  applyRole();
   resize();
   window.addEventListener("resize", resize);
   new ResizeObserver(resize).observe(stage);
@@ -2660,8 +2667,17 @@ function applyVisibility() {
 }
 
 function setScope(scope) {
+  if (state.role === "customer") {
+    state.scope = { kind: "house", id: state.you };
+    state.focus = state.you;
+    applyVisibility();
+    fillHouses();
+    return;
+  }
   state.scope = scope && scope.kind ? scope : { kind: "village" };
   state.focus = state.scope.kind === "house" ? state.scope.id : null;
+  if (state.scope.kind === "board") openEms(state.scope.id, true);
+  else if (state.role !== "tech") closeEms();
   applyVisibility();
   fillHouses();
 }
@@ -2677,6 +2693,16 @@ function onPick(ev) {
   const extras = scene.children.filter((o) => o.userData.houseId || o.userData.scope);
   const hits = ray.intersectObjects([hutMesh, roofMesh, ...(emsMesh ? [emsMesh] : []), ...extras], false);
   const hit = hits[0];
+  if (state.role === "customer") {
+    const hid =
+      hit && hit.object.userData.pickHuts && hit.instanceId != null
+        ? HOUSES[hit.instanceId].id
+        : hit && hit.object.userData.houseId
+          ? hit.object.userData.houseId
+          : null;
+    if (hid === state.you) setScope({ kind: "house", id: hid });
+    return;
+  }
   if (hit && hit.object.userData.pickHuts && hit.instanceId != null) {
     setScope({ kind: "house", id: HOUSES[hit.instanceId].id });
   } else if (hit && hit.object.userData.houseId) {
@@ -2789,6 +2815,258 @@ function togglePlay(dir) {
   syncPlayBtn();
 }
 
+function writeQuery(patch, reload) {
+  const q = new URLSearchParams(location.search);
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (v == null || v === "") q.delete(k);
+    else q.set(k, String(v));
+  }
+  if (!q.has("homes")) q.set("homes", String(TARGET_HOMES));
+  const next = `?${q.toString()}`;
+  if (reload) {
+    location.search = q.toString();
+    return;
+  }
+  history.replaceState(null, "", next);
+}
+
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function flyToXZ(x, z, dist = 14) {
+  if (!camera || !controls) return;
+  controls.target.set(x, 0.4, z);
+  camera.position.set(x + dist * 0.55, Math.max(5.5, dist * 0.58), z + dist * 0.72);
+}
+
+function sizeSelectValue() {
+  if (TARGET_HOMES <= 150) return "100";
+  if (TARGET_HOMES >= 700) return "1000";
+  return String(TARGET_HOMES);
+}
+
+function houseOutage(h) {
+  return (day.summary.outages || []).find(
+    (x) =>
+      state.nowMin >= x.min &&
+      state.nowMin < x.restore &&
+      (x.xfmrId ? h.xfmrId === x.xfmrId : h.feederId === x.feederId),
+  );
+}
+
+function areaStatus(h) {
+  const o = houseOutage(h);
+  if (o) return { tone: "bad", label: "Outage in your area", detail: `${o.label} · ${fmtClock(o.min)}–${fmtClock(o.restore)}` };
+  const feederW = HOUSES.filter((x) => x.feederId === h.feederId).reduce((s, x) => {
+    const r = readingAt(x.id, state.nowMin);
+    return s + (r?.powerW || 0);
+  }, 0);
+  const peak = day.summary.peakFeederW || 1;
+  if (feederW > peak * 0.75) return { tone: "warn", label: "Grid is busy", detail: "Large loads may trip. Wait if you can." };
+  return { tone: "ok", label: "Your area is on", detail: "Mini-grid operating. No home-by-home list." };
+}
+
+function fillCustomer() {
+  const card = document.getElementById("wl-cust-card");
+  const body = document.getElementById("wl-cust-body");
+  const youEl = document.getElementById("wl-you");
+  if (!card || !body) return;
+  const show = state.role === "customer";
+  card.hidden = !show;
+  if (!show) return;
+  if (youEl && !youEl.dataset.ready) {
+    youEl.innerHTML = HOUSES.slice(0, 24)
+      .map((h) => `<option value="${h.id}">${esc(h.name)} · ${esc(h.serial)}</option>`)
+      .join("");
+    youEl.dataset.ready = "1";
+  }
+  if (youEl) youEl.value = state.you;
+  const h = houseById[state.you] || HOUSES[0];
+  if (!h) return;
+  const r = readingAt(h.id, state.nowMin);
+  const wallet = r ? r.wallet : h.startCredit;
+  const on = r ? r.on && !r.feederOut : h.startCredit > 0;
+  const watts = r?.powerW || 0;
+  const kWh = (function () {
+    const hi = houseIndex[h.id];
+    const last = Math.min(SLOTS - 1, Math.floor(state.nowMin / SLOT_MIN));
+    let wh = 0;
+    for (let s = 0; s <= last; s++) wh += day.readings[s * HOUSE_N + hi]?.energyWh || 0;
+    return wh / 1000;
+  })();
+  const area = areaStatus(h);
+  const sms = day.events.filter((e) => e.houseId === h.id && e.kind === "sms" && e.min <= state.nowMin);
+  const nextPay = (h.payments || []).find((p) => p.min > state.nowMin);
+  const load = LOAD_TYPES[r?.loadType]?.label || "standby";
+  const hoursLeft =
+    watts > 0 && wallet > 0 ? (wallet / TARIFF_PER_KWH) / (watts / 1000) : wallet > 0 ? Infinity : 0;
+  const hoursTxt =
+    hoursLeft === Infinity ? "credit held (no load)" : hoursLeft <= 0 ? "no credit" : `~${hoursLeft.toFixed(1)} h at this load`;
+  body.innerHTML = `
+    <div class="wl-ov-grid">
+      <div class="wl-ov-stat ${on ? "ok" : "bad"}"><span>Service</span><b>${on ? "ON" : "OFF"}</b></div>
+      <div class="wl-ov-stat ${wallet <= LOW_BALANCE ? "warn" : ""}"><span>Credit</span><b>${wallet.toFixed(0)}</b></div>
+      <div class="wl-ov-stat"><span>Using now</span><b>${Math.round(watts)} W</b></div>
+      <div class="wl-ov-stat"><span>Today so far</span><b>${kWh.toFixed(2)} kWh</b></div>
+    </div>
+    <p class="wl-ov-k">Tariff</p>
+    <p class="wl-ov-note">${TARIFF_PER_KWH} / kWh (abstract units) · AUTO relay off at 0 credit · low-balance SMS at ${LOW_BALANCE}</p>
+    <p class="wl-ov-note">${esc(h.name)} · ${esc(h.serial)} · ${esc(load)} · ${hoursTxt}</p>
+    <p class="wl-ov-k">Your area</p>
+    <div class="wl-ov-stat ${area.tone}"><span>${esc(area.label)}</span><b>${esc(area.detail)}</b></div>
+    <p class="wl-ov-k">Messages</p>
+    <p class="wl-ov-note">${
+      sms.length
+        ? sms
+            .slice(-3)
+            .map((e) => `${fmtClock(e.min)} · low credit`)
+            .join(" · ")
+        : "No SMS yet."
+    }</p>
+    <p class="wl-ov-k">Buy credit</p>
+    <p class="wl-ov-note">Kiosk, phone, or CIU — then the meter gets set_balance before watts resume. ${
+      nextPay ? `Next schematic top-up at ${fmtClock(nextPay.min)} (${nextPay.amount}).` : "No more top-ups in this day."
+    }</p>
+    <p class="wl-ov-note">Neighbor meters stay private. You see your wallet and whether your area is on, busy, or dark.</p>
+  `;
+}
+
+function fillEms() {
+  const card = document.getElementById("wl-ems-card");
+  const body = document.getElementById("wl-ems-body");
+  const title = document.getElementById("wl-ems-title");
+  const sub = document.getElementById("wl-ems-sub");
+  if (!card || !body) return;
+  const id = state.emsId;
+  const b = id ? boardById[id] : null;
+  card.hidden = !b;
+  if (!b) return;
+  const houses = (b.houseIds || []).map((hid) => houseById[hid]).filter(Boolean);
+  const feeder = FEEDERS.find((f) => f.id === b.feederId);
+  const dtm = DTMS.find((d) => d.feederId === b.feederId);
+  const xf = TRANSFORMERS.find((t) => t.id === b.xfmrId);
+  const leak = LEAKS.find((lk) => lk && (lk.fromBoardId === b.id || lk.toBoardId === b.id));
+  const leakLive = leak && state.nowMin >= leak.min && state.nowMin < leak.restore;
+  const idx = BOARDS.findIndex((x) => x.id === b.id);
+  let boardW = 0;
+  let onN = 0;
+  let darkN = 0;
+  const phases = { A: 0, B: 0, C: 0 };
+  const rows = houses.map((h, i) => {
+    const r = readingAt(h.id, state.nowMin);
+    const o = houseOutage(h);
+    const watts = r?.powerW || 0;
+    const on = r ? r.on && !r.feederOut : false;
+    boardW += watts;
+    if (on) onN += 1;
+    if (o) darkN += 1;
+    const ph = r?.phase || h.phase || "A";
+    phases[ph] = (phases[ph] || 0) + 1;
+    return { h, r, o, watts, on, ph, port: i + 1 };
+  });
+  if (title) title.textContent = b.label || "MeshEMS";
+  if (sub) sub.textContent = `${idx + 1} / ${BOARDS.length} · ${houses.length} meters · ${feeder?.label || b.feederId}`;
+  const hops = houses[0] ? hopsToUsb(houses[0].id) : "—";
+  const check = [
+    { cls: "done", t: `Pole label ${b.id} · feeder ${b.feederId} · ${b.cluster}` },
+    { cls: "done", t: "Seat NESL 865B · ext 5 V / 3.3 V (workshop schematic)" },
+    { cls: houses.length ? "done" : "bad", t: `Map ports 1–${houses.length} to meter serials on this pole` },
+    { cls: "done", t: `Phase split A ${phases.A} · B ${phases.B} · C ${phases.C} from ${dtm?.label || "DTM"}` },
+    { cls: "done", t: `Heartbeat ${SLOT_MIN} min · MQTT northbound (OpenAMI)` },
+    { cls: xf ? "done" : "warn", t: xf ? `LV from ${xf.label || xf.id}` : "No xfmr id on this board" },
+    {
+      cls: leakLive ? "bad" : leak ? "warn" : "done",
+      t: leak
+        ? leakLive
+          ? `Leak live on span · ${leak.label} · +${leak.leakW} W ΔP`
+          : `Leak span mapped · ${leak.label} (not now)`
+        : "No leak span on this pole pair",
+    },
+    { cls: darkN ? "bad" : "done", t: darkN ? `${darkN} meters dark from feeder/xfmr outage` : "No outage on these laterals" },
+    { cls: "done", t: `RF hops to USB GW ≈ ${hops} · ${LANDMARKS.usb?.label || "USB GW"}` },
+    { cls: "done", t: "SSR / AUTO disconnect is per-meter credit, not a board kill switch" },
+  ];
+  body.innerHTML = `
+    <div class="wl-ov-grid">
+      <div class="wl-ov-stat"><span>Board load</span><b>${Math.round(boardW)} W</b></div>
+      <div class="wl-ov-stat ${onN === houses.length ? "ok" : "warn"}"><span>Meters on</span><b>${onN} / ${houses.length}</b></div>
+    </div>
+    <p class="wl-ov-k">Cabinet ports</p>
+    <table class="wl-ports">
+      <thead><tr><th>#</th><th>Meter</th><th>φ</th><th>W</th><th>Credit</th><th>State</th></tr></thead>
+      <tbody>
+        ${rows
+          .map((row) => {
+            const st = row.o ? "OUT" : row.on ? "ON" : "OFF";
+            const cls = row.o ? "is-out" : row.on ? "" : "is-off";
+            return `<tr class="${cls}"><td>${row.port}</td><td>${esc(row.h.name)} <code>${esc(row.h.serial)}</code></td><td>${row.ph}</td><td>${Math.round(row.watts)}</td><td>${(row.r?.wallet ?? 0).toFixed(0)}</td><td>${st}</td></tr>`;
+          })
+          .join("")}
+      </tbody>
+    </table>
+    <p class="wl-ov-k">Install walk</p>
+    <ul class="wl-check">${check.map((c) => `<li class="${c.cls}">${esc(c.t)}</li>`).join("")}</ul>
+    <p class="wl-ov-note">Schematic cabinet card for workshop walk-through. Not a live ICD. Meters here are SparkMeter-class prepaid (no STS token decode).</p>
+  `;
+}
+
+function openEms(id, fly) {
+  const b = boardById[id] || BOARDS[0];
+  if (!b) return;
+  state.emsId = b.id;
+  if (state.role !== "customer") state.scope = { kind: "board", id: b.id };
+  fillEms();
+  if (fly) flyToXZ(b.x, b.z, 11);
+  writeQuery({ board: b.id });
+}
+
+function closeEms() {
+  state.emsId = null;
+  const card = document.getElementById("wl-ems-card");
+  if (card) card.hidden = true;
+  writeQuery({ board: "" });
+}
+
+function stepEms(dir) {
+  if (!BOARDS.length) return;
+  const i = Math.max(0, BOARDS.findIndex((b) => b.id === state.emsId));
+  const next = BOARDS[(i + dir + BOARDS.length) % BOARDS.length];
+  openEms(next.id, true);
+}
+
+function applyRole() {
+  document.documentElement.dataset.role = state.role;
+  const roleEl = document.getElementById("wl-role");
+  if (roleEl) roleEl.value = state.role;
+  if (state.role === "customer") {
+    if (!houseById[state.you]) state.you = HOUSES[0]?.id || "h0";
+    state.focus = state.you;
+    state.scope = { kind: "house", id: state.you };
+    closeEms();
+    const h = houseById[state.you];
+    if (h) flyToXZ(h.x, h.z, 13);
+    fillCustomer();
+  } else {
+    const card = document.getElementById("wl-cust-card");
+    if (card) card.hidden = true;
+    if (state.role === "tech" && !state.emsId) openEms(BOARDS[0]?.id, true);
+    else fillEms();
+  }
+  applyVisibility();
+  fillHouses();
+  writeQuery({ role: state.role, you: state.role === "customer" ? state.you : "" });
+}
+
+function fillRolePanels() {
+  if (state.role === "customer") fillCustomer();
+  if (state.emsId) fillEms();
+}
+
 function applyQuery() {
   const q = new URLSearchParams(location.search);
   const light = q.get("light");
@@ -2797,6 +3075,24 @@ function applyQuery() {
     const el = document.getElementById("wl-light");
     if (el) el.value = light;
   }
+  const role = q.get("role");
+  if (role === "tech" || role === "customer" || role === "ops") state.role = role;
+  const you = q.get("you");
+  if (you && houseById[you]) state.you = you;
+  const board = q.get("board");
+  if (board && boardById[board]) state.emsId = board;
+  const homesEl = document.getElementById("wl-homes");
+  if (homesEl) {
+    const v = sizeSelectValue();
+    if (![...homesEl.options].some((o) => o.value === v)) {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = `Size: ${TARGET_HOMES} homes`;
+      homesEl.appendChild(opt);
+    }
+    homesEl.value = v;
+  }
+  writeQuery({ homes: TARGET_HOMES, light: state.light, role: state.role });
   const t = Number(q.get("t"));
   return Number.isFinite(t) ? Math.max(0, Math.min(DAY_MIN, t)) : 0;
 }
@@ -2840,6 +3136,36 @@ function bindUi() {
     state.light = v === "lamps" || v === "sun" ? v : "fill";
     placeSun(state.nowMin);
     colorPowerLines();
+    writeQuery({ light: state.light });
+  });
+  document.getElementById("wl-homes")?.addEventListener("change", (e) => {
+    const n = Number(e.target.value);
+    if (!Number.isFinite(n) || n === TARGET_HOMES) return;
+    writeQuery({ homes: n, light: state.light, role: state.role, t: Math.round(state.nowMin) }, true);
+  });
+  document.getElementById("wl-role")?.addEventListener("change", (e) => {
+    const v = e.target.value;
+    state.role = v === "tech" || v === "customer" ? v : "ops";
+    applyRole();
+  });
+  document.getElementById("wl-ems-open")?.addEventListener("click", () => {
+    if (state.role === "customer") return;
+    const id = state.emsId || (state.scope?.kind === "board" ? state.scope.id : BOARDS[0]?.id);
+    openEms(id, true);
+  });
+  document.getElementById("wl-ems-close")?.addEventListener("click", () => closeEms());
+  document.getElementById("wl-ems-prev")?.addEventListener("click", () => stepEms(-1));
+  document.getElementById("wl-ems-next")?.addEventListener("click", () => stepEms(1));
+  document.getElementById("wl-you")?.addEventListener("change", (e) => {
+    const id = e.target.value;
+    if (!houseById[id]) return;
+    state.you = id;
+    state.focus = id;
+    state.scope = { kind: "house", id };
+    const h = houseById[id];
+    if (h) flyToXZ(h.x, h.z, 13);
+    fillCustomer();
+    writeQuery({ you: id, role: "customer" });
   });
   document.querySelectorAll("[data-hide]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -3013,6 +3339,7 @@ function fillLog() {
 function listedHouses() {
   const q = state.houseQ.trim().toLowerCase();
   let list = HOUSES;
+  if (state.role === "tech" && state.scope?.kind === "board") list = scopeHouses();
   if (state.houseCluster !== "all") list = list.filter((h) => h.cluster === state.houseCluster);
   if (q) {
     list = list.filter(
@@ -3098,6 +3425,7 @@ function fillHouses(rebuild) {
   });
   drawStream();
   drawFsLoad();
+  fillRolePanels();
 }
 
 function hexCss(n) {

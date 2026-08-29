@@ -40,6 +40,54 @@ a { color: var(--green); }
 }
 .wl-stage-col { position: relative; min-width: 0; height: 100%; min-height: 0; }
 #wl-stage { position: relative; height: 100%; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #121214; }
+.wl-overlay {
+  position: absolute; z-index: 8; pointer-events: auto;
+  top: 8px; left: 8px; width: min(440px, calc(100% - 56px));
+  max-height: calc(100% - 16px); overflow: auto;
+  padding: 0.6rem 0.7rem 0.7rem;
+  border: 1px solid #3a3a3e; border-radius: 10px;
+  background: rgba(18, 18, 20, 0.92); color: #e8e6dc;
+  font-size: 12px; line-height: 1.4;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+.wl-overlay[hidden] { display: none !important; }
+.wl-overlay h2 {
+  font-size: 13px; font-weight: 500; margin: 0; border: 0; padding: 0; color: #e8e6dc;
+}
+.wl-ov-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.45rem; }
+.wl-ov-head p { margin: 0.15rem 0 0; font-size: 11px; color: #9a9990; }
+.wl-ov-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; flex-shrink: 0; }
+.wl-ov-actions button, .wl-overlay select {
+  font-family: inherit; font-size: 11px; padding: 0.2rem 0.5rem; border-radius: 999px;
+  border: 1px solid #4a4a4e; background: #1c1c20; color: #e8e6dc; cursor: pointer;
+}
+.wl-ov-k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #9a9990; margin: 0.55rem 0 0.25rem; }
+.wl-ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; }
+.wl-ov-stat {
+  padding: 0.35rem 0.45rem; border-radius: 8px; background: #121214; border: 1px solid #2a2a2e;
+}
+.wl-ov-stat b { display: block; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.wl-ov-stat span { display: block; font-size: 10px; color: #9a9990; }
+.wl-ov-stat.warn { border-color: #ba7517; }
+.wl-ov-stat.bad { border-color: #b42318; }
+.wl-ov-stat.ok { border-color: #3b6d11; }
+.wl-ports { width: 100%; border-collapse: collapse; font-size: 11px; }
+.wl-ports th, .wl-ports td { padding: 0.22rem 0.3rem; text-align: left; border-bottom: 1px solid #2a2a2e; }
+.wl-ports th { color: #9a9990; font-weight: 500; }
+.wl-ports tr.is-off td { color: #c45b5b; }
+.wl-ports tr.is-out td { color: #e6c84a; }
+.wl-check { list-style: none; margin: 0; padding: 0; }
+.wl-check li { padding: 0.2rem 0 0.2rem 1.15rem; position: relative; color: #c8c6bc; }
+.wl-check li::before { content: ""; position: absolute; left: 0; top: 0.45rem; width: 8px; height: 8px; border-radius: 2px; background: #3a3a38; }
+.wl-check li.done::before { background: #3b6d11; }
+.wl-check li.warn::before { background: #ba7517; }
+.wl-check li.bad::before { background: #b42318; }
+.wl-ov-note { font-size: 11px; color: #9a9990; margin: 0.4rem 0 0; }
+html[data-role="customer"] .side,
+html[data-role="customer"] .tbl-wrap,
+html[data-role="customer"] #wl-stream-panel,
+html[data-role="customer"] [data-ops] { display: none !important; }
+html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .circa-mark {
   position: absolute; left: 8px; bottom: 8px; z-index: 6;
   display: flex; align-items: center; gap: 0.4rem;
@@ -248,7 +296,7 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
     <button type="button" class="wl-skip" id="wl-play" title="Play" aria-label="Play">▶</button>
     <input id="wl-scrub" type="range" min="0" max="1440" value="0" />
     <button type="button" class="wl-skip" id="wl-rev" title="Play reverse" aria-label="Play reverse">◀</button>
-    <select id="wl-viz" aria-label="Time layout">
+    <select id="wl-viz" aria-label="Time layout" data-ops>
       <option value="v2" selected>v2 · worldlines rise</option>
       <option value="v1">v1 · rising now-plane</option>
     </select>
@@ -261,14 +309,14 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
       <option value="lamps">Light: lamps</option>
       <option value="sun">Light: sun</option>
     </select>
-    <select id="wl-scheme" aria-label="Color scheme">
+    <select id="wl-scheme" aria-label="Color scheme" data-ops>
       <option value="messages">Color: message types</option>
       <option value="load">Color: load types</option>
       <option value="capacity">Color: capacity proximity</option>
       <option value="osi">Color: OSI stack</option>
       <option value="asset">Color: asset type</option>
     </select>
-    <select id="wl-linegrad" aria-label="Power line gradient">
+    <select id="wl-linegrad" aria-label="Power line gradient" data-ops>
       <option value="capacity" selected>Lines: capacity</option>
       <option value="pf">Lines: power factor</option>
     </select>
@@ -278,17 +326,27 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
       <option value="60">60× min/s</option>
       <option value="120">120× min/s</option>
     </select>
-    <button type="button" data-hide="pay" class="off">payments</button>
-    <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip">anomalies</button>
-    <button type="button" data-hide="leak" title="MeshEMS ΔP localizes leak to a feeder span between two boards">leakage</button>
-    <button type="button" data-hide="worldline" class="off">worldlines</button>
-    <button type="button" data-hide="reading" class="off">readings</button>
-    <button type="button" data-hide="disconnect">cutoffs</button>
+    <select id="wl-homes" aria-label="Village size" title="100 or 1000 home mock. Reloads. Size is ?homes= so other query changes keep it.">
+      <option value="100">Size: 100 homes</option>
+      <option value="1000">Size: 1000 homes</option>
+    </select>
+    <select id="wl-role" aria-label="Viewer role">
+      <option value="ops" selected>View: operator</option>
+      <option value="tech">View: technician</option>
+      <option value="customer">View: customer</option>
+    </select>
+    <button type="button" id="wl-ems-open" title="Open pole MeshEMS cabinet card" data-ops>EMS cabinet</button>
+    <button type="button" data-hide="pay" class="off" data-ops>payments</button>
+    <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip" data-ops>anomalies</button>
+    <button type="button" data-hide="leak" title="MeshEMS ΔP localizes leak to a feeder span between two boards" data-ops>leakage</button>
+    <button type="button" data-hide="worldline" class="off" data-ops>worldlines</button>
+    <button type="button" data-hide="reading" class="off" data-ops>readings</button>
+    <button type="button" data-hide="disconnect" data-ops>cutoffs</button>
     <button type="button" data-hide="sms">SMS</button>
-    <button type="button" data-hide="sync">sync</button>
-    <button type="button" data-hide="mesh" class="off">mesh hops</button>
-    <button type="button" data-hide="phase_xfer">phase xfer</button>
-    <button type="button" data-hide="rf" class="off">RF net</button>
+    <button type="button" data-hide="sync" data-ops>sync</button>
+    <button type="button" data-hide="mesh" class="off" data-ops>mesh hops</button>
+    <button type="button" data-hide="phase_xfer" data-ops>phase xfer</button>
+    <button type="button" data-hide="rf" class="off" data-ops>RF net</button>
     <button type="button" id="wl-fs" title="Fullscreen (F)">Fullscreen</button>
   </div>
   <div class="stage">
@@ -303,6 +361,32 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
           </svg>
           <span class="circa-mark-txt"><b>Circaevum</b><span>graphics library</span></span>
         </a>
+        <aside id="wl-ems-card" class="wl-overlay" hidden>
+          <div class="wl-ov-head">
+            <div>
+              <h2 id="wl-ems-title">Pole EMS</h2>
+              <p id="wl-ems-sub">MeshEMS cabinet · ~10 meters</p>
+            </div>
+            <div class="wl-ov-actions">
+              <button type="button" id="wl-ems-prev">Prev pole</button>
+              <button type="button" id="wl-ems-next">Next pole</button>
+              <button type="button" id="wl-ems-close">Close</button>
+            </div>
+          </div>
+          <div id="wl-ems-body"></div>
+        </aside>
+        <aside id="wl-cust-card" class="wl-overlay" hidden>
+          <div class="wl-ov-head">
+            <div>
+              <h2>My connection</h2>
+              <p>Your meter and area status. Not a neighbor list.</p>
+            </div>
+            <label class="wl-ov-actions">
+              <select id="wl-you" aria-label="Who you are"></select>
+            </label>
+          </div>
+          <div id="wl-cust-body"></div>
+        </aside>
       </div>
       <label class="wl-win" id="wl-win" title="Height of stretch / scrunch boundary">
         <span id="wl-win-hi">past</span>
@@ -360,6 +444,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260829stage1"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260829roles1"></script>
 </body>
 </html>
