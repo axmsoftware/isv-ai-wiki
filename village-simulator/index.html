@@ -13,23 +13,32 @@
 <script src="../js/meter-embed.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.5; }
 a { color: var(--green); }
-.wrap { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
-.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.wrap {
+  max-width: 1280px; margin: 0 auto; padding: 0.5rem 1.25rem 1.5rem;
+  min-height: 100%; display: flex; flex-direction: column;
+}
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.4rem; flex-shrink: 0; }
 .back a { text-decoration: none; }
-h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
-.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; }
-.callout { border-left: 3px solid var(--amber); background: var(--amber-50); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin-bottom: 0.85rem; font-size: 12px; line-height: 1.45; }
-.callout > strong:first-child { color: var(--amber); display: block; margin-bottom: 0.2rem; }
 .legend { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; font-size: 11px; color: var(--text-2); margin-bottom: 0.75rem; }
 .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
 .cap-bar {
   display: inline-block; width: 140px; height: 9px; border-radius: 4px; vertical-align: middle; margin-right: 6px;
   background: linear-gradient(90deg, #3b6d11 0%, #e6c84a 50%, #b42318 100%);
 }
-.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem; align-items: stretch; }
-.wl-stage-col { position: relative; min-width: 0; height: 70vh; min-height: 480px; }
+#wl-theater {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 2.25rem);
+}
+.stage {
+  display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem;
+  align-items: stretch; flex: 1 1 auto; min-height: 0;
+}
+.wl-stage-col { position: relative; min-width: 0; height: 100%; min-height: 0; }
 #wl-stage { position: relative; height: 100%; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #121214; }
 .circa-mark {
   position: absolute; left: 8px; bottom: 8px; z-index: 6;
@@ -221,114 +230,18 @@ tr.k-sync td:nth-child(2) { color: var(--text-3); }
 tr.k-leak td:nth-child(2), tr.k-leak_clear td:nth-child(2) { color: #e85dff; }
 [data-hide].off { opacity: 0.4; text-decoration: line-through; }
 html.embed .back { display: none; }
-html.embed .wrap { padding: 0.75rem 1.15rem 1.25rem; max-width: none; }
-html.embed h1 { font-size: 18px; }
-html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
+html.embed .wrap { padding: 0.35rem 0.7rem 0.75rem; max-width: none; height: 100%; }
+html.embed #wl-theater { min-height: 0; flex: 1; }
 @media (max-width: 900px) {
   .stage { grid-template-columns: 1fr; }
-  .wl-stage-col { height: 55vh; }
+  .wl-stage-col { height: 65vh; min-height: 360px; }
+  #wl-theater { min-height: 0; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="back"><a href="../index.html#village-metering/village-simulator">Village Metering</a> · Village Simulator</p>
-  <h1>Village Simulator</h1>
-  <p class="sub">Three.js spacetime stack. v2 (default): ground = now, worldlines rise, last 2 h stretched. v1: day stack stays put, now-plane climbs midnight→24:00. Light fill (default) keeps the village readable at any hour; lamps = occupancy windows + pole bulbs; sun = playhead day/night. Green pad, brown yards, sun-cast shadows. Red knobs = still dark from a feeder/xfmr outage, every 5 min. Dark LV traces at trip (top) and restore (bottom). Hot red = FAULT / last breath. Default: anomaly events, worldlines off, readings off, payments off, mesh hops off, RF net off. PV is fixed-tilt (south). WASD trucks look-at. Hypothetical day, not live telemetry.</p>
-  <div class="callout">
-    <strong>Not live telemetry</strong>
-    Schematic mini-grid day using GroundBolt rules: 15 min heartbeat, tariff 200 / kWh (abstract units),
-    <code>POST /transaction/</code> then <code>set_balance</code>, then watts. <code>meter_config.state = AUTO</code>
-    → relay off when <code>credit_wallet &le; 0</code>. Four local outages (west spur, east pole xfmr, south lateral, market feeder overload) — rest of village stays live.
-    One DitroniX DTM (IPEM-class) per feeder: 3φ compare on the pole bars; imbalance can command a schematic phase-transfer.
-    Topology: ~10 homes / MeshEMS board, ~10 boards / feeder (~100 customers).
-    Leakage detection: MeshEMS ΔP localizes unmetered load to the feeder span between two boards.
-    Anomalies include PF &lt; 0.80 and capacity ≥ 80%. Allotment trip: 30 min ≥ 100% or 15 min ≥ 150% → <code>STATE_OFF</code>.
-    SM meters do not decode STS / OpenPAYGO tokens.
-    <span id="wl-fault-note"></span>
-  </div>
-  <div class="legend" data-legend="messages">
-    <span><i style="background:#c9a227"></i>pay / set_balance (kiosk · agent · phone · CIU)</span>
-    <span><i style="background:#2aa8b8"></i>reading (on)</span>
-    <span><i style="background:#3a3a38"></i>reading (off)</span>
-    <span><i style="background:#b42318"></i>disconnect</span>
-    <span><i style="background:#ba7517"></i>capacity 80% / 100%</span>
-    <span><i style="background:#3d8bfd"></i>PF &lt; 0.80</span>
-    <span><i style="background:#b42318"></i>overload trip</span>
-    <span><i style="background:#b42318;border-radius:50%"></i>outage knob (5 min still dark)</span>
-    <span><i style="background:#b42318"></i>dark LV slice at trip</span>
-    <span><i style="background:#3b6d11"></i>LV slice at restore</span>
-    <span><i style="background:#ff2d4a"></i>FAULT origin / tripped primary</span>
-    <span><i style="background:#175cd3"></i>configure_meter on</span>
-    <span><i style="background:#c45b8a"></i>low-balance SMS</span>
-    <span><i style="background:#8a8a82"></i>SymmetricDS</span>
-    <span><i style="background:#175cd3"></i>mesh path to USB / ops</span>
-    <span><i style="background:#c9a227"></i>repair dispatch</span>
-    <span><i style="background:#ba7517"></i>load shed</span>
-    <span><i style="background:#3b6d11"></i>feeder restore</span>
-    <span><i style="background:#ff4d1a"></i>last breath reached GB</span>
-    <span><i style="background:#ff9a40"></i>last breath died mid-mesh / channel</span>
-    <span id="wl-lv-lo"><i style="background:#3b6d11"></i>LV flow idle</span>
-    <span id="wl-lv-hi"><i style="background:#b42318"></i>LV flow at xfmr cap</span>
-    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
-    <span><i style="background:#2bb6a3"></i>DTM (DitroniX 3φ)</span>
-    <span><i style="background:#e6c84a"></i>phase A</span>
-    <span><i style="background:#3d8bfd"></i>phase B</span>
-    <span><i style="background:#9b4dca"></i>phase C</span>
-    <span><i style="background:#5c7cfa"></i>phase transfer</span>
-    <span><i style="background:#e85dff"></i>leakage · MeshEMS ΔP span</span>
-    <span><i style="background:#1a2740"></i>PV night / idle</span>
-    <span><i style="background:#40b8ff"></i>PV producing</span>
-    <span><i style="background:#2c4a3c"></i>BESS / home battery</span>
-    <span><i style="background:#ffe29a"></i>lamp window (home on)</span>
-    <span><i style="background:#1c1b18"></i>lamp dark (home off)</span>
-    <span><i style="background:#9aa8b4"></i>village compass N E S W</span>
-  </div>
-  <div class="legend" data-legend="load" hidden>
-    <span><i style="background:#e6c84a"></i>lighting</span>
-    <span><i style="background:#c0392b"></i>heating</span>
-    <span><i style="background:#0f9b8e"></i>refrigeration</span>
-    <span><i style="background:#3d8bfd"></i>computer / internet</span>
-    <span><i style="background:#5b8def"></i>laundry</span>
-    <span><i style="background:#ba7517"></i>cooking</span>
-    <span><i style="background:#2b6cb0"></i>water pump</span>
-    <span><i style="background:#6a994e"></i>agriculture</span>
-    <span><i style="background:#9b4dca"></i>tools / weld</span>
-    <span><i style="background:#3a3a38"></i>standby / off</span>
-  </div>
-  <div class="legend" data-legend="osi" hidden>
-    <span><i style="background:#c4783a"></i>L1 Physical · feeder / xfmr / outage</span>
-    <span><i style="background:#e24b4b"></i>L2 Data link · RF channel / last-breath drop</span>
-    <span><i style="background:#f0a202"></i>L3 Network · mesh hops</span>
-    <span><i style="background:#e8e04a"></i>L4 Transport · last breath reached GB</span>
-    <span><i style="background:#3bb273"></i>L5 Session · SymmetricDS sync</span>
-    <span><i style="background:#3d8bfd"></i>L6 Presentation · SMS encode</span>
-    <span><i style="background:#9b4dca"></i>L7 Application · pay / AUTO / DTM xfer / heartbeat</span>
-  </div>
-  <div class="legend" data-legend="capacity" hidden>
-    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
-    <span>0% idle</span>
-    <span>50% mid</span>
-    <span>100% at limit</span>
-  </div>
-  <div class="legend" data-legend="asset" hidden>
-    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
-    <span>homes: 0% → 100% cap</span>
-    <span><i style="background:#5ee0a0"></i>home lateral → MeshEMS</span>
-    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
-    <span><i style="background:#3d8bfd"></i>feeder</span>
-    <span><i style="background:#ffe566"></i>station</span>
-    <span><i style="background:#2ee6d0"></i>DTM (DitroniX 3φ)</span>
-    <span><i style="background:#d45aa0"></i>pole xfmr</span>
-    <span><i style="background:#ff3355"></i>circuit breaker</span>
-  </div>
-  <div class="legend" id="wl-line-legend">
-    <span class="cap-bar" title="true_power_inst / line or meter cap"></span>
-    <span id="wl-line-lo">0% idle</span>
-    <span id="wl-line-mid">50% mid</span>
-    <span id="wl-line-hi">100% at cap</span>
-    <span>power lines</span>
-  </div>
   <div id="wl-theater">
   <div class="controls">
     <span id="wl-clock">00:00</span>
@@ -447,6 +360,6 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260827light3"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260829stage1"></script>
 </body>
 </html>
