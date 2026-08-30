@@ -173,6 +173,8 @@ Standalone pages accept `?embed=1` to hide back-navigation chrome (`html.embed` 
 
 When **creating** a new note page, copy an existing `tech-comm-*.html`, keep the embed script, and register in `MEETING_NOTES`.
 
+The village-metering iframe guard must detect the wiki shell by DOM (`#meter-study-frame`), never by `/index.html$`. That regex also matches `village-simulator/index.html` and reload-loops the sim.
+
 ### Registries in `index.html` (edit these when adding content)
 
 | Constant | Purpose |
