@@ -39,13 +39,15 @@ import {
   CIVIC_PF,
   PF_POOR,
   civicW,
+  sunElev,
+  pvFarmW,
   fmtClock,
   meshPath,
   outageCovers,
   outageHit,
   rfEdges,
   simulateDay,
-} from "./village-worldline-sim.js?v=20260816leak";
+} from "./village-worldline-sim.js?v=20260830pv100";
 
 const COL = {
   site: 0x3b6d11,
@@ -981,13 +983,13 @@ function placeSun(min) {
   if (!sunLight || !sunMesh) return;
   const hr = min / 60;
   const t = (hr - 6) / 12;
-  const up = t > 0 && t < 1;
+  const elev = sunElev(min);
+  const up = elev > 0;
   const u = Math.max(0, Math.min(1, t));
   const { x: cx, z: cz, r } = COMPASS;
   const R = Math.max(48, COMPASS.r + 6);
   const x = cx + Math.cos(Math.PI * u) * R;
   const z = cz + Math.sin(Math.PI * u) * R * (NORTH.z < 0 ? 1 : -1);
-  const elev = up ? Math.sin(Math.PI * u) : 0;
   const y = up ? 8 + elev * 58 : -14;
   const mode = state.light === "lamps" || state.light === "sun" ? state.light : "fill";
   sunMesh.position.set(x, y, z);
@@ -1193,7 +1195,7 @@ function buildPvAndStorage() {
   pvMat = new THREE.MeshLambertMaterial({ color: PV_COL, emissive: 0x000000, emissiveIntensity: 0 });
   const roofSet = new Set(PV_ROOF_IDS);
   const roofN = PV_ROOF_IDS.length;
-  const farmN = PV_FARM.rows * PV_FARM.cols;
+  const farmN = PV_FARM.modules || PV_FARM.rows * PV_FARM.cols;
   pvMesh = new THREE.InstancedMesh(panelGeo, pvMat, roofN + farmN + 6);
   pvMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   pvSlots.length = 0;
@@ -1208,9 +1210,14 @@ function buildPvAndStorage() {
     plant(h.x, bh + 0.58, h.z, 0.95 * s, 0.85 * s);
   });
 
+  const pitchX = PV_FARM.pitchX || 1.55;
+  const pitchZ = PV_FARM.pitchZ || 1.15;
+  let planted = 0;
   for (let r = 0; r < PV_FARM.rows; r++) {
     for (let c = 0; c < PV_FARM.cols; c++) {
-      plant(PV_FARM.x + c * 1.85, 0.55, PV_FARM.z + r * 1.35, 1.55, 1.05);
+      if (planted >= farmN) break;
+      plant(PV_FARM.x + c * pitchX, 0.55, PV_FARM.z + r * pitchZ, 1.35, 0.95);
+      planted += 1;
     }
   }
   plant(LANDMARKS.clinic.x - 0.35, 1.72, LANDMARKS.clinic.z + 0.15, 1.8, 1.15);
@@ -1223,9 +1230,9 @@ function buildPvAndStorage() {
   scene.add(pvMesh);
   orientPv();
 
-  const farmSpr = timeSprite(PV_FARM.label, "#8aa0b8", 220);
-  farmSpr.scale.set(5.4, 1.25, 1);
-  farmSpr.position.set(PV_FARM.x + 4, 1.4, PV_FARM.z - 1.2);
+  const farmSpr = timeSprite(PV_FARM.label, "#8aa0b8", 280);
+  farmSpr.scale.set(7.2, 1.35, 1);
+  farmSpr.position.set(PV_FARM.x + (PV_FARM.cols * (PV_FARM.pitchX || 1.55)) / 2, 1.6, PV_FARM.z - 1.4);
   scene.add(farmSpr);
 
   const battMat = new THREE.MeshLambertMaterial({ color: 0x2c4a3c });
@@ -2919,6 +2926,7 @@ function fillCustomer() {
     <p class="wl-ov-note">${esc(h.name)} · ${esc(h.serial)} · ${esc(load)} · ${hoursTxt}</p>
     <p class="wl-ov-k">Your area</p>
     <div class="wl-ov-stat ${area.tone}"><span>${esc(area.label)}</span><b>${esc(area.detail)}</b></div>
+    <p class="wl-ov-note">Site solar ${Math.round((PV_FARM.nameplateW || 0) / 1000)} kW nameplate · now ${Math.round(pvFarmW(state.nowMin) / 1000)} kW. Village-wide, not your roof.</p>
     <p class="wl-ov-k">Messages</p>
     <p class="wl-ov-note">${
       sms.length
@@ -3283,6 +3291,7 @@ function fillStats() {
       ${statCard("dtm", STAT_ICO.dtm, "DTMs", DTMS.length, `${FEEDERS.length} feeders`)}
       ${statCard("dtm", STAT_ICO.xfer, "phase xfer", s.phaseXfers ?? 0, `${s.xfmrCapW} W xfmr`)}
       ${statCard("energy", STAT_ICO.bolt, "peak live", `${s.peakFeederW} W`, `${s.tariff} / kWh`)}
+      ${statCard("energy", STAT_ICO.bolt, "site PV", `${Math.round((s.pvNameplateW || 0) / 1000)} kW`, `peak ${Math.round((s.pvPeakW || 0) / 1000)} kW · ${s.pvKWh ?? 0} kWh day`)}
       ${statCard("ops", STAT_ICO.pulse, "heartbeat", `${s.heartbeatMin} min`, `${s.readings} readings`)}
     </div>
     <h3 class="stat-sec">Anomalies</h3>

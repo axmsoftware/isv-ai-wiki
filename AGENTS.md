@@ -152,7 +152,7 @@ Registered sections (`SECTIONS` in `index.html`):
 | `#village-metering/vendor-study` | Vendor pipeline + technical tables |
 | `#village-metering/openami` | OpenAMI stack · leakage visibility |
 | `#village-metering/meshems` | MeshEMS board |
-| `#village-metering/village-simulator` | Village Simulator (Three.js hypothetical prepaid day). Size `?homes=100` or `?homes=1000` (default 1000). Role `?role=ops\|tech\|customer`. Customer id `?you=h0`. Legacy `#village-metering/worldline-day` and `…/worldline-day-100` alias here |
+| `#village-metering/village-simulator` | Village Simulator (Three.js hypothetical prepaid day). Size `?homes=100` or `?homes=1000` (default 1000). Role `?role=ops` / `tech` / `customer`. Customer id `?you=h0`. Legacy `#village-metering/worldline-day` and `…/worldline-day-100` alias here |
 | `#meter-study/...` | Legacy — same as `#village-metering/...` (`problems-today` → `problems`, `scope` → `village-scope`) |
 | `#notes/{note-id}` | Tech Comm meeting note (default: `metering-2026-05-28`) |
 | `#events/{note-id}` | In-person event planning (workshops, hackathons; default: `power-africa-2026-workshop-planning`). Legacy `#power-africa/...` still resolves. |
