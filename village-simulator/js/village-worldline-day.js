@@ -949,6 +949,7 @@ function buildBessCan(b) {
   box(0.08, b.h * 0.55, 0.06, 0xc9a227, b.x - b.w * 0.38, b.h * 0.55, b.z + b.d * 0.52);
 }
 
+/** Face south (+Z). Noon sun sits at +Z; -Z is north. +X tilt aims the panel face that way. */
 const SUN_TILT = 0.52;
 const skyDir = new THREE.Vector3();
 
@@ -972,7 +973,7 @@ function orientPv() {
     pvDummy.position.set(s.x, s.y, s.z);
     pvDummy.scale.set(s.sx, 1, s.sz);
     pvDummy.quaternion.identity();
-    pvDummy.rotation.set(-SUN_TILT, 0, 0);
+    pvDummy.rotation.set(SUN_TILT, 0, 0);
     pvDummy.updateMatrix();
     pvMesh.setMatrixAt(i, pvDummy.matrix);
   }
