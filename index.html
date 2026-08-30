@@ -185,6 +185,18 @@ body {
   background: var(--bg);
 }
 
+#main.sim-stage-first {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+#sec-village-metering.sim-stage-first .section-header { display: none; }
+#sec-village-metering.sim-stage-first .notes-embed { margin-top: 0; }
+#sec-village-metering.sim-stage-first .notes-embed iframe {
+  height: calc(100vh - 5.25rem);
+  min-height: 560px;
+}
+#sec-village-metering.sim-stage-first #meter-study-toolbar-json { display: none; }
+
 .notes-embed-toolbar {
   display: flex;
   flex-wrap: wrap;
@@ -2147,7 +2159,7 @@ code {
           <span id="meter-study-embed-label">Overview</span>
           <div class="notes-embed-toolbar-links">
             <a id="meter-study-toolbar-standalone" href="meter-overview.html" target="_blank" rel="noopener">Full page</a>
-            <a href="meter-benchmark/northbound-mqtt-v0.1.json" target="_blank" rel="noopener">Northbound JSON</a>
+            <a id="meter-study-toolbar-json" href="meter-benchmark/northbound-mqtt-v0.1.json" target="_blank" rel="noopener">Northbound JSON</a>
           </div>
         </div>
         <iframe id="meter-study-frame" title="Village Metering preview" src="meter-overview.html?embed=1&v=20260701"></iframe>
@@ -2301,8 +2313,8 @@ const METER_BENCHMARK_PAGES = {
   },
   'village-simulator': {
     title: 'Village Simulator',
-    sub: 'Hypothetical 3D prepaid day · Circaevum graphics · not live telemetry',
-    src: 'village-simulator/index.html?embed=1&v=20260816dir',
+    sub: '',
+    src: 'village-simulator/index.html?embed=1&v=20260830zfight',
     standalone: 'village-simulator/index.html'
   }
 };
@@ -2434,6 +2446,7 @@ function showSection(id, options = {}) {
   const main = document.getElementById('main');
   main.classList.toggle('wide', id === 'supported');
   main.classList.toggle('notes-wide', id === 'notes' || id === 'events' || id === 'village-metering' || id === 'tech-notes' || id === 'tasks');
+  if (id !== 'village-metering') main.classList.remove('sim-stage-first');
   if (id === 'supported') loadFundedProjects();
   if ((id === 'notes' || id === 'events') && !options.skipNoteRefresh) {
     const noteSection = getNoteSection(activeNoteId);
@@ -2498,7 +2511,7 @@ function showNote(noteId, updateHash = true) {
   if (updateHash) history.replaceState(null, '', `#${sectionId}/${noteId}`);
 }
 
-function refreshMeterPreview(pageId) {
+function refreshMeterPreview(pageId, requested) {
   const page = METER_BENCHMARK_PAGES[pageId];
   if (!page) return;
   document.querySelectorAll('.nav-sub-item[data-meter-page]').forEach(el => {
@@ -2510,14 +2523,21 @@ function refreshMeterPreview(pageId) {
   const toolbar = document.getElementById('meter-study-toolbar-standalone');
   if (frame) {
     bindMeterStudyFrameGuard(frame);
-    frame.src = page.src;
+    let src = page.src;
+    if (requested === 'worldline-day-100') src += (src.includes('?') ? '&' : '?') + 'homes=100';
+    frame.src = src;
   }
   if (label) label.textContent = page.title;
-  if (sub) sub.textContent = page.sub;
+  if (sub) sub.textContent = page.sub || '';
   if (toolbar) {
-    toolbar.href = page.standalone;
+    toolbar.href = requested === 'worldline-day-100' ? `${page.standalone}?homes=100` : page.standalone;
     toolbar.textContent = 'Full page';
   }
+  const sec = document.getElementById('sec-village-metering');
+  const main = document.getElementById('main');
+  const isSim = pageId === 'village-simulator';
+  sec?.classList.toggle('sim-stage-first', isSim);
+  main?.classList.toggle('sim-stage-first', isSim);
 }
 
 function bindMeterStudyFrameGuard(frame) {
@@ -2538,11 +2558,12 @@ function bindMeterStudyFrameGuard(frame) {
 }
 
 function showMeterPage(pageId, updateHash = true) {
+  const requested = pageId;
   pageId = resolveMeterPageId(pageId);
   if (!METER_BENCHMARK_PAGES[pageId]) return;
   activeMeterPageId = pageId;
   showSection('village-metering', { skipMeterRefresh: true, skipHash: true });
-  refreshMeterPreview(pageId);
+  refreshMeterPreview(pageId, requested);
   if (updateHash) history.replaceState(null, '', `#village-metering/${pageId}`);
 }
 
@@ -2557,8 +2578,9 @@ function initFromHash() {
     return;
   }
   if (raw === 'village-metering' || raw.startsWith('village-metering/') || raw === 'meter-study' || raw.startsWith('meter-study/')) {
-    const pageId = resolveMeterPageId(raw.split('/')[1]);
-    if (METER_BENCHMARK_PAGES[pageId]) showMeterPage(pageId, false);
+    const rawPage = raw.split('/')[1];
+    const pageId = resolveMeterPageId(rawPage);
+    if (METER_BENCHMARK_PAGES[pageId]) showMeterPage(rawPage || 'overview', false);
     else showMeterPage('overview', false);
     return;
   }

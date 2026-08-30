@@ -22,6 +22,9 @@ import {
   LAST_BREATH_MAX_HOPS,
   RF_CHANNEL_CAP,
   TARGET_HOMES,
+  TARIFF_PER_KWH,
+  LOW_BALANCE,
+  hopsToUsb,
   TRANSFORMERS,
   VENDORS,
   VILLAGE_PEOPLE,
@@ -36,13 +39,15 @@ import {
   CIVIC_PF,
   PF_POOR,
   civicW,
+  sunElev,
+  pvFarmW,
   fmtClock,
   meshPath,
   outageCovers,
   outageHit,
   rfEdges,
   simulateDay,
-} from "./village-worldline-sim.js?v=20260816leak";
+} from "./village-worldline-sim.js?v=20260830pv100";
 
 const COL = {
   site: 0x3b6d11,
@@ -131,6 +136,12 @@ function lastBreathY(min, hopI = 0, hops = 1) {
   return stackHopWorldY(min, hopI, 1.45, hops);
 }
 const LINE_HANG = 1.15;
+/** Keep static ground decals off one another. Worldlines may still cross. */
+const Y_ROAD = 0.08;
+const Y_GRID = 0.16;
+const Y_NOW = 0.28;
+const Y_RF = 0.22;
+const Y_COMPASS = [0.09, 0.14, 0.2];
 const HOP_DY = 0.16;
 const KNOB_STEP = 5;
 function fitCompass() {
@@ -187,18 +198,37 @@ function capacityColor(t) {
   return c.lerpColors(CAP_MID, CAP_HI, (x - 0.5) / 0.5);
 }
 
-/** Lambert + instanceColor as night glow. Patch after color_fragment so vColor is in. */
+/** Lambert + instanceColor as night glow. `uGlow` scales with lighting mode. */
+const glowMats = [];
 function glowLambert(emit) {
   const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+  m.userData.baseEmit = emit;
+  m.userData.glow = emit;
   m.onBeforeCompile = (shader) => {
+    shader.uniforms.uGlow = { value: m.userData.glow };
+    m.userData.glowUniform = shader.uniforms.uGlow;
+    shader.fragmentShader = shader.fragmentShader.replace(
+      "#include <common>",
+      `#include <common>
+       uniform float uGlow;`,
+    );
     shader.fragmentShader = shader.fragmentShader.replace(
       "#include <color_fragment>",
       `#include <color_fragment>
-       totalEmissiveRadiance += diffuseColor.rgb * ${emit.toFixed(2)};`,
+       totalEmissiveRadiance += diffuseColor.rgb * uGlow;`,
     );
   };
   m.customProgramCacheKey = () => `glowL:${emit}`;
+  glowMats.push(m);
   return m;
+}
+
+function setGlowScale(mode) {
+  const k = mode === "fill" ? 0.5 : mode === "lamps" ? 1.2 : 1;
+  for (const m of glowMats) {
+    m.userData.glow = m.userData.baseEmit * k;
+    if (m.userData.glowUniform) m.userData.glowUniform.value = m.userData.glow;
+  }
 }
 
 function pfColor(pf) {
@@ -349,6 +379,10 @@ const state = {
   viz: "v2",
   lineGrad: "capacity",
   sky: "dark",
+  light: "fill",
+  role: "ops",
+  you: HOUSES[0]?.id || "h0",
+  emsId: null,
 };
 
 const eventMeshes = [];
@@ -392,6 +426,9 @@ let hutMesh;
 let roofMesh;
 let sunLight;
 let ambientLight;
+let fillLight;
+let moonLight;
+let civicLights = [];
 let sunMesh;
 let sunBead;
 const compassSprites = [];
@@ -399,6 +436,12 @@ let pvMat;
 let pvMesh;
 let hemiLight;
 let sky;
+let windowMesh;
+let streetLampMesh;
+let groundMesh;
+const hutPose = [];
+const lampWarm = new THREE.Color(0xffe29a);
+const lampDark = new THREE.Color(0x1c1b18);
 const pvSlots = [];
 const pvDummy = new THREE.Object3D();
 const skyNight = new THREE.Color(0x121214);
@@ -605,7 +648,7 @@ function boot() {
   scene.background = null;
   scene.fog = new THREE.Fog(COL.bg, 220, 780);
 
-  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 2000);
+  camera = new THREE.PerspectiveCamera(42, 1, 0.4, 1200);
   {
     const home = camHome(true);
     camera.position.set(...home.pos);
@@ -644,6 +687,28 @@ function boot() {
   sunLight.target.position.set(COMPASS.x, 0, COMPASS.z);
   scene.add(sunLight);
   scene.add(sunLight.target);
+  fillLight = new THREE.DirectionalLight(0xf4f0e6, 0);
+  fillLight.position.set(COMPASS.x - 36, 72, COMPASS.z + 28);
+  fillLight.target.position.set(COMPASS.x, 0, COMPASS.z);
+  scene.add(fillLight);
+  scene.add(fillLight.target);
+  moonLight = new THREE.DirectionalLight(0xa8c4e8, 0);
+  moonLight.position.set(COMPASS.x - 42, 58, COMPASS.z - 24);
+  moonLight.target.position.set(COMPASS.x, 0, COMPASS.z);
+  scene.add(moonLight);
+  scene.add(moonLight.target);
+  civicLights = [
+    LANDMARKS.market,
+    LANDMARKS.clinic,
+    LANDMARKS.kiosk,
+    LANDMARKS.ops,
+    LANDMARKS.gen,
+  ].map((s) => {
+    const l = new THREE.PointLight(0xffc878, 0, 24, 1.55);
+    l.position.set(s.x, 3.15, s.z);
+    scene.add(l);
+    return l;
+  });
   sunMesh = new THREE.Mesh(
     new THREE.SphereGeometry(2.4, 16, 16),
     new THREE.MeshBasicMaterial({ color: 0xffe7a8 }),
@@ -672,9 +737,11 @@ function boot() {
   fillLedger();
   fillStats();
   fillHouses();
+  const startMin = applyQuery();
   applySchemeColors();
-  setNow(0);
+  setNow(startMin);
   applyVizMode();
+  applyRole();
   resize();
   window.addEventListener("resize", resize);
   new ResizeObserver(resize).observe(stage);
@@ -723,7 +790,7 @@ function syncTimeLayout() {
   clipPlanes[1].constant = v2 ? PAST_TOP + 1.25 : v1Top() + 4;
   if (winBand) winBand.position.y = boundH;
   if (sprWin) sprWin.position.y = boundH + 0.4;
-  if (nowPlane) nowPlane.position.y = v2 ? 0.04 : yWorldAt(state.nowMin, state.nowMin);
+  if (nowPlane) nowPlane.position.y = v2 ? Y_NOW : yWorldAt(state.nowMin, state.nowMin);
   if (nowMark) nowMark.position.y = v2 ? 1.35 : yWorldAt(state.nowMin, state.nowMin) + 1.2;
   const y0 = v2 ? -SCRUNCH_H : 0;
   const y1 = v2 ? PAST_TOP : v1Top();
@@ -803,7 +870,7 @@ function pitchedRoof(x, y, z, sx, sz, color) {
 }
 
 function buildGenPad(x, z) {
-  box(1.25, 0.16, 1.05, 0x3a3a40, x, 0.09, z);
+  box(1.25, 0.16, 1.05, 0x3a3a40, x, 0.14, z);
   box(0.95, 0.52, 0.68, 0x7a7a82, x - 0.12, 0.46, z);
   addMesh(new THREE.CylinderGeometry(0.2, 0.22, 0.62, 12), 0x4a4a52, x + 0.48, 0.46, z);
   box(0.07, 0.42, 0.07, 0x2a2a30, x - 0.22, 0.92, z);
@@ -818,7 +885,7 @@ function buildMainXfmr(x, z) {
     return m;
   };
   const parts = [
-    keep(box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.08, z), 0x3a3a38),
+    keep(box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.13, z), 0x3a3a38),
     keep(addMesh(new THREE.CylinderGeometry(0.36, 0.4, 1.12, 14), 0x5c5c4a, x, 0.68, z), 0x5c5c4a),
   ];
   for (const dx of [-0.16, 0, 0.16]) {
@@ -847,7 +914,7 @@ function buildClinic(x, z) {
   box(2.42, 0.1, 1.76, 0x3b6d11, x, 1.12, z);
   pitchedRoof(x, 1.42, z, 2.05, 1.55, 0x6a3a32);
   box(0.16, 0.52, 0.05, 0xb42318, x, 0.72, z + 0.88);
-  box(0.52, 0.16, 0.05, 0xb42318, x, 0.72, z + 0.88);
+  box(0.52, 0.16, 0.05, 0xb42318, x, 0.72, z + 0.91);
   box(0.42, 0.72, 0.08, 0x2a2a28, x + 0.7, 0.4, z + 0.88);
 }
 
@@ -882,12 +949,13 @@ function buildCloudMark(x, z) {
 }
 
 function buildBessCan(b) {
-  box(b.w, b.h, b.d, 0x2c4a3c, b.x, b.h / 2 + 0.02, b.z);
+  box(b.w, b.h, b.d, 0x2c4a3c, b.x, b.h / 2 + 0.06, b.z);
   box(b.w * 0.94, 0.05, b.d * 0.94, 0x1e3328, b.x, b.h + 0.04, b.z);
   box(0.08, b.h * 0.55, 0.06, 0xc9a227, b.x + b.w * 0.38, b.h * 0.55, b.z + b.d * 0.52);
   box(0.08, b.h * 0.55, 0.06, 0xc9a227, b.x - b.w * 0.38, b.h * 0.55, b.z + b.d * 0.52);
 }
 
+/** Face south (+Z). Noon sun sits at +Z; -Z is north. +X tilt aims the panel face that way. */
 const SUN_TILT = 0.52;
 const skyDir = new THREE.Vector3();
 
@@ -911,7 +979,7 @@ function orientPv() {
     pvDummy.position.set(s.x, s.y, s.z);
     pvDummy.scale.set(s.sx, 1, s.sz);
     pvDummy.quaternion.identity();
-    pvDummy.rotation.set(-SUN_TILT, 0, 0);
+    pvDummy.rotation.set(SUN_TILT, 0, 0);
     pvDummy.updateMatrix();
     pvMesh.setMatrixAt(i, pvDummy.matrix);
   }
@@ -922,27 +990,79 @@ function placeSun(min) {
   if (!sunLight || !sunMesh) return;
   const hr = min / 60;
   const t = (hr - 6) / 12;
-  const up = t > 0 && t < 1;
+  const elev = sunElev(min);
+  const up = elev > 0;
   const u = Math.max(0, Math.min(1, t));
   const { x: cx, z: cz, r } = COMPASS;
   const R = Math.max(48, COMPASS.r + 6);
   const x = cx + Math.cos(Math.PI * u) * R;
   const z = cz + Math.sin(Math.PI * u) * R * (NORTH.z < 0 ? 1 : -1);
-  const elev = up ? Math.sin(Math.PI * u) : 0;
   const y = up ? 8 + elev * 58 : -14;
-  sunLight.position.set(x, Math.max(y, 4), z);
-  sunLight.castShadow = up;
+  const mode = state.light === "lamps" || state.light === "sun" ? state.light : "fill";
   sunMesh.position.set(x, y, z);
   sunMesh.visible = y > 3;
-  sunLight.intensity = 0.28 + elev * 1.85;
-  ambientLight.intensity = 0.08 + elev * 0.14;
-  if (hemiLight) {
-    hemiLight.intensity = 0.06 + elev * 0.32;
-    hemiLight.color.setHex(elev > 0.25 ? 0x8eb8dc : 0xc48a58);
-    hemiLight.groundColor.setHex(elev > 0.12 ? 0x3d6230 : 0x1a2414);
-  }
-  sunLight.color.setHex(elev > 0.18 ? 0xfff2d4 : 0xffb070);
   sunMesh.material.color.setHex(elev > 0.25 ? 0xffe7a8 : 0xffc078);
+  if (mode === "fill") {
+    sunLight.position.set(cx + 28, 62, cz + 18);
+    sunLight.castShadow = true;
+    sunLight.intensity = 1.45;
+    sunLight.color.setHex(0xfff6e8);
+    ambientLight.color.setHex(0xf0ece4);
+    ambientLight.intensity = 0.62;
+    if (hemiLight) {
+      hemiLight.intensity = 0.78;
+      hemiLight.color.setHex(0xc5def0);
+      hemiLight.groundColor.setHex(0x5a7a40);
+    }
+    if (fillLight) fillLight.intensity = 0.62;
+    if (moonLight) moonLight.intensity = 0;
+    for (const l of civicLights) l.intensity = 0;
+  } else if (mode === "lamps") {
+    sunLight.position.set(x, Math.max(y, 6), z);
+    sunLight.castShadow = false;
+    sunLight.intensity = up ? 0.1 + elev * 0.28 : 0.03;
+    sunLight.color.setHex(0xffb070);
+    ambientLight.color.setHex(0x6a7a90);
+    ambientLight.intensity = 0.2;
+    if (hemiLight) {
+      hemiLight.intensity = 0.34;
+      hemiLight.color.setHex(0x3a4a68);
+      hemiLight.groundColor.setHex(0x1c1810);
+    }
+    if (fillLight) fillLight.intensity = 0;
+    if (moonLight) moonLight.intensity = up ? 0.1 : 0.48;
+    for (const l of civicLights) l.intensity = 1.15;
+  } else {
+    sunLight.position.set(x, Math.max(y, 4), z);
+    sunLight.castShadow = up;
+    sunLight.intensity = 0.28 + elev * 1.85;
+    sunLight.color.setHex(elev > 0.18 ? 0xfff2d4 : 0xffb070);
+    ambientLight.color.setHex(0xe8e4dc);
+    ambientLight.intensity = 0.08 + elev * 0.14;
+    if (hemiLight) {
+      hemiLight.intensity = 0.06 + elev * 0.32;
+      hemiLight.color.setHex(elev > 0.25 ? 0x8eb8dc : 0xc48a58);
+      hemiLight.groundColor.setHex(elev > 0.12 ? 0x3d6230 : 0x1a2414);
+    }
+    if (fillLight) fillLight.intensity = 0;
+    if (moonLight) moonLight.intensity = 0;
+    for (const l of civicLights) l.intensity = 0;
+  }
+  if (groundMesh?.material) {
+    if (mode === "fill") {
+      groundMesh.material.emissive.setHex(0x244a16);
+      groundMesh.material.emissiveIntensity = 0.32;
+    } else if (mode === "lamps") {
+      groundMesh.material.emissive.setHex(0x10180e);
+      groundMesh.material.emissiveIntensity = 0.28;
+    } else {
+      groundMesh.material.emissive.setHex(0x000000);
+      groundMesh.material.emissiveIntensity = 0;
+    }
+  }
+  setGlowScale(mode);
+  if (windowMesh) windowMesh.visible = mode === "lamps";
+  if (streetLampMesh) streetLampMesh.visible = mode === "lamps";
   const bright = state.sky === "bright";
   if (sky) {
     if (bright) {
@@ -988,27 +1108,30 @@ function buildCompass() {
   torus.castShadow = true;
   torus.receiveShadow = true;
   scene.add(torus);
-  const pad = new THREE.Mesh(
-    new THREE.RingGeometry(r - 3.4, r + 3.4, 96),
-    new THREE.MeshBasicMaterial({ color: 0xf4f7fb, side: THREE.DoubleSide }),
-  );
-  pad.rotation.x = -Math.PI / 2;
-  pad.position.set(cx, 0.06, cz);
-  scene.add(pad);
-  const rimInner = new THREE.Mesh(
-    new THREE.RingGeometry(r - 3.9, r - 3.4, 96),
-    new THREE.MeshBasicMaterial({ color: 0x1c2228, side: THREE.DoubleSide }),
-  );
-  rimInner.rotation.x = -Math.PI / 2;
-  rimInner.position.set(cx, 0.07, cz);
-  scene.add(rimInner);
-  const dayArc = new THREE.Mesh(
-    new THREE.RingGeometry(r + 3.4, r + 6.2, 64, 1, Math.PI, Math.PI),
-    new THREE.MeshBasicMaterial({ color: 0xe8b060, side: THREE.DoubleSide }),
-  );
-  dayArc.rotation.x = -Math.PI / 2;
-  dayArc.position.set(cx, 0.08, cz);
-  scene.add(dayArc);
+  const ringDecal = (inner, outer, y, color, segs = 96, thetaLen) => {
+    const geo =
+      thetaLen != null
+        ? new THREE.RingGeometry(inner, outer, segs, 1, Math.PI, thetaLen)
+        : new THREE.RingGeometry(inner, outer, segs);
+    const m = new THREE.Mesh(
+      geo,
+      new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -4,
+      }),
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(cx, y, cz);
+    scene.add(m);
+    return m;
+  };
+  ringDecal(r - 3.4, r + 3.4, Y_COMPASS[0], 0xf4f7fb);
+  ringDecal(r - 3.9, r - 3.4, Y_COMPASS[1], 0x1c2228);
+  ringDecal(r + 3.4, r + 6.2, Y_COMPASS[2], 0xe8b060, 64, Math.PI);
 
   const tickMat = new THREE.MeshLambertMaterial({ color: 0xf4f7fa });
   for (let i = 0; i < 24; i++) {
@@ -1082,7 +1205,7 @@ function buildPvAndStorage() {
   pvMat = new THREE.MeshLambertMaterial({ color: PV_COL, emissive: 0x000000, emissiveIntensity: 0 });
   const roofSet = new Set(PV_ROOF_IDS);
   const roofN = PV_ROOF_IDS.length;
-  const farmN = PV_FARM.rows * PV_FARM.cols;
+  const farmN = PV_FARM.modules || PV_FARM.rows * PV_FARM.cols;
   pvMesh = new THREE.InstancedMesh(panelGeo, pvMat, roofN + farmN + 6);
   pvMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
   pvSlots.length = 0;
@@ -1097,9 +1220,14 @@ function buildPvAndStorage() {
     plant(h.x, bh + 0.58, h.z, 0.95 * s, 0.85 * s);
   });
 
+  const pitchX = PV_FARM.pitchX || 1.55;
+  const pitchZ = PV_FARM.pitchZ || 1.15;
+  let planted = 0;
   for (let r = 0; r < PV_FARM.rows; r++) {
     for (let c = 0; c < PV_FARM.cols; c++) {
-      plant(PV_FARM.x + c * 1.85, 0.55, PV_FARM.z + r * 1.35, 1.55, 1.05);
+      if (planted >= farmN) break;
+      plant(PV_FARM.x + c * pitchX, 0.55, PV_FARM.z + r * pitchZ, 1.35, 0.95);
+      planted += 1;
     }
   }
   plant(LANDMARKS.clinic.x - 0.35, 1.72, LANDMARKS.clinic.z + 0.15, 1.8, 1.15);
@@ -1112,9 +1240,9 @@ function buildPvAndStorage() {
   scene.add(pvMesh);
   orientPv();
 
-  const farmSpr = timeSprite(PV_FARM.label, "#8aa0b8", 220);
-  farmSpr.scale.set(5.4, 1.25, 1);
-  farmSpr.position.set(PV_FARM.x + 4, 1.4, PV_FARM.z - 1.2);
+  const farmSpr = timeSprite(PV_FARM.label, "#8aa0b8", 280);
+  farmSpr.scale.set(7.2, 1.35, 1);
+  farmSpr.position.set(PV_FARM.x + (PV_FARM.cols * (PV_FARM.pitchX || 1.55)) / 2, 1.6, PV_FARM.z - 1.4);
   scene.add(farmSpr);
 
   const battMat = new THREE.MeshLambertMaterial({ color: 0x2c4a3c });
@@ -1206,7 +1334,14 @@ function bakeGroundTexture() {
 function addPolarGrid(y, opacity, intoTime, min) {
   const g = new THREE.LineSegments(
     polarGridGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x2c2c32, transparent: true, opacity }),
+    new THREE.LineBasicMaterial({
+      color: 0x2c2c32,
+      transparent: true,
+      opacity,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
+    }),
   );
   g.position.y = y;
   if (intoTime) {
@@ -1222,13 +1357,16 @@ function buildVillage() {
     new THREE.MeshLambertMaterial({
       map: bakeGroundTexture(),
       color: 0xffffff,
+      emissive: 0x000000,
+      emissiveIntensity: 0,
     }),
   );
   ground.rotation.x = -Math.PI / 2;
   ground.position.set(cx, 0, cz);
   ground.receiveShadow = true;
   scene.add(ground);
-  addPolarGrid(0.03, 0.28, false);
+  groundMesh = ground;
+  addPolarGrid(Y_GRID, 0.28, false);
 
   const west = CLUSTERS.find((c) => c.id === "west");
   const marketC = CLUSTERS.find((c) => c.id === "market");
@@ -1247,17 +1385,18 @@ function buildVillage() {
     [[LANDMARKS.xfmr.x, LANDMARKS.xfmr.z], [west.x, west.z]],
     [[marketC.x, marketC.z], [south.x, south.z]],
   ];
-  for (const path of tracks) {
+  tracks.forEach((path, ti) => {
     for (let i = 0; i < path.length - 1; i++) {
       const [ax, az] = path[i];
       const [bx, bz] = path[i + 1];
       const dx = bx - ax;
       const dz = bz - az;
       const len = Math.hypot(dx, dz);
-      const strip = box(0.95, 0.035, len, 0x2c2c32, (ax + bx) / 2, 0.03, (az + bz) / 2);
+      const y = Y_ROAD + ti * 0.02 + i * 0.008;
+      const strip = box(0.95, 0.07, len, 0x2c2c32, (ax + bx) / 2, y, (az + bz) / 2);
       strip.rotation.y = Math.atan2(dx, dz);
     }
-  }
+  });
 
   for (const c of CLUSTERS) {
     const spr = timeSprite(c.label);
@@ -1296,6 +1435,7 @@ function buildVillage() {
   const roofGeo = new THREE.ConeGeometry(0.82, 0.48, 4);
   hutMesh = new THREE.InstancedMesh(hutGeo, glowLambert(0.48), HOUSE_N);
   roofMesh = new THREE.InstancedMesh(roofGeo, glowLambert(0.38), HOUSE_N);
+  hutPose.length = 0;
   const dummy = new THREE.Object3D();
   const hutCol = new THREE.Color();
   HOUSES.forEach((h, i) => {
@@ -1315,6 +1455,7 @@ function buildVillage() {
     hutCol.copy(CAP_LO);
     hutMesh.setColorAt(i, hutCol);
     roofMesh.setColorAt(i, hutCol);
+    hutPose.push({ x: h.x, z: h.z, yaw, bh, s });
   });
   hutMesh.castShadow = true;
   hutMesh.receiveShadow = true;
@@ -1324,6 +1465,7 @@ function buildVillage() {
   roofMesh.userData.pickHuts = true;
   scene.add(hutMesh);
   scene.add(roofMesh);
+  buildHouseLamps();
 
   buildPvAndStorage();
   buildCompass();
@@ -1350,7 +1492,7 @@ function buildVillage() {
     const y = yAt(min);
     const hh = Math.floor(min / 60);
     const mm = min % 60;
-    if (mm === 0 && hh % 2 === 0) addPolarGrid(y, 0.22, true, min);
+    if (mm === 0 && hh % 2 === 0 && min > 0) addPolarGrid(y, 0.22, true, min);
     const hour = mm === 0;
     const half = mm === 30;
     const label = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
@@ -1911,7 +2053,7 @@ function buildMeshFloor() {
     const b = nodeXZ(to);
     const ca = from === "usb" ? "usb" : houseById[from]?.cluster;
     const cb = to === "usb" ? "usb" : houseById[to]?.cluster;
-    const pair = [new THREE.Vector3(a.x, 0.11, a.z), new THREE.Vector3(b.x, 0.11, b.z)];
+    const pair = [new THREE.Vector3(a.x, Y_RF, a.z), new THREE.Vector3(b.x, Y_RF, b.z)];
     if (ca !== cb) choke.push(...pair);
     else same.push(...pair);
   }
@@ -1993,28 +2135,34 @@ function buildLastBreaths() {
 function buildNowPlane() {
   const { x: cx, z: cz, r } = COMPASS;
   nowPlane = new THREE.Mesh(
-    new THREE.CircleGeometry(r, 64),
+    new THREE.RingGeometry(Math.max(2, r - 1.2), r + 0.55, 72),
     new THREE.MeshBasicMaterial({
       color: COL.reading,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.28,
       side: THREE.DoubleSide,
       depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
     }),
   );
   nowPlane.rotation.x = -Math.PI / 2;
-  nowPlane.position.set(cx, 0.04, cz);
+  nowPlane.position.set(cx, Y_NOW, cz);
   scene.add(nowPlane);
 
   const band = (y, opacity) => {
     const p = new THREE.Mesh(
-      new THREE.CircleGeometry(r, 48),
+      new THREE.RingGeometry(Math.max(2, r - 1.2), r + 0.45, 48),
       new THREE.MeshBasicMaterial({
         color: 0x2a3040,
         transparent: true,
         opacity,
         side: THREE.DoubleSide,
         depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -2,
       }),
     );
     p.rotation.x = -Math.PI / 2;
@@ -2079,6 +2227,7 @@ function buildPowerLines() {
   poleMesh.castShadow = true;
   poleMesh.receiveShadow = true;
   scene.add(poleMesh);
+  buildStreetLamps();
 
   const xfmrGeo = new THREE.BoxGeometry(0.62, 0.72, 0.48);
   xfmrMesh = new THREE.InstancedMesh(xfmrGeo, glowLambert(0.42), TRANSFORMERS.length);
@@ -2324,12 +2473,95 @@ function colorHardware() {
   }
 }
 
+function buildHouseLamps() {
+  const geo = new THREE.PlaneGeometry(0.3, 0.22);
+  windowMesh = new THREE.InstancedMesh(
+    geo,
+    new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.92,
+      depthWrite: false,
+    }),
+    HOUSE_N,
+  );
+  windowMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const dummy = new THREE.Object3D();
+  dummy.scale.set(0.001, 0.001, 1);
+  dummy.updateMatrix();
+  for (let i = 0; i < HOUSE_N; i++) {
+    windowMesh.setMatrixAt(i, dummy.matrix);
+    windowMesh.setColorAt(i, lampDark);
+  }
+  windowMesh.visible = false;
+  windowMesh.frustumCulled = false;
+  scene.add(windowMesh);
+}
+
+function buildStreetLamps() {
+  const n = POLES.length;
+  if (!n) return;
+  const geo = new THREE.SphereGeometry(0.12, 8, 8);
+  streetLampMesh = new THREE.InstancedMesh(
+    geo,
+    new THREE.MeshBasicMaterial({ color: 0xffe7b0 }),
+    n,
+  );
+  const dummy = new THREE.Object3D();
+  POLES.forEach((p, i) => {
+    dummy.position.set(p.x, LINE_HANG + 0.1, p.z);
+    dummy.rotation.set(0, 0, 0);
+    dummy.scale.set(1, 1, 1);
+    dummy.updateMatrix();
+    streetLampMesh.setMatrixAt(i, dummy.matrix);
+  });
+  streetLampMesh.visible = false;
+  streetLampMesh.castShadow = false;
+  scene.add(streetLampMesh);
+}
+
+function updateLampWindows(last) {
+  if (!windowMesh || !hutPose.length) return;
+  const lamps = state.light === "lamps";
+  windowMesh.visible = lamps;
+  if (streetLampMesh) streetLampMesh.visible = lamps;
+  if (!lamps) return;
+  const dummy = new THREE.Object3D();
+  const col = new THREE.Color();
+  for (let i = 0; i < HOUSE_N; i++) {
+    const p = hutPose[i];
+    const r = last[HOUSES[i].id];
+    const on = !!(r?.on && !r?.feederOut);
+    const face = 0.58 * p.s;
+    dummy.position.set(
+      p.x + Math.sin(p.yaw) * face,
+      p.bh * 0.52,
+      p.z + Math.cos(p.yaw) * face,
+    );
+    dummy.rotation.set(0, p.yaw, 0);
+    dummy.scale.set(on ? 1 : 0.001, on ? 1 : 0.001, 1);
+    dummy.updateMatrix();
+    windowMesh.setMatrixAt(i, dummy.matrix);
+    if (on) {
+      const t = Math.min(1, (r.powerW || 40) / 180);
+      col.copy(lampWarm).lerp(new THREE.Color(0xfff6d2), t);
+    } else {
+      col.copy(lampDark);
+    }
+    windowMesh.setColorAt(i, col);
+  }
+  windowMesh.instanceMatrix.needsUpdate = true;
+  if (windowMesh.instanceColor) windowMesh.instanceColor.needsUpdate = true;
+}
+
 function colorHouses(last) {
   if (!hutMesh || !roofMesh) return;
   const src = last || loadsAt(state.nowMin).last;
   const red = new THREE.Color(COL.outage);
   const roof = new THREE.Color();
   const asset = state.scheme === "asset";
+  const lamps = state.light === "lamps";
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
@@ -2338,12 +2570,18 @@ function colorHouses(last) {
     if (out) c = red;
     else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
     else c = capacityColor(r?.capacity || 0);
+    if (lamps && !out) {
+      const on = !!(r?.on && !r?.feederOut);
+      if (on) c = c.clone().lerp(lampWarm, 0.28);
+      else c = lampDark.clone();
+    }
     hutMesh.setColorAt(i, c);
-    roof.copy(c).multiplyScalar(0.78);
+    roof.copy(c).multiplyScalar(lamps && !out && !(r?.on) ? 0.45 : 0.78);
     roofMesh.setColorAt(i, roof);
   }
   hutMesh.instanceColor.needsUpdate = true;
   roofMesh.instanceColor.needsUpdate = true;
+  updateLampWindows(src);
 }
 
 function colorPowerLines() {
@@ -2417,7 +2655,7 @@ function setNow(min) {
   if (timeGroup) timeGroup.position.y = isV2() ? yAt(state.nowMin) : 0;
   timeUniforms.uNow.value = state.nowMin;
   placeSun(state.nowMin);
-  if (nowPlane) nowPlane.position.y = isV2() ? 0.04 : yWorldAt(state.nowMin, state.nowMin);
+  if (nowPlane) nowPlane.position.y = isV2() ? Y_NOW : yWorldAt(state.nowMin, state.nowMin);
   if (nowMark) nowMark.position.y = isV2() ? 1.35 : yWorldAt(state.nowMin, state.nowMin) + 1.2;
   restackTimeStack();
   restackLastBreath();
@@ -2460,8 +2698,17 @@ function applyVisibility() {
 }
 
 function setScope(scope) {
+  if (state.role === "customer") {
+    state.scope = { kind: "house", id: state.you };
+    state.focus = state.you;
+    applyVisibility();
+    fillHouses();
+    return;
+  }
   state.scope = scope && scope.kind ? scope : { kind: "village" };
   state.focus = state.scope.kind === "house" ? state.scope.id : null;
+  if (state.scope.kind === "board") openEms(state.scope.id, true);
+  else if (state.role !== "tech") closeEms();
   applyVisibility();
   fillHouses();
 }
@@ -2477,6 +2724,16 @@ function onPick(ev) {
   const extras = scene.children.filter((o) => o.userData.houseId || o.userData.scope);
   const hits = ray.intersectObjects([hutMesh, roofMesh, ...(emsMesh ? [emsMesh] : []), ...extras], false);
   const hit = hits[0];
+  if (state.role === "customer") {
+    const hid =
+      hit && hit.object.userData.pickHuts && hit.instanceId != null
+        ? HOUSES[hit.instanceId].id
+        : hit && hit.object.userData.houseId
+          ? hit.object.userData.houseId
+          : null;
+    if (hid === state.you) setScope({ kind: "house", id: hid });
+    return;
+  }
   if (hit && hit.object.userData.pickHuts && hit.instanceId != null) {
     setScope({ kind: "house", id: HOUSES[hit.instanceId].id });
   } else if (hit && hit.object.userData.houseId) {
@@ -2589,6 +2846,289 @@ function togglePlay(dir) {
   syncPlayBtn();
 }
 
+function writeQuery(patch, reload) {
+  const q = new URLSearchParams(location.search);
+  for (const [k, v] of Object.entries(patch || {})) {
+    if (v == null || v === "") q.delete(k);
+    else q.set(k, String(v));
+  }
+  if (!q.has("homes")) q.set("homes", String(TARGET_HOMES));
+  const next = `?${q.toString()}`;
+  if (reload) {
+    location.search = q.toString();
+    return;
+  }
+  history.replaceState(null, "", next);
+}
+
+function esc(s) {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function flyToXZ(x, z, dist = 14) {
+  if (!camera || !controls) return;
+  controls.target.set(x, 0.4, z);
+  camera.position.set(x + dist * 0.55, Math.max(5.5, dist * 0.58), z + dist * 0.72);
+}
+
+function sizeSelectValue() {
+  if (TARGET_HOMES <= 150) return "100";
+  if (TARGET_HOMES >= 700) return "1000";
+  return String(TARGET_HOMES);
+}
+
+function houseOutage(h) {
+  return (day.summary.outages || []).find(
+    (x) =>
+      state.nowMin >= x.min &&
+      state.nowMin < x.restore &&
+      (x.xfmrId ? h.xfmrId === x.xfmrId : h.feederId === x.feederId),
+  );
+}
+
+function areaStatus(h) {
+  const o = houseOutage(h);
+  if (o) return { tone: "bad", label: "Outage in your area", detail: `${o.label} · ${fmtClock(o.min)}–${fmtClock(o.restore)}` };
+  const feederW = HOUSES.filter((x) => x.feederId === h.feederId).reduce((s, x) => {
+    const r = readingAt(x.id, state.nowMin);
+    return s + (r?.powerW || 0);
+  }, 0);
+  const peak = day.summary.peakFeederW || 1;
+  if (feederW > peak * 0.75) return { tone: "warn", label: "Grid is busy", detail: "Large loads may trip. Wait if you can." };
+  return { tone: "ok", label: "Your area is on", detail: "Mini-grid operating. No home-by-home list." };
+}
+
+function fillCustomer() {
+  const card = document.getElementById("wl-cust-card");
+  const body = document.getElementById("wl-cust-body");
+  const youEl = document.getElementById("wl-you");
+  if (!card || !body) return;
+  const show = state.role === "customer";
+  card.hidden = !show;
+  if (!show) return;
+  if (youEl && !youEl.dataset.ready) {
+    youEl.innerHTML = HOUSES.slice(0, 24)
+      .map((h) => `<option value="${h.id}">${esc(h.name)} · ${esc(h.serial)}</option>`)
+      .join("");
+    youEl.dataset.ready = "1";
+  }
+  if (youEl) youEl.value = state.you;
+  const h = houseById[state.you] || HOUSES[0];
+  if (!h) return;
+  const r = readingAt(h.id, state.nowMin);
+  const wallet = r ? r.wallet : h.startCredit;
+  const on = r ? r.on && !r.feederOut : h.startCredit > 0;
+  const watts = r?.powerW || 0;
+  const kWh = (function () {
+    const hi = houseIndex[h.id];
+    const last = Math.min(SLOTS - 1, Math.floor(state.nowMin / SLOT_MIN));
+    let wh = 0;
+    for (let s = 0; s <= last; s++) wh += day.readings[s * HOUSE_N + hi]?.energyWh || 0;
+    return wh / 1000;
+  })();
+  const area = areaStatus(h);
+  const sms = day.events.filter((e) => e.houseId === h.id && e.kind === "sms" && e.min <= state.nowMin);
+  const nextPay = (h.payments || []).find((p) => p.min > state.nowMin);
+  const load = LOAD_TYPES[r?.loadType]?.label || "standby";
+  const hoursLeft =
+    watts > 0 && wallet > 0 ? (wallet / TARIFF_PER_KWH) / (watts / 1000) : wallet > 0 ? Infinity : 0;
+  const hoursTxt =
+    hoursLeft === Infinity ? "credit held (no load)" : hoursLeft <= 0 ? "no credit" : `~${hoursLeft.toFixed(1)} h at this load`;
+  body.innerHTML = `
+    <div class="wl-ov-grid">
+      <div class="wl-ov-stat ${on ? "ok" : "bad"}"><span>Service</span><b>${on ? "ON" : "OFF"}</b></div>
+      <div class="wl-ov-stat ${wallet <= LOW_BALANCE ? "warn" : ""}"><span>Credit</span><b>${wallet.toFixed(0)}</b></div>
+      <div class="wl-ov-stat"><span>Using now</span><b>${Math.round(watts)} W</b></div>
+      <div class="wl-ov-stat"><span>Today so far</span><b>${kWh.toFixed(2)} kWh</b></div>
+    </div>
+    <p class="wl-ov-k">Tariff</p>
+    <p class="wl-ov-note">${TARIFF_PER_KWH} / kWh (abstract units) · AUTO relay off at 0 credit · low-balance SMS at ${LOW_BALANCE}</p>
+    <p class="wl-ov-note">${esc(h.name)} · ${esc(h.serial)} · ${esc(load)} · ${hoursTxt}</p>
+    <p class="wl-ov-k">Your area</p>
+    <div class="wl-ov-stat ${area.tone}"><span>${esc(area.label)}</span><b>${esc(area.detail)}</b></div>
+    <p class="wl-ov-note">Site solar ${Math.round((PV_FARM.nameplateW || 0) / 1000)} kW nameplate · now ${Math.round(pvFarmW(state.nowMin) / 1000)} kW. Village-wide, not your roof.</p>
+    <p class="wl-ov-k">Messages</p>
+    <p class="wl-ov-note">${
+      sms.length
+        ? sms
+            .slice(-3)
+            .map((e) => `${fmtClock(e.min)} · low credit`)
+            .join(" · ")
+        : "No SMS yet."
+    }</p>
+    <p class="wl-ov-k">Buy credit</p>
+    <p class="wl-ov-note">Kiosk, phone, or CIU — then the meter gets set_balance before watts resume. ${
+      nextPay ? `Next schematic top-up at ${fmtClock(nextPay.min)} (${nextPay.amount}).` : "No more top-ups in this day."
+    }</p>
+    <p class="wl-ov-note">Neighbor meters stay private. You see your wallet and whether your area is on, busy, or dark.</p>
+  `;
+}
+
+function fillEms() {
+  const card = document.getElementById("wl-ems-card");
+  const body = document.getElementById("wl-ems-body");
+  const title = document.getElementById("wl-ems-title");
+  const sub = document.getElementById("wl-ems-sub");
+  if (!card || !body) return;
+  const id = state.emsId;
+  const b = id ? boardById[id] : null;
+  card.hidden = !b;
+  if (!b) return;
+  const houses = (b.houseIds || []).map((hid) => houseById[hid]).filter(Boolean);
+  const feeder = FEEDERS.find((f) => f.id === b.feederId);
+  const dtm = DTMS.find((d) => d.feederId === b.feederId);
+  const xf = TRANSFORMERS.find((t) => t.id === b.xfmrId);
+  const leak = LEAKS.find((lk) => lk && (lk.fromBoardId === b.id || lk.toBoardId === b.id));
+  const leakLive = leak && state.nowMin >= leak.min && state.nowMin < leak.restore;
+  const idx = BOARDS.findIndex((x) => x.id === b.id);
+  let boardW = 0;
+  let onN = 0;
+  let darkN = 0;
+  const phases = { A: 0, B: 0, C: 0 };
+  const rows = houses.map((h, i) => {
+    const r = readingAt(h.id, state.nowMin);
+    const o = houseOutage(h);
+    const watts = r?.powerW || 0;
+    const on = r ? r.on && !r.feederOut : false;
+    boardW += watts;
+    if (on) onN += 1;
+    if (o) darkN += 1;
+    const ph = r?.phase || h.phase || "A";
+    phases[ph] = (phases[ph] || 0) + 1;
+    return { h, r, o, watts, on, ph, port: i + 1 };
+  });
+  if (title) title.textContent = b.label || "MeshEMS";
+  if (sub) sub.textContent = `${idx + 1} / ${BOARDS.length} · ${houses.length} meters · ${feeder?.label || b.feederId}`;
+  const hops = houses[0] ? hopsToUsb(houses[0].id) : "—";
+  const check = [
+    { cls: "done", t: `Pole label ${b.id} · feeder ${b.feederId} · ${b.cluster}` },
+    { cls: "done", t: "Seat NESL 865B · ext 5 V / 3.3 V (workshop schematic)" },
+    { cls: houses.length ? "done" : "bad", t: `Map ports 1–${houses.length} to meter serials on this pole` },
+    { cls: "done", t: `Phase split A ${phases.A} · B ${phases.B} · C ${phases.C} from ${dtm?.label || "DTM"}` },
+    { cls: "done", t: `Heartbeat ${SLOT_MIN} min · MQTT northbound (OpenAMI)` },
+    { cls: xf ? "done" : "warn", t: xf ? `LV from ${xf.label || xf.id}` : "No xfmr id on this board" },
+    {
+      cls: leakLive ? "bad" : leak ? "warn" : "done",
+      t: leak
+        ? leakLive
+          ? `Leak live on span · ${leak.label} · +${leak.leakW} W ΔP`
+          : `Leak span mapped · ${leak.label} (not now)`
+        : "No leak span on this pole pair",
+    },
+    { cls: darkN ? "bad" : "done", t: darkN ? `${darkN} meters dark from feeder/xfmr outage` : "No outage on these laterals" },
+    { cls: "done", t: `RF hops to USB GW ≈ ${hops} · ${LANDMARKS.usb?.label || "USB GW"}` },
+    { cls: "done", t: "SSR / AUTO disconnect is per-meter credit, not a board kill switch" },
+  ];
+  body.innerHTML = `
+    <div class="wl-ov-grid">
+      <div class="wl-ov-stat"><span>Board load</span><b>${Math.round(boardW)} W</b></div>
+      <div class="wl-ov-stat ${onN === houses.length ? "ok" : "warn"}"><span>Meters on</span><b>${onN} / ${houses.length}</b></div>
+    </div>
+    <p class="wl-ov-k">Cabinet ports</p>
+    <table class="wl-ports">
+      <thead><tr><th>#</th><th>Meter</th><th>φ</th><th>W</th><th>Credit</th><th>State</th></tr></thead>
+      <tbody>
+        ${rows
+          .map((row) => {
+            const st = row.o ? "OUT" : row.on ? "ON" : "OFF";
+            const cls = row.o ? "is-out" : row.on ? "" : "is-off";
+            return `<tr class="${cls}"><td>${row.port}</td><td>${esc(row.h.name)} <code>${esc(row.h.serial)}</code></td><td>${row.ph}</td><td>${Math.round(row.watts)}</td><td>${(row.r?.wallet ?? 0).toFixed(0)}</td><td>${st}</td></tr>`;
+          })
+          .join("")}
+      </tbody>
+    </table>
+    <p class="wl-ov-k">Install walk</p>
+    <ul class="wl-check">${check.map((c) => `<li class="${c.cls}">${esc(c.t)}</li>`).join("")}</ul>
+    <p class="wl-ov-note">Schematic cabinet card for workshop walk-through. Not a live ICD. Meters here are SparkMeter-class prepaid (no STS token decode).</p>
+  `;
+}
+
+function openEms(id, fly) {
+  const b = boardById[id] || BOARDS[0];
+  if (!b) return;
+  state.emsId = b.id;
+  if (state.role !== "customer") state.scope = { kind: "board", id: b.id };
+  fillEms();
+  if (fly) flyToXZ(b.x, b.z, 11);
+  writeQuery({ board: b.id });
+}
+
+function closeEms() {
+  state.emsId = null;
+  const card = document.getElementById("wl-ems-card");
+  if (card) card.hidden = true;
+  writeQuery({ board: "" });
+}
+
+function stepEms(dir) {
+  if (!BOARDS.length) return;
+  const i = Math.max(0, BOARDS.findIndex((b) => b.id === state.emsId));
+  const next = BOARDS[(i + dir + BOARDS.length) % BOARDS.length];
+  openEms(next.id, true);
+}
+
+function applyRole() {
+  document.documentElement.dataset.role = state.role;
+  const roleEl = document.getElementById("wl-role");
+  if (roleEl) roleEl.value = state.role;
+  if (state.role === "customer") {
+    if (!houseById[state.you]) state.you = HOUSES[0]?.id || "h0";
+    state.focus = state.you;
+    state.scope = { kind: "house", id: state.you };
+    closeEms();
+    const h = houseById[state.you];
+    if (h) flyToXZ(h.x, h.z, 13);
+    fillCustomer();
+  } else {
+    const card = document.getElementById("wl-cust-card");
+    if (card) card.hidden = true;
+    if (state.role === "tech" && !state.emsId) openEms(BOARDS[0]?.id, true);
+    else fillEms();
+  }
+  applyVisibility();
+  fillHouses();
+  writeQuery({ role: state.role, you: state.role === "customer" ? state.you : "" });
+}
+
+function fillRolePanels() {
+  if (state.role === "customer") fillCustomer();
+  if (state.emsId) fillEms();
+}
+
+function applyQuery() {
+  const q = new URLSearchParams(location.search);
+  const light = q.get("light");
+  if (light === "lamps" || light === "sun" || light === "fill") {
+    state.light = light;
+    const el = document.getElementById("wl-light");
+    if (el) el.value = light;
+  }
+  const role = q.get("role");
+  if (role === "tech" || role === "customer" || role === "ops") state.role = role;
+  const you = q.get("you");
+  if (you && houseById[you]) state.you = you;
+  const board = q.get("board");
+  if (board && boardById[board]) state.emsId = board;
+  const homesEl = document.getElementById("wl-homes");
+  if (homesEl) {
+    const v = sizeSelectValue();
+    if (![...homesEl.options].some((o) => o.value === v)) {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = `Size: ${TARGET_HOMES} homes`;
+      homesEl.appendChild(opt);
+    }
+    homesEl.value = v;
+  }
+  writeQuery({ homes: TARGET_HOMES, light: state.light, role: state.role });
+  const t = Number(q.get("t"));
+  return Number.isFinite(t) ? Math.max(0, Math.min(DAY_MIN, t)) : 0;
+}
+
 function bindUi() {
   document.getElementById("wl-play")?.addEventListener("click", () => togglePlay(1));
   document.getElementById("wl-rev")?.addEventListener("click", () => togglePlay(-1));
@@ -2622,6 +3162,42 @@ function bindUi() {
   document.getElementById("wl-sky")?.addEventListener("change", (e) => {
     state.sky = e.target.value === "bright" ? "bright" : "dark";
     placeSun(state.nowMin);
+  });
+  document.getElementById("wl-light")?.addEventListener("change", (e) => {
+    const v = e.target.value;
+    state.light = v === "lamps" || v === "sun" ? v : "fill";
+    placeSun(state.nowMin);
+    colorPowerLines();
+    writeQuery({ light: state.light });
+  });
+  document.getElementById("wl-homes")?.addEventListener("change", (e) => {
+    const n = Number(e.target.value);
+    if (!Number.isFinite(n) || n === TARGET_HOMES) return;
+    writeQuery({ homes: n, light: state.light, role: state.role, t: Math.round(state.nowMin) }, true);
+  });
+  document.getElementById("wl-role")?.addEventListener("change", (e) => {
+    const v = e.target.value;
+    state.role = v === "tech" || v === "customer" ? v : "ops";
+    applyRole();
+  });
+  document.getElementById("wl-ems-open")?.addEventListener("click", () => {
+    if (state.role === "customer") return;
+    const id = state.emsId || (state.scope?.kind === "board" ? state.scope.id : BOARDS[0]?.id);
+    openEms(id, true);
+  });
+  document.getElementById("wl-ems-close")?.addEventListener("click", () => closeEms());
+  document.getElementById("wl-ems-prev")?.addEventListener("click", () => stepEms(-1));
+  document.getElementById("wl-ems-next")?.addEventListener("click", () => stepEms(1));
+  document.getElementById("wl-you")?.addEventListener("change", (e) => {
+    const id = e.target.value;
+    if (!houseById[id]) return;
+    state.you = id;
+    state.focus = id;
+    state.scope = { kind: "house", id };
+    const h = houseById[id];
+    if (h) flyToXZ(h.x, h.z, 13);
+    fillCustomer();
+    writeQuery({ you: id, role: "customer" });
   });
   document.querySelectorAll("[data-hide]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -2739,6 +3315,7 @@ function fillStats() {
       ${statCard("dtm", STAT_ICO.dtm, "DTMs", DTMS.length, `${FEEDERS.length} feeders`)}
       ${statCard("dtm", STAT_ICO.xfer, "phase xfer", s.phaseXfers ?? 0, `${s.xfmrCapW} W xfmr`)}
       ${statCard("energy", STAT_ICO.bolt, "peak live", `${s.peakFeederW} W`, `${s.tariff} / kWh`)}
+      ${statCard("energy", STAT_ICO.bolt, "site PV", `${Math.round((s.pvNameplateW || 0) / 1000)} kW`, `peak ${Math.round((s.pvPeakW || 0) / 1000)} kW · ${s.pvKWh ?? 0} kWh day`)}
       ${statCard("ops", STAT_ICO.pulse, "heartbeat", `${s.heartbeatMin} min`, `${s.readings} readings`)}
     </div>
     <h3 class="stat-sec">Anomalies</h3>
@@ -2795,6 +3372,7 @@ function fillLog() {
 function listedHouses() {
   const q = state.houseQ.trim().toLowerCase();
   let list = HOUSES;
+  if (state.role === "tech" && state.scope?.kind === "board") list = scopeHouses();
   if (state.houseCluster !== "all") list = list.filter((h) => h.cluster === state.houseCluster);
   if (q) {
     list = list.filter(
@@ -2880,6 +3458,7 @@ function fillHouses(rebuild) {
   });
   drawStream();
   drawFsLoad();
+  fillRolePanels();
 }
 
 function hexCss(n) {

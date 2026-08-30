@@ -13,24 +13,81 @@
 <script src="../js/meter-embed.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
 body { font-family: var(--font); font-size: 15px; color: var(--text); background: var(--bg); line-height: 1.5; }
 a { color: var(--green); }
-.wrap { max-width: 1280px; margin: 0 auto; padding: 1.5rem 1.25rem 2rem; }
-.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.75rem; }
+.wrap {
+  max-width: 1280px; margin: 0 auto; padding: 0.5rem 1.25rem 1.5rem;
+  min-height: 100%; display: flex; flex-direction: column;
+}
+.back { font-size: 12px; color: var(--text-2); margin-bottom: 0.4rem; flex-shrink: 0; }
 .back a { text-decoration: none; }
-h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
-.sub { font-size: 13px; color: var(--text-2); margin-bottom: 0.65rem; }
-.callout { border-left: 3px solid var(--amber); background: var(--amber-50); padding: 0.65rem 0.85rem; border-radius: 0 8px 8px 0; margin-bottom: 0.85rem; font-size: 12px; line-height: 1.45; }
-.callout > strong:first-child { color: var(--amber); display: block; margin-bottom: 0.2rem; }
 .legend { display: flex; flex-wrap: wrap; gap: 0.65rem 1rem; font-size: 11px; color: var(--text-2); margin-bottom: 0.75rem; }
 .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
 .cap-bar {
   display: inline-block; width: 140px; height: 9px; border-radius: 4px; vertical-align: middle; margin-right: 6px;
   background: linear-gradient(90deg, #3b6d11 0%, #e6c84a 50%, #b42318 100%);
 }
-.stage { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem; align-items: stretch; }
-.wl-stage-col { position: relative; min-width: 0; height: 70vh; min-height: 480px; }
+#wl-theater {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - 2.25rem);
+}
+.stage {
+  display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem;
+  align-items: stretch; flex: 1 1 auto; min-height: 0;
+}
+.wl-stage-col { position: relative; min-width: 0; height: 100%; min-height: 0; }
 #wl-stage { position: relative; height: 100%; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #121214; }
+.wl-overlay {
+  position: absolute; z-index: 8; pointer-events: auto;
+  top: 8px; left: 8px; width: min(440px, calc(100% - 56px));
+  max-height: calc(100% - 16px); overflow: auto;
+  padding: 0.6rem 0.7rem 0.7rem;
+  border: 1px solid #3a3a3e; border-radius: 10px;
+  background: rgba(18, 18, 20, 0.92); color: #e8e6dc;
+  font-size: 12px; line-height: 1.4;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+}
+.wl-overlay[hidden] { display: none !important; }
+.wl-overlay h2 {
+  font-size: 13px; font-weight: 500; margin: 0; border: 0; padding: 0; color: #e8e6dc;
+}
+.wl-ov-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 0.5rem; margin-bottom: 0.45rem; }
+.wl-ov-head p { margin: 0.15rem 0 0; font-size: 11px; color: #9a9990; }
+.wl-ov-actions { display: flex; flex-wrap: wrap; gap: 0.3rem; flex-shrink: 0; }
+.wl-ov-actions button, .wl-overlay select {
+  font-family: inherit; font-size: 11px; padding: 0.2rem 0.5rem; border-radius: 999px;
+  border: 1px solid #4a4a4e; background: #1c1c20; color: #e8e6dc; cursor: pointer;
+}
+.wl-ov-k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; color: #9a9990; margin: 0.55rem 0 0.25rem; }
+.wl-ov-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.35rem; }
+.wl-ov-stat {
+  padding: 0.35rem 0.45rem; border-radius: 8px; background: #121214; border: 1px solid #2a2a2e;
+}
+.wl-ov-stat b { display: block; font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.wl-ov-stat span { display: block; font-size: 10px; color: #9a9990; }
+.wl-ov-stat.warn { border-color: #ba7517; }
+.wl-ov-stat.bad { border-color: #b42318; }
+.wl-ov-stat.ok { border-color: #3b6d11; }
+.wl-ports { width: 100%; border-collapse: collapse; font-size: 11px; }
+.wl-ports th, .wl-ports td { padding: 0.22rem 0.3rem; text-align: left; border-bottom: 1px solid #2a2a2e; }
+.wl-ports th { color: #9a9990; font-weight: 500; }
+.wl-ports tr.is-off td { color: #c45b5b; }
+.wl-ports tr.is-out td { color: #e6c84a; }
+.wl-check { list-style: none; margin: 0; padding: 0; }
+.wl-check li { padding: 0.2rem 0 0.2rem 1.15rem; position: relative; color: #c8c6bc; }
+.wl-check li::before { content: ""; position: absolute; left: 0; top: 0.45rem; width: 8px; height: 8px; border-radius: 2px; background: #3a3a38; }
+.wl-check li.done::before { background: #3b6d11; }
+.wl-check li.warn::before { background: #ba7517; }
+.wl-check li.bad::before { background: #b42318; }
+.wl-ov-note { font-size: 11px; color: #9a9990; margin: 0.4rem 0 0; }
+html[data-role="customer"] .side,
+html[data-role="customer"] .tbl-wrap,
+html[data-role="customer"] #wl-stream-panel,
+html[data-role="customer"] [data-ops] { display: none !important; }
+html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .circa-mark {
   position: absolute; left: 8px; bottom: 8px; z-index: 6;
   display: flex; align-items: center; gap: 0.4rem;
@@ -221,119 +278,25 @@ tr.k-sync td:nth-child(2) { color: var(--text-3); }
 tr.k-leak td:nth-child(2), tr.k-leak_clear td:nth-child(2) { color: #e85dff; }
 [data-hide].off { opacity: 0.4; text-decoration: line-through; }
 html.embed .back { display: none; }
-html.embed .wrap { padding: 0.75rem 1.15rem 1.25rem; max-width: none; }
-html.embed h1 { font-size: 18px; }
-html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
+html.embed .wrap { padding: 0.35rem 0.7rem 0.75rem; max-width: none; height: auto; min-height: 100%; }
+html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
 @media (max-width: 900px) {
   .stage { grid-template-columns: 1fr; }
-  .wl-stage-col { height: 55vh; }
+  .wl-stage-col { height: 65vh; min-height: 360px; }
+  #wl-theater { min-height: 0; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
   <p class="back"><a href="../index.html#village-metering/village-simulator">Village Metering</a> · Village Simulator</p>
-  <h1>Village Simulator</h1>
-  <p class="sub">Three.js spacetime stack. v2 (default): ground = now, worldlines rise, last 2 h stretched. v1: day stack stays put, now-plane climbs midnight→24:00. Green pad, brown yards, sun-cast shadows. Red knobs = still dark from a feeder/xfmr outage, every 5 min. Dark LV traces at trip (top) and restore (bottom). Hot red = FAULT / last breath. Default: anomaly events, worldlines off, readings off, payments off, mesh hops off, RF net off. PV is fixed-tilt (south). WASD trucks look-at. Hypothetical day, not live telemetry.</p>
-  <div class="callout">
-    <strong>Not live telemetry</strong>
-    Schematic mini-grid day using GroundBolt rules: 15 min heartbeat, tariff 200 / kWh (abstract units),
-    <code>POST /transaction/</code> then <code>set_balance</code>, then watts. <code>meter_config.state = AUTO</code>
-    → relay off when <code>credit_wallet &le; 0</code>. Four local outages (west spur, east pole xfmr, south lateral, market feeder overload) — rest of village stays live.
-    One DitroniX DTM (IPEM-class) per feeder: 3φ compare on the pole bars; imbalance can command a schematic phase-transfer.
-    Topology: ~10 homes / MeshEMS board, ~10 boards / feeder (~100 customers).
-    Leakage detection: MeshEMS ΔP localizes unmetered load to the feeder span between two boards.
-    Anomalies include PF &lt; 0.80 and capacity ≥ 80%. Allotment trip: 30 min ≥ 100% or 15 min ≥ 150% → <code>STATE_OFF</code>.
-    SM meters do not decode STS / OpenPAYGO tokens.
-    <span id="wl-fault-note"></span>
-  </div>
-  <div class="legend" data-legend="messages">
-    <span><i style="background:#c9a227"></i>pay / set_balance (kiosk · agent · phone · CIU)</span>
-    <span><i style="background:#2aa8b8"></i>reading (on)</span>
-    <span><i style="background:#3a3a38"></i>reading (off)</span>
-    <span><i style="background:#b42318"></i>disconnect</span>
-    <span><i style="background:#ba7517"></i>capacity 80% / 100%</span>
-    <span><i style="background:#3d8bfd"></i>PF &lt; 0.80</span>
-    <span><i style="background:#b42318"></i>overload trip</span>
-    <span><i style="background:#b42318;border-radius:50%"></i>outage knob (5 min still dark)</span>
-    <span><i style="background:#b42318"></i>dark LV slice at trip</span>
-    <span><i style="background:#3b6d11"></i>LV slice at restore</span>
-    <span><i style="background:#ff2d4a"></i>FAULT origin / tripped primary</span>
-    <span><i style="background:#175cd3"></i>configure_meter on</span>
-    <span><i style="background:#c45b8a"></i>low-balance SMS</span>
-    <span><i style="background:#8a8a82"></i>SymmetricDS</span>
-    <span><i style="background:#175cd3"></i>mesh path to USB / ops</span>
-    <span><i style="background:#c9a227"></i>repair dispatch</span>
-    <span><i style="background:#ba7517"></i>load shed</span>
-    <span><i style="background:#3b6d11"></i>feeder restore</span>
-    <span><i style="background:#ff4d1a"></i>last breath reached GB</span>
-    <span><i style="background:#ff9a40"></i>last breath died mid-mesh / channel</span>
-    <span id="wl-lv-lo"><i style="background:#3b6d11"></i>LV flow idle</span>
-    <span id="wl-lv-hi"><i style="background:#b42318"></i>LV flow at xfmr cap</span>
-    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
-    <span><i style="background:#2bb6a3"></i>DTM (DitroniX 3φ)</span>
-    <span><i style="background:#e6c84a"></i>phase A</span>
-    <span><i style="background:#3d8bfd"></i>phase B</span>
-    <span><i style="background:#9b4dca"></i>phase C</span>
-    <span><i style="background:#5c7cfa"></i>phase transfer</span>
-    <span><i style="background:#e85dff"></i>leakage · MeshEMS ΔP span</span>
-    <span><i style="background:#1a2740"></i>PV night / idle</span>
-    <span><i style="background:#40b8ff"></i>PV producing</span>
-    <span><i style="background:#2c4a3c"></i>BESS / home battery</span>
-    <span><i style="background:#9aa8b4"></i>village compass N E S W</span>
-  </div>
-  <div class="legend" data-legend="load" hidden>
-    <span><i style="background:#e6c84a"></i>lighting</span>
-    <span><i style="background:#c0392b"></i>heating</span>
-    <span><i style="background:#0f9b8e"></i>refrigeration</span>
-    <span><i style="background:#3d8bfd"></i>computer / internet</span>
-    <span><i style="background:#5b8def"></i>laundry</span>
-    <span><i style="background:#ba7517"></i>cooking</span>
-    <span><i style="background:#2b6cb0"></i>water pump</span>
-    <span><i style="background:#6a994e"></i>agriculture</span>
-    <span><i style="background:#9b4dca"></i>tools / weld</span>
-    <span><i style="background:#3a3a38"></i>standby / off</span>
-  </div>
-  <div class="legend" data-legend="osi" hidden>
-    <span><i style="background:#c4783a"></i>L1 Physical · feeder / xfmr / outage</span>
-    <span><i style="background:#e24b4b"></i>L2 Data link · RF channel / last-breath drop</span>
-    <span><i style="background:#f0a202"></i>L3 Network · mesh hops</span>
-    <span><i style="background:#e8e04a"></i>L4 Transport · last breath reached GB</span>
-    <span><i style="background:#3bb273"></i>L5 Session · SymmetricDS sync</span>
-    <span><i style="background:#3d8bfd"></i>L6 Presentation · SMS encode</span>
-    <span><i style="background:#9b4dca"></i>L7 Application · pay / AUTO / DTM xfer / heartbeat</span>
-  </div>
-  <div class="legend" data-legend="capacity" hidden>
-    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
-    <span>0% idle</span>
-    <span>50% mid</span>
-    <span>100% at limit</span>
-  </div>
-  <div class="legend" data-legend="asset" hidden>
-    <span class="cap-bar" title="true_power_inst / load_limit_w"></span>
-    <span>homes: 0% → 100% cap</span>
-    <span><i style="background:#5ee0a0"></i>home lateral → MeshEMS</span>
-    <span><i style="background:#ff6a2a"></i>MeshEMS board (~10 homes)</span>
-    <span><i style="background:#3d8bfd"></i>feeder</span>
-    <span><i style="background:#ffe566"></i>station</span>
-    <span><i style="background:#2ee6d0"></i>DTM (DitroniX 3φ)</span>
-    <span><i style="background:#d45aa0"></i>pole xfmr</span>
-    <span><i style="background:#ff3355"></i>circuit breaker</span>
-  </div>
-  <div class="legend" id="wl-line-legend">
-    <span class="cap-bar" title="true_power_inst / line or meter cap"></span>
-    <span id="wl-line-lo">0% idle</span>
-    <span id="wl-line-mid">50% mid</span>
-    <span id="wl-line-hi">100% at cap</span>
-    <span>power lines</span>
-  </div>
   <div id="wl-theater">
   <div class="controls">
     <span id="wl-clock">00:00</span>
     <button type="button" class="wl-skip" id="wl-play" title="Play" aria-label="Play">▶</button>
     <input id="wl-scrub" type="range" min="0" max="1440" value="0" />
     <button type="button" class="wl-skip" id="wl-rev" title="Play reverse" aria-label="Play reverse">◀</button>
-    <select id="wl-viz" aria-label="Time layout">
+    <select id="wl-viz" aria-label="Time layout" data-ops>
       <option value="v2" selected>v2 · worldlines rise</option>
       <option value="v1">v1 · rising now-plane</option>
     </select>
@@ -341,14 +304,19 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
       <option value="dark" selected>Sky: dark</option>
       <option value="bright">Sky: bright</option>
     </select>
-    <select id="wl-scheme" aria-label="Color scheme">
+    <select id="wl-light" aria-label="Village lighting">
+      <option value="fill" selected>Light: fill</option>
+      <option value="lamps">Light: lamps</option>
+      <option value="sun">Light: sun</option>
+    </select>
+    <select id="wl-scheme" aria-label="Color scheme" data-ops>
       <option value="messages">Color: message types</option>
       <option value="load">Color: load types</option>
       <option value="capacity">Color: capacity proximity</option>
       <option value="osi">Color: OSI stack</option>
       <option value="asset">Color: asset type</option>
     </select>
-    <select id="wl-linegrad" aria-label="Power line gradient">
+    <select id="wl-linegrad" aria-label="Power line gradient" data-ops>
       <option value="capacity" selected>Lines: capacity</option>
       <option value="pf">Lines: power factor</option>
     </select>
@@ -358,17 +326,27 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
       <option value="60">60× min/s</option>
       <option value="120">120× min/s</option>
     </select>
-    <button type="button" data-hide="pay" class="off">payments</button>
-    <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip">anomalies</button>
-    <button type="button" data-hide="leak" title="MeshEMS ΔP localizes leak to a feeder span between two boards">leakage</button>
-    <button type="button" data-hide="worldline" class="off">worldlines</button>
-    <button type="button" data-hide="reading" class="off">readings</button>
-    <button type="button" data-hide="disconnect">cutoffs</button>
+    <select id="wl-homes" aria-label="Village size" title="100 or 1000 home mock. Reloads. Size is ?homes= so other query changes keep it.">
+      <option value="100">Size: 100 homes</option>
+      <option value="1000" selected>Size: 1000 homes</option>
+    </select>
+    <select id="wl-role" aria-label="Viewer role">
+      <option value="ops" selected>View: operator</option>
+      <option value="tech">View: technician</option>
+      <option value="customer">View: customer</option>
+    </select>
+    <button type="button" id="wl-ems-open" title="Open pole MeshEMS cabinet card" data-ops>EMS cabinet</button>
+    <button type="button" data-hide="pay" class="off" data-ops>payments</button>
+    <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip" data-ops>anomalies</button>
+    <button type="button" data-hide="leak" title="MeshEMS ΔP localizes leak to a feeder span between two boards" data-ops>leakage</button>
+    <button type="button" data-hide="worldline" class="off" data-ops>worldlines</button>
+    <button type="button" data-hide="reading" class="off" data-ops>readings</button>
+    <button type="button" data-hide="disconnect" data-ops>cutoffs</button>
     <button type="button" data-hide="sms">SMS</button>
-    <button type="button" data-hide="sync">sync</button>
-    <button type="button" data-hide="mesh" class="off">mesh hops</button>
-    <button type="button" data-hide="phase_xfer">phase xfer</button>
-    <button type="button" data-hide="rf" class="off">RF net</button>
+    <button type="button" data-hide="sync" data-ops>sync</button>
+    <button type="button" data-hide="mesh" class="off" data-ops>mesh hops</button>
+    <button type="button" data-hide="phase_xfer" data-ops>phase xfer</button>
+    <button type="button" data-hide="rf" class="off" data-ops>RF net</button>
     <button type="button" id="wl-fs" title="Fullscreen (F)">Fullscreen</button>
   </div>
   <div class="stage">
@@ -383,6 +361,32 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
           </svg>
           <span class="circa-mark-txt"><b>Circaevum</b><span>graphics library</span></span>
         </a>
+        <aside id="wl-ems-card" class="wl-overlay" hidden>
+          <div class="wl-ov-head">
+            <div>
+              <h2 id="wl-ems-title">Pole EMS</h2>
+              <p id="wl-ems-sub">MeshEMS cabinet · ~10 meters</p>
+            </div>
+            <div class="wl-ov-actions">
+              <button type="button" id="wl-ems-prev">Prev pole</button>
+              <button type="button" id="wl-ems-next">Next pole</button>
+              <button type="button" id="wl-ems-close">Close</button>
+            </div>
+          </div>
+          <div id="wl-ems-body"></div>
+        </aside>
+        <aside id="wl-cust-card" class="wl-overlay" hidden>
+          <div class="wl-ov-head">
+            <div>
+              <h2>My connection</h2>
+              <p>Your meter and area status. Not a neighbor list.</p>
+            </div>
+            <label class="wl-ov-actions">
+              <select id="wl-you" aria-label="Who you are"></select>
+            </label>
+          </div>
+          <div id="wl-cust-body"></div>
+        </aside>
       </div>
       <label class="wl-win" id="wl-win" title="Height of stretch / scrunch boundary">
         <span id="wl-win-hi">past</span>
@@ -440,6 +444,6 @@ html.embed .wl-stage-col { height: 62vh; min-height: 420px; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260816dir"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260830zfight"></script>
 </body>
 </html>

@@ -644,13 +644,29 @@ function pickPvHouses() {
 
 export const PV_ROOF_IDS = pickPvHouses();
 
-export const PV_FARM = {
-  x: MAIN_GEN.x - 5.5,
-  z: MAIN_GEN.z - 4.2,
-  rows: TARGET_HOMES >= 200 ? 3 : 2,
-  cols: TARGET_HOMES >= 200 ? 7 : 3,
-  label: "PV farm",
-};
+/** 1000-home mock: 100 kW site array. Smaller mocks keep the same W/meter (10 kW at 100 homes). */
+function farmSpec(homes) {
+  const nameplateW = homes >= 700 ? 100000 : Math.max(4000, Math.round(100000 * (homes / 1000)));
+  const moduleW = 400;
+  const modules = Math.max(6, Math.round(nameplateW / moduleW));
+  const cols = nameplateW >= 80000 ? 20 : nameplateW >= 20000 ? 10 : 5;
+  const rows = Math.ceil(modules / cols);
+  const kw = nameplateW / 1000;
+  return {
+    x: MAIN_GEN.x - 8,
+    z: MAIN_GEN.z - 10,
+    rows,
+    cols,
+    modules,
+    pitchX: 1.55,
+    pitchZ: 1.15,
+    nameplateW,
+    moduleW,
+    label: Number.isInteger(kw) ? `${kw} kW PV` : `${kw.toFixed(1)} kW PV`,
+  };
+}
+
+export const PV_FARM = farmSpec(TARGET_HOMES);
 
 export const BESS = [
   { id: "bess-main", x: MAIN_GEN.x + 2.4, z: MAIN_GEN.z + 1.6, w: 2.1, h: 1.15, d: 1.2, label: "BESS" },

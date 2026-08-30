@@ -35,7 +35,7 @@ import {
   STATIONS,
   HOMES_PER_BOARD,
   LEAKS,
-} from "./village-worldline-layout.js?v=20260816leak";
+} from "./village-worldline-layout.js?v=20260830pv100";
 
 export {
   BESS,
@@ -135,6 +135,17 @@ export function pfFromMix(mix) {
 }
 
 export const XFMR_CAPACITY_W = 68000;
+
+/** Sun elevation 0–1, 06:00–18:00 sine. Same curve as the 3D sun bead. */
+export function sunElev(min) {
+  const t = min / 60 / 12 - 0.5;
+  if (t <= 0 || t >= 1) return 0;
+  return Math.sin(Math.PI * t);
+}
+
+export function pvFarmW(min) {
+  return Math.round((PV_FARM.nameplateW || 0) * sunElev(min));
+}
 
 export function civicW(min) {
   const h = min / 60;
@@ -527,6 +538,8 @@ export function simulateDay() {
   );
   let shed = false;
   let peakFeederW = 0;
+  let peakPvW = 0;
+  let pvWh = 0;
   let lastBreathArrivedN = 0;
   let lastBreathSilentN = 0;
   let payN = 0;
@@ -556,6 +569,9 @@ export function simulateDay() {
 
   for (let slot = 0; slot < SLOTS; slot++) {
     const min = slot * SLOT_MIN;
+    const pvW = pvFarmW(min);
+    if (pvW > peakPvW) peakPvW = pvW;
+    pvWh += pvW * (SLOT_MIN / 60);
 
     for (const h of Object.values(byId)) {
       for (const pay of h.payments) {
@@ -968,6 +984,9 @@ export function simulateDay() {
     heartbeatMin: SLOT_MIN,
     xfmrCapW: XFMR_CAPACITY_W,
     peakFeederW: Math.round(peakFeederW),
+    pvNameplateW: PV_FARM.nameplateW || 0,
+    pvPeakW: Math.round(peakPvW),
+    pvKWh: Math.round((pvWh / 1000) * 10) / 10,
     tripMin: OUTAGES[0]?.min ?? null,
     restoreMin: OUTAGES[OUTAGES.length - 1]?.restore ?? null,
     outages: outageLog,
