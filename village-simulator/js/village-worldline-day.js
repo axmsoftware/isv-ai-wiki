@@ -136,6 +136,12 @@ function lastBreathY(min, hopI = 0, hops = 1) {
   return stackHopWorldY(min, hopI, 1.45, hops);
 }
 const LINE_HANG = 1.15;
+/** Keep static ground decals off one another. Worldlines may still cross. */
+const Y_ROAD = 0.08;
+const Y_GRID = 0.16;
+const Y_NOW = 0.28;
+const Y_RF = 0.22;
+const Y_COMPASS = [0.09, 0.14, 0.2];
 const HOP_DY = 0.16;
 const KNOB_STEP = 5;
 function fitCompass() {
@@ -642,7 +648,7 @@ function boot() {
   scene.background = null;
   scene.fog = new THREE.Fog(COL.bg, 220, 780);
 
-  camera = new THREE.PerspectiveCamera(42, 1, 0.1, 2000);
+  camera = new THREE.PerspectiveCamera(42, 1, 0.4, 1200);
   {
     const home = camHome(true);
     camera.position.set(...home.pos);
@@ -784,7 +790,7 @@ function syncTimeLayout() {
   clipPlanes[1].constant = v2 ? PAST_TOP + 1.25 : v1Top() + 4;
   if (winBand) winBand.position.y = boundH;
   if (sprWin) sprWin.position.y = boundH + 0.4;
-  if (nowPlane) nowPlane.position.y = v2 ? 0.04 : yWorldAt(state.nowMin, state.nowMin);
+  if (nowPlane) nowPlane.position.y = v2 ? Y_NOW : yWorldAt(state.nowMin, state.nowMin);
   if (nowMark) nowMark.position.y = v2 ? 1.35 : yWorldAt(state.nowMin, state.nowMin) + 1.2;
   const y0 = v2 ? -SCRUNCH_H : 0;
   const y1 = v2 ? PAST_TOP : v1Top();
@@ -864,7 +870,7 @@ function pitchedRoof(x, y, z, sx, sz, color) {
 }
 
 function buildGenPad(x, z) {
-  box(1.25, 0.16, 1.05, 0x3a3a40, x, 0.09, z);
+  box(1.25, 0.16, 1.05, 0x3a3a40, x, 0.14, z);
   box(0.95, 0.52, 0.68, 0x7a7a82, x - 0.12, 0.46, z);
   addMesh(new THREE.CylinderGeometry(0.2, 0.22, 0.62, 12), 0x4a4a52, x + 0.48, 0.46, z);
   box(0.07, 0.42, 0.07, 0x2a2a30, x - 0.22, 0.92, z);
@@ -879,7 +885,7 @@ function buildMainXfmr(x, z) {
     return m;
   };
   const parts = [
-    keep(box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.08, z), 0x3a3a38),
+    keep(box(0.7, 0.12, 0.7, 0x3a3a38, x, 0.13, z), 0x3a3a38),
     keep(addMesh(new THREE.CylinderGeometry(0.36, 0.4, 1.12, 14), 0x5c5c4a, x, 0.68, z), 0x5c5c4a),
   ];
   for (const dx of [-0.16, 0, 0.16]) {
@@ -908,7 +914,7 @@ function buildClinic(x, z) {
   box(2.42, 0.1, 1.76, 0x3b6d11, x, 1.12, z);
   pitchedRoof(x, 1.42, z, 2.05, 1.55, 0x6a3a32);
   box(0.16, 0.52, 0.05, 0xb42318, x, 0.72, z + 0.88);
-  box(0.52, 0.16, 0.05, 0xb42318, x, 0.72, z + 0.88);
+  box(0.52, 0.16, 0.05, 0xb42318, x, 0.72, z + 0.91);
   box(0.42, 0.72, 0.08, 0x2a2a28, x + 0.7, 0.4, z + 0.88);
 }
 
@@ -943,7 +949,7 @@ function buildCloudMark(x, z) {
 }
 
 function buildBessCan(b) {
-  box(b.w, b.h, b.d, 0x2c4a3c, b.x, b.h / 2 + 0.02, b.z);
+  box(b.w, b.h, b.d, 0x2c4a3c, b.x, b.h / 2 + 0.06, b.z);
   box(b.w * 0.94, 0.05, b.d * 0.94, 0x1e3328, b.x, b.h + 0.04, b.z);
   box(0.08, b.h * 0.55, 0.06, 0xc9a227, b.x + b.w * 0.38, b.h * 0.55, b.z + b.d * 0.52);
   box(0.08, b.h * 0.55, 0.06, 0xc9a227, b.x - b.w * 0.38, b.h * 0.55, b.z + b.d * 0.52);
@@ -1102,27 +1108,30 @@ function buildCompass() {
   torus.castShadow = true;
   torus.receiveShadow = true;
   scene.add(torus);
-  const pad = new THREE.Mesh(
-    new THREE.RingGeometry(r - 3.4, r + 3.4, 96),
-    new THREE.MeshBasicMaterial({ color: 0xf4f7fb, side: THREE.DoubleSide }),
-  );
-  pad.rotation.x = -Math.PI / 2;
-  pad.position.set(cx, 0.06, cz);
-  scene.add(pad);
-  const rimInner = new THREE.Mesh(
-    new THREE.RingGeometry(r - 3.9, r - 3.4, 96),
-    new THREE.MeshBasicMaterial({ color: 0x1c2228, side: THREE.DoubleSide }),
-  );
-  rimInner.rotation.x = -Math.PI / 2;
-  rimInner.position.set(cx, 0.07, cz);
-  scene.add(rimInner);
-  const dayArc = new THREE.Mesh(
-    new THREE.RingGeometry(r + 3.4, r + 6.2, 64, 1, Math.PI, Math.PI),
-    new THREE.MeshBasicMaterial({ color: 0xe8b060, side: THREE.DoubleSide }),
-  );
-  dayArc.rotation.x = -Math.PI / 2;
-  dayArc.position.set(cx, 0.08, cz);
-  scene.add(dayArc);
+  const ringDecal = (inner, outer, y, color, segs = 96, thetaLen) => {
+    const geo =
+      thetaLen != null
+        ? new THREE.RingGeometry(inner, outer, segs, 1, Math.PI, thetaLen)
+        : new THREE.RingGeometry(inner, outer, segs);
+    const m = new THREE.Mesh(
+      geo,
+      new THREE.MeshBasicMaterial({
+        color,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -4,
+      }),
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.set(cx, y, cz);
+    scene.add(m);
+    return m;
+  };
+  ringDecal(r - 3.4, r + 3.4, Y_COMPASS[0], 0xf4f7fb);
+  ringDecal(r - 3.9, r - 3.4, Y_COMPASS[1], 0x1c2228);
+  ringDecal(r + 3.4, r + 6.2, Y_COMPASS[2], 0xe8b060, 64, Math.PI);
 
   const tickMat = new THREE.MeshLambertMaterial({ color: 0xf4f7fa });
   for (let i = 0; i < 24; i++) {
@@ -1325,7 +1334,14 @@ function bakeGroundTexture() {
 function addPolarGrid(y, opacity, intoTime, min) {
   const g = new THREE.LineSegments(
     polarGridGeometry(),
-    new THREE.LineBasicMaterial({ color: 0x2c2c32, transparent: true, opacity }),
+    new THREE.LineBasicMaterial({
+      color: 0x2c2c32,
+      transparent: true,
+      opacity,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
+    }),
   );
   g.position.y = y;
   if (intoTime) {
@@ -1350,7 +1366,7 @@ function buildVillage() {
   ground.receiveShadow = true;
   scene.add(ground);
   groundMesh = ground;
-  addPolarGrid(0.03, 0.28, false);
+  addPolarGrid(Y_GRID, 0.28, false);
 
   const west = CLUSTERS.find((c) => c.id === "west");
   const marketC = CLUSTERS.find((c) => c.id === "market");
@@ -1369,17 +1385,18 @@ function buildVillage() {
     [[LANDMARKS.xfmr.x, LANDMARKS.xfmr.z], [west.x, west.z]],
     [[marketC.x, marketC.z], [south.x, south.z]],
   ];
-  for (const path of tracks) {
+  tracks.forEach((path, ti) => {
     for (let i = 0; i < path.length - 1; i++) {
       const [ax, az] = path[i];
       const [bx, bz] = path[i + 1];
       const dx = bx - ax;
       const dz = bz - az;
       const len = Math.hypot(dx, dz);
-      const strip = box(0.95, 0.035, len, 0x2c2c32, (ax + bx) / 2, 0.03, (az + bz) / 2);
+      const y = Y_ROAD + ti * 0.02 + i * 0.008;
+      const strip = box(0.95, 0.07, len, 0x2c2c32, (ax + bx) / 2, y, (az + bz) / 2);
       strip.rotation.y = Math.atan2(dx, dz);
     }
-  }
+  });
 
   for (const c of CLUSTERS) {
     const spr = timeSprite(c.label);
@@ -1475,7 +1492,7 @@ function buildVillage() {
     const y = yAt(min);
     const hh = Math.floor(min / 60);
     const mm = min % 60;
-    if (mm === 0 && hh % 2 === 0) addPolarGrid(y, 0.22, true, min);
+    if (mm === 0 && hh % 2 === 0 && min > 0) addPolarGrid(y, 0.22, true, min);
     const hour = mm === 0;
     const half = mm === 30;
     const label = `${String(hh).padStart(2, "0")}:${String(mm).padStart(2, "0")}`;
@@ -2036,7 +2053,7 @@ function buildMeshFloor() {
     const b = nodeXZ(to);
     const ca = from === "usb" ? "usb" : houseById[from]?.cluster;
     const cb = to === "usb" ? "usb" : houseById[to]?.cluster;
-    const pair = [new THREE.Vector3(a.x, 0.11, a.z), new THREE.Vector3(b.x, 0.11, b.z)];
+    const pair = [new THREE.Vector3(a.x, Y_RF, a.z), new THREE.Vector3(b.x, Y_RF, b.z)];
     if (ca !== cb) choke.push(...pair);
     else same.push(...pair);
   }
@@ -2118,28 +2135,34 @@ function buildLastBreaths() {
 function buildNowPlane() {
   const { x: cx, z: cz, r } = COMPASS;
   nowPlane = new THREE.Mesh(
-    new THREE.CircleGeometry(r, 64),
+    new THREE.RingGeometry(Math.max(2, r - 1.2), r + 0.55, 72),
     new THREE.MeshBasicMaterial({
       color: COL.reading,
       transparent: true,
-      opacity: 0.07,
+      opacity: 0.28,
       side: THREE.DoubleSide,
       depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1,
+      polygonOffsetUnits: -2,
     }),
   );
   nowPlane.rotation.x = -Math.PI / 2;
-  nowPlane.position.set(cx, 0.04, cz);
+  nowPlane.position.set(cx, Y_NOW, cz);
   scene.add(nowPlane);
 
   const band = (y, opacity) => {
     const p = new THREE.Mesh(
-      new THREE.CircleGeometry(r, 48),
+      new THREE.RingGeometry(Math.max(2, r - 1.2), r + 0.45, 48),
       new THREE.MeshBasicMaterial({
         color: 0x2a3040,
         transparent: true,
         opacity,
         side: THREE.DoubleSide,
         depthWrite: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -2,
       }),
     );
     p.rotation.x = -Math.PI / 2;
@@ -2510,7 +2533,7 @@ function updateLampWindows(last) {
     const p = hutPose[i];
     const r = last[HOUSES[i].id];
     const on = !!(r?.on && !r?.feederOut);
-    const face = 0.48 * p.s;
+    const face = 0.58 * p.s;
     dummy.position.set(
       p.x + Math.sin(p.yaw) * face,
       p.bh * 0.52,
@@ -2632,7 +2655,7 @@ function setNow(min) {
   if (timeGroup) timeGroup.position.y = isV2() ? yAt(state.nowMin) : 0;
   timeUniforms.uNow.value = state.nowMin;
   placeSun(state.nowMin);
-  if (nowPlane) nowPlane.position.y = isV2() ? 0.04 : yWorldAt(state.nowMin, state.nowMin);
+  if (nowPlane) nowPlane.position.y = isV2() ? Y_NOW : yWorldAt(state.nowMin, state.nowMin);
   if (nowMark) nowMark.position.y = isV2() ? 1.35 : yWorldAt(state.nowMin, state.nowMin) + 1.2;
   restackTimeStack();
   restackLastBreath();
