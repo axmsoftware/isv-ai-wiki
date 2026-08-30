@@ -2547,10 +2547,15 @@ function bindMeterStudyFrameGuard(frame) {
     try {
       const doc = frame.contentDocument;
       if (!doc) return;
-      const path = doc.location.pathname || '';
-      const isWikiShell = /index\.html$/.test(path) || path.endsWith('/');
-      if (isWikiShell && METER_BENCHMARK_PAGES[activeMeterPageId]) {
-        frame.src = METER_BENCHMARK_PAGES[activeMeterPageId].src;
+      // Only bounce if the iframe loaded the wiki shell itself.
+      // Do not match path /index.html$ — that also hits village-simulator/index.html
+      // and reload-loops the sim (white flash, CSP noise).
+      const nestedWiki = !!doc.getElementById('meter-study-frame');
+      const page = METER_BENCHMARK_PAGES[activeMeterPageId];
+      if (nestedWiki && page) {
+        const next = page.src;
+        const here = doc.location.pathname + doc.location.search;
+        if (here.indexOf(next.split('?')[0]) === -1) frame.src = next;
       }
       if (window.ISVTheme) ISVTheme.syncFrame(frame);
     } catch (e) { /* cross-origin */ }
