@@ -242,13 +242,11 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .feeder-cell {
   aspect-ratio: 1; min-width: 0; min-height: 16px; padding: 0;
   border-radius: 3px; border: 1px solid #2a2a2e; cursor: pointer;
-  background: #2a2a2e;
+  background: #3b6d11;
 }
-.feeder-cell.on { background: #2bb6a3; border-color: #1e8f80; }
-.feeder-cell.off { background: #8a3a38; border-color: #b42318; }
-.feeder-cell.out { background: #c9a227; border-color: #ba7517; }
+.feeder-cell.out { box-shadow: inset 0 0 0 1px #ba7517; }
 .feeder-cell.match { box-shadow: 0 0 0 1px #e8e6dc; }
-.feeder-cell.focus { outline: 2px solid #3d8bfd; outline-offset: 0; z-index: 1; }
+.feeder-cell.focus { outline: 2px solid #e6c84a; outline-offset: 0; z-index: 1; }
 .feeder-cell:hover { filter: brightness(1.12); }
 .feeder-clear {
   font-family: inherit; font-size: 11px; padding: 0.2rem 0.5rem; margin-top: 0.4rem;
@@ -487,6 +485,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260831feeder2"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260831feeder3"></script>
 </body>
 </html>

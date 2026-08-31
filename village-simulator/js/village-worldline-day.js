@@ -2318,9 +2318,9 @@ function feederBufWidth(kind) {
 function buildFeederBuffers() {
   feederBufById = {};
   const bufMat = new THREE.MeshBasicMaterial({
-    color: ASSET.feeder,
+    color: 0xffffff,
     transparent: true,
-    opacity: 0.32,
+    opacity: 0.42,
     side: THREE.DoubleSide,
     depthWrite: false,
     polygonOffset: true,
@@ -2364,6 +2364,8 @@ function buildFeederBuffers() {
     if (segs.length) {
       const ribbon = new THREE.InstancedMesh(barGeo, bufMat.clone(), segs.length);
       ribbon.userData.scope = { kind: "feeder", id: f.id };
+      ribbon.userData.segs = segs;
+      const idle = capacityColor(0);
       segs.forEach((s, i) => {
         const dx = s.bx - s.ax;
         const dz = s.bz - s.az;
@@ -2374,6 +2376,7 @@ function buildFeederBuffers() {
         dummy.scale.set(w, 0.045, len + w * 0.28);
         dummy.updateMatrix();
         ribbon.setMatrixAt(i, dummy.matrix);
+        ribbon.setColorAt(i, idle);
       });
       ribbon.frustumCulled = false;
       g.add(ribbon);
@@ -2397,6 +2400,7 @@ function buildFeederBuffers() {
         dummy.scale.set(j.r, j.r, 1);
         dummy.updateMatrix();
         caps.setMatrixAt(i, dummy.matrix);
+        caps.setColorAt(i, idle);
       });
       caps.count = joints.length;
       caps.frustumCulled = false;
@@ -2828,8 +2832,45 @@ function colorPowerLines() {
     powerLineMesh.setColorAt(i, c);
   });
   if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
+  colorFeederBuffers(last, byFeeder, byXfmr);
   colorHouses(last);
   colorHardware({ last, byFeeder, byXfmr });
+}
+
+function colorFeederBuffers(last, byFeeder, byXfmr) {
+  const fid = activeFeederId();
+  if (!fid) return;
+  const g = feederBufById[fid];
+  if (!g) return;
+  const ribbon = g.children.find((m) => m.userData.segs);
+  const caps = g.children.find((m) => m.geometry?.type === "CircleGeometry");
+  if (ribbon?.userData.segs && ribbon.instanceColor) {
+    ribbon.userData.segs.forEach((s, i) => {
+      const hit = outageCovers(s, state.nowMin);
+      let p = 0;
+      let cap = s.capW || XFMR_CAPACITY_W;
+      if (s.houseId) {
+        const r = last[s.houseId];
+        if (r && r.on && !r.feederOut) p = r.powerW;
+        cap = Math.max(1, houseById[s.houseId]?.loadLimitW || cap);
+      } else if (s.xfmrId) {
+        p = byXfmr[s.xfmrId]?.p || 0;
+      } else if (s.feederId) {
+        p = byFeeder[s.feederId]?.p || 0;
+      }
+      const c = hit ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, p / Math.max(1, cap)));
+      ribbon.setColorAt(i, c);
+    });
+    ribbon.instanceColor.needsUpdate = true;
+  }
+  if (caps?.instanceColor) {
+    const pq = byFeeder[fid];
+    const trunk = lvSegMeta.find((s) => s.feederId === fid && s.kind === "trunk");
+    const t = Math.min(1, (pq?.p || 0) / Math.max(1, trunk?.capW || 8000));
+    const c = capacityColor(t);
+    for (let i = 0; i < caps.count; i++) caps.setColorAt(i, c);
+    caps.instanceColor.needsUpdate = true;
+  }
 }
 
 function applyLineLegend() {
@@ -3889,7 +3930,19 @@ function fillFeederGrid() {
     }
   }
   grid.querySelectorAll(".feeder-row").forEach((row) => {
-    row.classList.toggle("is-on", row.getAttribute("data-board") === state.scopeBoard);
+    const bid = row.getAttribute("data-board");
+    row.classList.toggle("is-on", bid === state.scopeBoard);
+    const b = boardById[bid];
+    let bp = 0;
+    let bcap = 0;
+    for (const hid of b?.houseIds || []) {
+      const h = houseById[hid];
+      const r = readingAt(hid, state.nowMin);
+      if (r && r.on && !r.feederOut) bp += r.powerW || 0;
+      bcap += h?.loadLimitW || 220;
+    }
+    const lab = row.querySelector(".feeder-row-lab");
+    if (lab) lab.style.borderColor = `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
   });
   grid.querySelectorAll("button.feeder-cell[data-h]").forEach((btn) => {
     const id = btn.getAttribute("data-h");
@@ -3897,10 +3950,15 @@ function fillFeederGrid() {
     const r = readingAt(id, state.nowMin);
     const o = h ? houseOutage(h) : null;
     const on = r ? r.on && !r.feederOut : false;
-    btn.classList.toggle("on", on && !o);
-    btn.classList.toggle("off", !on && !o);
+    const watts = on ? r.powerW || 0 : 0;
+    const cap = r?.capacity || (on && h?.loadLimitW ? watts / h.loadLimitW : 0);
     btn.classList.toggle("out", !!o);
     btn.classList.toggle("focus", state.focus === id);
+    const c = o ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, cap));
+    const hex = `#${c.getHexString()}`;
+    btn.style.background = hex;
+    btn.style.borderColor = hex;
+    btn.title = `${h?.name || id} · ${h?.serial || ""} · ${o ? "OUTAGE" : on ? `${Math.round(watts)} W · ${Math.round(cap * 100)}%` : "OFF · 0 W"}`;
     const match =
       !!q &&
       !!h &&
