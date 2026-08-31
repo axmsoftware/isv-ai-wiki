@@ -28,6 +28,13 @@ a { color: var(--green); }
   display: inline-block; width: 140px; height: 9px; border-radius: 4px; vertical-align: middle; margin-right: 6px;
   background: linear-gradient(90deg, #3b6d11 0%, #e6c84a 50%, #b42318 100%);
 }
+.cap-bar.is-harm {
+  background: linear-gradient(90deg, #1a8f7a 0%, #9b4dca 50%, #ff2d6a 100%);
+}
+.line-leg {
+  display: inline-flex; align-items: center; gap: 0.35rem; flex-wrap: wrap;
+  font-size: 10px; color: var(--text-2);
+}
 #wl-theater {
   flex: 1 1 auto;
   display: flex;
@@ -379,7 +386,14 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
     <select id="wl-linegrad" aria-label="Power line gradient" data-ops>
       <option value="capacity" selected>Lines: capacity</option>
       <option value="pf">Lines: power factor</option>
+      <option value="harmonics">Lines: harmonics (THD)</option>
     </select>
+    <span id="wl-line-legend" class="line-leg" title="Line / feeder-grid color ramp">
+      <i class="cap-bar"></i>
+      <span id="wl-line-lo">0% idle</span>
+      <span id="wl-line-mid">50% mid</span>
+      <span id="wl-line-hi">100% at cap</span>
+    </span>
     <select id="wl-speed" aria-label="Playback speed">
       <option value="15">15× min/s</option>
       <option value="30" selected>30× min/s</option>
@@ -511,6 +525,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260831leak2"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260831thd"></script>
 </body>
 </html>

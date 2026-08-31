@@ -37,7 +37,9 @@ import {
   HOMES_PER_BOARD,
   LEAKS,
   CIVIC_PF,
+  CIVIC_THD,
   PF_POOR,
+  THD_HI,
   civicW,
   sunElev,
   pvFarmW,
@@ -47,7 +49,7 @@ import {
   outageHit,
   rfEdges,
   simulateDay,
-} from "./village-worldline-sim.js?v=20260830pv100";
+} from "./village-worldline-sim.js?v=20260831thd";
 
 const COL = {
   site: 0x3b6d11,
@@ -192,12 +194,67 @@ const clipPlanes = [
 const CAP_LO = new THREE.Color(0x3b6d11);
 const CAP_MID = new THREE.Color(0xe6c84a);
 const CAP_HI = new THREE.Color(0xb42318);
+const HAR_LO = new THREE.Color(0x1a8f7a);
+const HAR_MID = new THREE.Color(0x9b4dca);
+const HAR_HI = new THREE.Color(0xff2d6a);
 
 function capacityColor(t) {
   const c = new THREE.Color();
   const x = Math.max(0, Math.min(1, t));
   if (x < 0.5) return c.lerpColors(CAP_LO, CAP_MID, x / 0.5);
   return c.lerpColors(CAP_MID, CAP_HI, (x - 0.5) / 0.5);
+}
+
+function thdColor(pct) {
+  const c = new THREE.Color();
+  const x = Math.max(0, Math.min(1, (pct || 0) / THD_HI));
+  if (x < 0.5) return c.lerpColors(HAR_LO, HAR_MID, x / 0.5);
+  return c.lerpColors(HAR_MID, HAR_HI, (x - 0.5) / 0.5);
+}
+
+function parseLineGrad(v) {
+  if (v === "pf" || v === "harmonics") return v;
+  return "capacity";
+}
+
+function readingMetricColor(r) {
+  if (!r || !r.on || r.feederOut) {
+    if (state.lineGrad === "harmonics") return thdColor(0);
+    if (state.lineGrad === "pf") return pfColor(1);
+    return capacityColor(0);
+  }
+  if (state.lineGrad === "pf") return pfColor(r.pf ?? 1);
+  if (state.lineGrad === "harmonics") return thdColor(r.thd || 0);
+  return capacityColor(r.capacity || 0);
+}
+
+function flowMetricColor(p, q, cap, thd) {
+  if (state.lineGrad === "pf") return pfColor(p <= 0 ? 1 : p / Math.hypot(p, q || 0));
+  if (state.lineGrad === "harmonics") return thdColor(thd || 0);
+  return capacityColor(Math.min(1, (p || 0) / Math.max(1, cap || 1)));
+}
+
+function aggThd(pq) {
+  if (!pq || !(pq.p > 0)) return 0;
+  return (pq.thdP || 0) / pq.p;
+}
+
+function houseIdsMetricColor(ids, last) {
+  let p = 0;
+  let q = 0;
+  let cap = 0;
+  let thdP = 0;
+  for (const hid of ids || []) {
+    const h = houseById[hid];
+    const r = last ? last[hid] : readingAt(hid, state.nowMin);
+    cap += h?.loadLimitW || 220;
+    if (r && r.on && !r.feederOut) {
+      p += r.powerW || 0;
+      q += r.varQ || 0;
+      thdP += (r.thd || 0) * (r.powerW || 0);
+    }
+  }
+  return flowMetricColor(p, q, Math.max(1, cap), p > 0 ? thdP / p : 0);
 }
 
 /** Lambert + instanceColor as night glow. `uGlow` scales with lighting mode. */
@@ -2645,10 +2702,11 @@ function updateDtmBars() {
   }
 }
 
-function addPQ(map, id, p, q) {
-  const cur = map[id] || (map[id] = { p: 0, q: 0 });
+function addPQ(map, id, p, q, thd) {
+  const cur = map[id] || (map[id] = { p: 0, q: 0, thdP: 0 });
   cur.p += p;
   cur.q += q;
+  cur.thdP += (thd || 0) * p;
 }
 
 function loadsAt(min) {
@@ -2665,8 +2723,8 @@ function loadsAt(min) {
     if (r?.feederOut) out = true;
     if (r && r.on && !r.feederOut) {
       L[h.cluster] += r.powerW;
-      addPQ(byFeeder, h.feederId, r.powerW, r.varQ || 0);
-      addPQ(byXfmr, h.xfmrId, r.powerW, r.varQ || 0);
+      addPQ(byFeeder, h.feederId, r.powerW, r.varQ || 0, r.thd || 0);
+      addPQ(byXfmr, h.xfmrId, r.powerW, r.varQ || 0, r.thd || 0);
     }
   }
   return { L, last, out, byFeeder, byXfmr };
@@ -2769,15 +2827,7 @@ function colorHardware(loads) {
       if (rank <= 0) {
         c = new THREE.Color(asset ? ASSET.board : 0xff6a2a);
       } else {
-        let p = 0;
-        let cap = 0;
-        for (const hid of b.houseIds || []) {
-          const h = houseById[hid];
-          const r = last[hid];
-          if (r && r.on && !r.feederOut) p += r.powerW;
-          cap += h?.loadLimitW || 220;
-        }
-        c = capacityColor(Math.min(1, p / Math.max(1, cap)));
+        c = houseIdsMetricColor(b.houseIds, last);
         const leakHit = LEAKS.find(
           (lk) => lk.feederId === fid && (lk.fromBoardId === b.id || lk.toBoardId === b.id),
         );
@@ -2814,7 +2864,7 @@ function colorHardware(loads) {
         c = new THREE.Color(asset ? ASSET.xfmr : 0xc9a227).multiplyScalar(0.28);
       } else {
         const pq = byXfmr[t.id];
-        c = capacityColor(Math.min(1, (pq?.p || 0) / Math.max(1, t.capW || 1200)));
+        c = flowMetricColor(pq?.p || 0, pq?.q || 0, t.capW || 1200, aggThd(pq));
       }
       xfmrMesh.setColorAt(i, c);
     });
@@ -2830,7 +2880,8 @@ function colorHardware(loads) {
   for (const p of dtmParts) {
     const onThis = fid && p.body.userData.scope?.id === fid;
     if (fid && onThis) {
-      const c = capacityColor(Math.min(1, dtmLoad / Math.max(1, dtmCap)));
+      const pq = byFeeder[fid];
+      const c = flowMetricColor(dtmLoad, pq?.q || 0, dtmCap, aggThd(pq));
       p.body.material.color.copy(c).multiplyScalar(0.45);
       p.lid.material.color.copy(c);
     } else {
@@ -2934,19 +2985,15 @@ function colorHouses(last) {
   const src = last || loadsAt(state.nowMin).last;
   const red = new THREE.Color(COL.outage);
   const roof = new THREE.Color();
-  const asset = state.scheme === "asset";
   const lamps = state.light === "lamps";
   const fid = activeFeederId();
-  const loadGrid = !!fid;
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
     const out = !!(r?.feederOut || outageHit(h, state.nowMin));
     let c;
     if (out) c = red.clone();
-    else if (loadGrid) c = capacityColor(r?.capacity || 0);
-    else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
-    else c = capacityColor(r?.capacity || 0);
+    else c = readingMetricColor(r);
     if (lamps && !out) {
       const on = !!(r?.on && !r?.feederOut);
       if (on) c = c.clone().lerp(lampWarm, 0.28);
@@ -2985,44 +3032,49 @@ function colorPowerLines() {
   const { last, byFeeder, byXfmr } = loadsAt(state.nowMin);
   const civic = civicW(state.nowMin);
   const civicQ = civic * Math.tan(Math.acos(CIVIC_PF));
-  const usePf = state.lineGrad === "pf";
   const asset = state.scheme === "asset";
   const fid = activeFeederId();
-  const loadGrid = !!fid;
   lvSegMeta.forEach((s, i) => {
     const hit = outageCovers(s, state.nowMin);
     let p = 0;
     let q = 0;
+    let thd = 0;
     let cap = s.capW || XFMR_CAPACITY_W;
     if (s.houseId) {
       const r = last[s.houseId];
       if (r && r.on && !r.feederOut) {
         p = r.powerW;
         q = r.varQ || 0;
+        thd = r.thd || 0;
       }
       cap = Math.max(1, houseById[s.houseId].loadLimitW);
     } else if (s.xfmrId) {
       const pq = byXfmr[s.xfmrId];
       p = pq?.p || 0;
       q = pq?.q || 0;
+      thd = aggThd(pq);
     } else if (s.feederId) {
       const pq = byFeeder[s.feederId];
       p = pq?.p || 0;
       q = pq?.q || 0;
+      thd = aggThd(pq);
     } else {
+      let thdP = 0;
       for (const pq of Object.values(byFeeder)) {
         p += pq.p;
         q += pq.q;
+        thdP += pq.thdP || 0;
       }
       p += civic;
       q += civicQ;
+      thdP += civic * CIVIC_THD;
+      thd = p > 0 ? thdP / p : 0;
       cap = XFMR_CAPACITY_W;
     }
     let c;
-    if (!loadGrid && asset) c = new THREE.Color(ASSET[assetLineKind(s)]);
+    if (!fid && asset) c = new THREE.Color(ASSET[assetLineKind(s)]);
     else if (hit) c = new THREE.Color(COL.outage);
-    else if (!loadGrid && usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
-    else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
+    else c = flowMetricColor(p, q, cap, thd);
     if (state.role !== "customer" && fid) {
       if (s.houseId) tintSelectRank(c, houseSelectRank(houseById[s.houseId]));
       else if (s.feederId !== fid) c.multiplyScalar(0.12);
@@ -3055,16 +3107,28 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
       const hit = outageCovers(s, state.nowMin);
       let p = 0;
       let cap = s.capW || XFMR_CAPACITY_W;
+      let q = 0;
+      let thd = 0;
       if (s.houseId) {
         const r = last[s.houseId];
-        if (r && r.on && !r.feederOut) p = r.powerW;
+        if (r && r.on && !r.feederOut) {
+          p = r.powerW;
+          q = r.varQ || 0;
+          thd = r.thd || 0;
+        }
         cap = Math.max(1, houseById[s.houseId]?.loadLimitW || cap);
       } else if (s.xfmrId) {
-        p = byXfmr[s.xfmrId]?.p || 0;
+        const pq = byXfmr[s.xfmrId];
+        p = pq?.p || 0;
+        q = pq?.q || 0;
+        thd = aggThd(pq);
       } else if (s.feederId) {
-        p = byFeeder[s.feederId]?.p || 0;
+        const pq = byFeeder[s.feederId];
+        p = pq?.p || 0;
+        q = pq?.q || 0;
+        thd = aggThd(pq);
       }
-      const c = hit ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, p / Math.max(1, cap)));
+      const c = hit ? new THREE.Color(COL.outage) : flowMetricColor(p, q, cap, thd);
       if (s.houseId) tintSelectRank(c, houseSelectRank(houseById[s.houseId]));
       else c.lerp(SEL_FEEDER, state.scopeBoard || state.focus ? 0.24 : 0.1);
       ribbon.setColorAt(i, c);
@@ -3074,8 +3138,7 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
   if (caps?.instanceColor) {
     const pq = byFeeder[fid];
     const trunk = lvSegMeta.find((s) => s.feederId === fid && s.kind === "trunk");
-    const t = Math.min(1, (pq?.p || 0) / Math.max(1, trunk?.capW || 8000));
-    const c = capacityColor(t);
+    const c = flowMetricColor(pq?.p || 0, pq?.q || 0, trunk?.capW || 8000, aggThd(pq));
     c.lerp(SEL_FEEDER, state.scopeBoard || state.focus ? 0.24 : 0.1);
     for (let i = 0; i < caps.count; i++) caps.setColorAt(i, c);
     caps.instanceColor.needsUpdate = true;
@@ -3083,19 +3146,27 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
 }
 
 function applyLineLegend() {
-  const pf = state.lineGrad === "pf";
+  const g = state.lineGrad;
   const lo = document.getElementById("wl-line-lo");
   const mid = document.getElementById("wl-line-mid");
   const hi = document.getElementById("wl-line-hi");
   const bar = document.querySelector("#wl-line-legend .cap-bar");
-  if (lo) lo.textContent = pf ? "PF 1.0" : "0% idle";
-  if (mid) mid.textContent = pf ? "0.78" : "50% mid";
-  if (hi) hi.textContent = pf ? "PF ≤ 0.55" : "100% at cap";
-  if (bar) bar.title = pf ? "line PF = P / S from end-use mix (schematic)" : "true_power_inst / line or meter cap";
+  if (lo) lo.textContent = g === "pf" ? "PF 1.0" : g === "harmonics" ? "THD 0%" : "0% idle";
+  if (mid) mid.textContent = g === "pf" ? "0.78" : g === "harmonics" ? "~8%" : "50% mid";
+  if (hi) hi.textContent = g === "pf" ? "PF ≤ 0.55" : g === "harmonics" ? `≥${THD_HI}% THD` : "100% at cap";
+  if (bar) {
+    bar.classList.toggle("is-harm", g === "harmonics");
+    bar.title =
+      g === "pf"
+        ? "line PF = P / S from end-use mix (schematic)"
+        : g === "harmonics"
+          ? "current THD % from end-use mix (schematic · IEEE 519-ish)"
+          : "true_power_inst / line or meter cap";
+  }
   const lvLo = document.getElementById("wl-lv-lo");
   const lvHi = document.getElementById("wl-lv-hi");
-  if (lvLo) lvLo.lastChild.textContent = pf ? "LV PF ~1.0" : "LV flow idle";
-  if (lvHi) lvHi.lastChild.textContent = pf ? "LV PF ≤ 0.55" : "LV flow at xfmr cap";
+  if (lvLo) lvLo.lastChild.textContent = g === "pf" ? "LV PF ~1.0" : g === "harmonics" ? "LV THD clean" : "LV flow idle";
+  if (lvHi) lvHi.lastChild.textContent = g === "pf" ? "LV PF ≤ 0.55" : g === "harmonics" ? `LV THD ≥${THD_HI}%` : "LV flow at xfmr cap";
 }
 
 let lastUiMin = -1;
@@ -3797,6 +3868,12 @@ function applyQuery() {
   if (you && houseById[you]) state.you = you;
   const board = q.get("board");
   if (board && boardById[board]) state.emsId = board;
+  const lines = q.get("lines") || q.get("linegrad");
+  if (lines) {
+    state.lineGrad = parseLineGrad(lines);
+    const gEl = document.getElementById("wl-linegrad");
+    if (gEl) gEl.value = state.lineGrad;
+  }
   const feeder = q.get("feeder");
   if (feeder && FEEDERS.some((f) => f.id === feeder) && state.role !== "customer") {
     const b = state.emsId && boardById[state.emsId]?.feederId === feeder ? state.emsId : null;
@@ -3819,6 +3896,7 @@ function applyQuery() {
     homesEl.value = v;
   }
   writeQuery({ homes: TARGET_HOMES, light: state.light, role: state.role });
+  applyLineLegend();
   const t = Number(q.get("t"));
   return Number.isFinite(t) ? Math.max(0, Math.min(DAY_MIN, t)) : 0;
 }
@@ -3845,9 +3923,10 @@ function bindUi() {
     applySchemeColors();
   });
   document.getElementById("wl-linegrad")?.addEventListener("change", (e) => {
-    state.lineGrad = e.target.value === "pf" ? "pf" : "capacity";
+    state.lineGrad = parseLineGrad(e.target.value);
     applyLineLegend();
     colorPowerLines();
+    fillHouses(true);
   });
   document.getElementById("wl-viz")?.addEventListener("change", (e) => {
     state.viz = e.target.value === "v1" ? "v1" : "v2";
@@ -4188,21 +4267,14 @@ function fillFeederGrid() {
     row.classList.toggle("is-leak", leakEnds.has(bid));
     row.classList.toggle("is-dim", !!state.scopeBoard && bid !== state.scopeBoard);
     const b = boardById[bid];
-    let bp = 0;
-    let bcap = 0;
-    for (const hid of b?.houseIds || []) {
-      const h = houseById[hid];
-      const r = readingAt(hid, state.nowMin);
-      if (r && r.on && !r.feederOut) bp += r.powerW || 0;
-      bcap += h?.loadLimitW || 220;
-    }
     const lab = row.querySelector(".feeder-row-lab");
     if (lab) {
+      const metric = houseIdsMetricColor(b?.houseIds);
       lab.style.borderColor = bid === state.scopeBoard
         ? "#5ee0ff"
         : leakEnds.has(bid)
           ? "#e85dff"
-          : `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
+          : `#${metric.getHexString()}`;
     }
   });
   grid.querySelectorAll("button.feeder-cell[data-h]").forEach((btn) => {
@@ -4216,11 +4288,12 @@ function fillFeederGrid() {
     btn.classList.toggle("out", !!o);
     btn.classList.toggle("focus", state.focus === id);
     btn.classList.toggle("on-ems", !!state.scopeBoard && h?.boardId === state.scopeBoard);
-    const c = o ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, cap));
+    const c = o ? new THREE.Color(COL.outage) : readingMetricColor(r);
     const hex = `#${c.getHexString()}`;
     btn.style.background = hex;
     btn.style.borderColor = hex;
-    btn.title = `${h?.name || id} · ${h?.serial || ""} · ${o ? "OUTAGE" : on ? `${Math.round(watts)} W · ${Math.round(cap * 100)}%` : "OFF · 0 W"}`;
+    const thdTxt = on ? ` · THD ${(r?.thd || 0).toFixed(0)}%` : "";
+    btn.title = `${h?.name || id} · ${h?.serial || ""} · ${o ? "OUTAGE" : on ? `${Math.round(watts)} W · ${Math.round(cap * 100)}%${thdTxt}` : "OFF · 0 W"}`;
     const match =
       !!q &&
       !!h &&
@@ -4314,7 +4387,7 @@ function fillHouses(rebuild) {
             ? `OUTAGE · silent (mesh) · ${wallet.toFixed(0)}`
             : `OUTAGE · ${wallet.toFixed(0)}`
       : on
-        ? `ON · ${wallet.toFixed(0)} · ${LOAD_TYPES[loadType]?.label || loadType} · ${Math.round(capacity * 100)}% of ${limit} W · PF ${(r?.pf ?? 1).toFixed(2)}`
+        ? `ON · ${wallet.toFixed(0)} · ${LOAD_TYPES[loadType]?.label || loadType} · ${Math.round(capacity * 100)}% of ${limit} W · PF ${(r?.pf ?? 1).toFixed(2)} · THD ${(r?.thd || 0).toFixed(0)}%`
         : `OFF · ${wallet.toFixed(0)}`;
   });
   drawStream();

@@ -134,6 +134,36 @@ export function pfFromMix(mix) {
   return { pf: p / Math.hypot(p, q), varQ: q };
 }
 
+/** Typical current THD % by end-use. Schematic, not a meter register. IEEE 519-ish. */
+export const LOAD_THD = {
+  lighting: 12,
+  heating: 3,
+  fridge: 18,
+  ict: 28,
+  laundry: 22,
+  cooking: 7,
+  pump: 14,
+  ag: 16,
+  tools: 32,
+  productive: 32,
+  idle: 2,
+};
+export const CIVIC_THD = 10;
+/** Color ramp saturates near 15% current THD. 5% is the IEEE 519 voltage-THD neighborhood. */
+export const THD_HI = 15;
+
+export function thdFromMix(mix) {
+  let p = 0;
+  let acc = 0;
+  for (const [k, w] of Object.entries(mix || {})) {
+    if (!(w > 0)) continue;
+    p += w;
+    acc += w * (LOAD_THD[k] ?? 8);
+  }
+  if (p <= 0) return 0;
+  return acc / p;
+}
+
 export const XFMR_CAPACITY_W = 68000;
 
 /** Sun elevation 0–1, 06:00–18:00 sine. Same curve as the 3D sun bead. */
@@ -716,6 +746,7 @@ export function simulateDay() {
           capacity: 0,
           pf: 1,
           varQ: 0,
+          thd: 0,
           phase: h.phase || "A",
           feederOut: !!dark,
           mix: {},
@@ -821,6 +852,8 @@ export function simulateDay() {
 
       const loadType = dominantLoad(h, min, !disconnected, mix);
       const capacity = disconnected ? 0 : ratio;
+      let thd = disconnected ? 0 : thdFromMix(mix);
+      if (!disconnected && PV_ROOF_IDS.includes(h.id)) thd += 5 * sunElev(min);
       readings.push({
         min,
         houseId: h.id,
@@ -834,6 +867,7 @@ export function simulateDay() {
         capacity,
         pf: pq.pf,
         varQ: pq.varQ,
+        thd,
         phase: h.phase || "A",
         feederOut: false,
         mix,
