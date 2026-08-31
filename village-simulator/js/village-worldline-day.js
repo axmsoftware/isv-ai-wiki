@@ -2511,7 +2511,8 @@ function leakScope(lk) {
 
 function leakMark(mesh, lk, layer) {
   mesh.userData = { kind: "leak", leakId: lk.id, leakLayer: layer, scope: leakScope(lk) };
-  mesh.renderOrder = layer === "ground" ? 3 : 2;
+  mesh.renderOrder = layer === "pick" ? 1 : layer === "ground" ? 3 : 4;
+  mesh.raycast = layer === "label" ? () => {} : THREE.Mesh.prototype.raycast;
   scene.add(mesh);
   leakMeshes.push(mesh);
 }
@@ -2525,42 +2526,58 @@ function buildLeaks() {
     const yaw = Math.atan2(dx, dz);
     const mx = (lk.ax + lk.bx) / 2;
     const mz = (lk.az + lk.bz) / 2;
+    const corridorW = Math.max(2.6, feederBufWidth("primary") * 1.35);
+    const pickH = LINE_HANG + 0.85;
+    const pick = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({
+        color: COL.leak,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        side: THREE.DoubleSide,
+      }),
+    );
+    pick.position.set(mx, pickH / 2, mz);
+    pick.rotation.y = yaw;
+    pick.scale.set(corridorW, pickH, len + 1.4);
+    leakMark(pick, lk, "pick");
     const ground = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshBasicMaterial({
         color: COL.leak,
         transparent: true,
-        opacity: 0.55,
-        depthWrite: false,
+        opacity: 0.95,
+        depthWrite: true,
       }),
     );
-    ground.position.set(mx, Y_FEEDER + 0.06, mz);
+    ground.position.set(mx, Y_FEEDER + 0.14, mz);
     ground.rotation.y = yaw;
-    ground.scale.set(feederBufWidth("primary") * 1.05, 0.07, len);
+    ground.scale.set(corridorW, 0.18, len);
     leakMark(ground, lk, "ground");
     const bar = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
-      new THREE.MeshBasicMaterial({ color: COL.leak, transparent: true, opacity: 0.88 }),
+      new THREE.MeshBasicMaterial({ color: COL.leak }),
     );
-    bar.position.set(mx, LINE_HANG + 0.38, mz);
+    bar.position.set(mx, LINE_HANG + 0.4, mz);
     bar.rotation.y = yaw;
-    bar.scale.set(0.22, 0.22, len);
+    bar.scale.set(0.55, 0.72, len);
     leakMark(bar, lk, "span");
     for (const [x, z] of [
       [lk.ax, lk.az],
       [lk.bx, lk.bz],
     ]) {
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.55, 0.09, 8, 18),
-        new THREE.MeshBasicMaterial({ color: COL.leak, transparent: true, opacity: 0.9 }),
+        new THREE.TorusGeometry(0.78, 0.14, 10, 22),
+        new THREE.MeshBasicMaterial({ color: COL.leak }),
       );
       ring.rotation.x = Math.PI / 2;
-      ring.position.set(x, LINE_HANG + 0.48, z);
+      ring.position.set(x, LINE_HANG + 0.5, z);
       leakMark(ring, lk, "ring");
     }
-    const spr = timeSprite(`LEAK ${lk.leakW} W`, "#f0b0ff", 260);
-    spr.scale.set(6.8, 1.45, 1);
-    spr.position.set(lk.x, LINE_HANG + 1.6, lk.z);
+    const spr = timeSprite(`ΔP ${lk.leakW} W`, "#ffb8ff", 280);
+    spr.scale.set(8.4, 1.8, 1);
+    spr.position.set(lk.x, LINE_HANG + 2.15, lk.z);
     leakMark(spr, lk, "label");
   }
   updateLeakViz();
@@ -2569,6 +2586,8 @@ function buildLeaks() {
 function updateLeakViz() {
   const fid = state.role === "customer" ? null : activeFeederId();
   const showAll = !state.hide.leak;
+  const liveCol = new THREE.Color(0xff4dff);
+  const mapCol = new THREE.Color(0xd24ae0);
   for (const m of leakMeshes) {
     const lk = LEAKS.find((x) => x.id === m.userData.leakId);
     if (!lk) {
@@ -2576,18 +2595,27 @@ function updateLeakViz() {
       continue;
     }
     const layer = m.userData.leakLayer;
-    m.visible = fid ? lk.feederId === fid : showAll && layer !== "ground";
+    m.visible = fid ? lk.feederId === fid : showAll && layer !== "ground" && layer !== "pick";
     if (!m.visible) continue;
     const live = leakLive(lk);
-    if (m.material && "opacity" in m.material) {
+    if (m.material?.color) m.material.color.copy(live ? liveCol : mapCol);
+    if (!m.material || !("opacity" in m.material)) continue;
+    if (layer === "pick") {
       m.material.transparent = true;
-      const hi = layer === "ground" ? 0.72 : 0.95;
-      const lo = layer === "ground" ? 0.28 : 0.38;
-      m.material.opacity = live ? hi : lo;
-    }
-    if (layer === "label") {
-      const k = fid ? 1.25 : 1;
-      m.scale.set(6.8 * k, 1.45 * k, 1);
+      m.material.opacity = 0;
+      m.material.depthWrite = false;
+    } else if (layer === "ground") {
+      m.material.transparent = true;
+      m.material.opacity = live ? 0.98 : 0.88;
+      m.material.depthWrite = true;
+    } else if (layer === "label") {
+      m.material.transparent = true;
+      m.material.opacity = 1;
+      const k = fid ? 1.35 : 1.12;
+      m.scale.set(8.4 * k, 1.8 * k, 1);
+    } else {
+      m.material.transparent = false;
+      m.material.opacity = 1;
     }
   }
 }
@@ -3185,7 +3213,8 @@ function setScope(scope, opts = {}) {
 }
 
 function pickList() {
-  const list = [hutMesh, roofMesh];
+  const leaks = leakMeshes.filter((m) => m.visible && m.userData.leakLayer !== "label");
+  const list = [...leaks, hutMesh, roofMesh];
   if (emsMesh) list.push(emsMesh);
   if (xfmrMesh) list.push(xfmrMesh);
   if (poleMesh) list.push(poleMesh);
@@ -3196,15 +3225,26 @@ function pickList() {
     if (g.visible) list.push(...g.children);
   }
   for (const o of scene.children) {
-    if (o.userData.houseId || o.userData.scope) list.push(o);
+    if (o.userData.houseId || (o.userData.scope && !o.userData.leakId)) list.push(o);
   }
   return list.filter(Boolean);
+}
+
+function preferLeakHit(hits) {
+  if (!hits.length) return null;
+  const closest = hits[0].distance;
+  const leak = hits.find((h) => h.object.userData.leakId && h.distance <= closest + 3.4);
+  return leak || hits[0];
 }
 
 function scopeFromHit(hit) {
   if (!hit) return { kind: "village" };
   const o = hit.object;
   const i = hit.instanceId;
+  if (o.userData.leakId) {
+    const lk = LEAKS.find((x) => x.id === o.userData.leakId);
+    return lk ? leakScope(lk) : { kind: "village" };
+  }
   if (o.userData.pickHuts && i != null) {
     const h = HOUSES[i];
     return h ? { kind: "house", id: h.id } : { kind: "village" };
@@ -3242,7 +3282,7 @@ function onPick(ev) {
   const ray = new THREE.Raycaster();
   ray.setFromCamera(mouse, camera);
   const hits = ray.intersectObjects(pickList(), false);
-  const hit = hits[0];
+  const hit = preferLeakHit(hits);
   if (state.role === "customer") {
     const hid =
       hit && hit.object.userData.pickHuts && hit.instanceId != null
