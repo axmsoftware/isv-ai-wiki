@@ -248,6 +248,21 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .feeder-cell.match { box-shadow: 0 0 0 1px #e8e6dc; }
 .feeder-cell.focus { outline: 2px solid #e6c84a; outline-offset: 0; z-index: 1; }
 .feeder-cell:hover { filter: brightness(1.12); }
+.feeder-row.is-leak .feeder-row-lab { color: #f0b0ff; }
+.feeder-leak {
+  display: flex; align-items: center; gap: 0.4rem; width: 100%;
+  font-family: inherit; font-size: 10px; line-height: 1.3; text-align: left;
+  padding: 0.22rem 0.4rem; margin: 1px 0 2px; border-radius: 4px; cursor: pointer;
+  border: 1px dashed #e85dff; background: #2a1028; color: #f0b0ff;
+}
+.feeder-leak.is-live { background: #4a1848; border-style: solid; }
+.feeder-leak.is-idle { opacity: 0.78; }
+.feeder-leak-k {
+  flex-shrink: 0; font-size: 9px; letter-spacing: 0.04em; font-weight: 500;
+  padding: 0.05rem 0.28rem; border-radius: 3px; border: 1px solid #e85dff;
+}
+.feeder-leak-txt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.feeder-leak:hover { filter: brightness(1.12); }
 .feeder-clear {
   font-family: inherit; font-size: 11px; padding: 0.2rem 0.5rem; margin-top: 0.4rem;
   border-radius: 999px; border: 1px solid var(--border); background: var(--bg);
@@ -485,6 +500,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260831feeder3"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260831leak"></script>
 </body>
 </html>

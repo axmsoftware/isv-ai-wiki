@@ -2476,59 +2476,111 @@ function buildEmsBoards() {
   scene.add(emsMesh);
 }
 
+function leakKindLabel(kind) {
+  if (kind === "tap") return "illegal tap";
+  if (kind === "earth") return "earth leak";
+  if (kind === "unmetered") return "unmetered load";
+  return kind || "leak";
+}
+
+function leakBetween(a, b) {
+  if (!a || !b) return null;
+  return (
+    LEAKS.find(
+      (lk) =>
+        (lk.fromBoardId === a.id && lk.toBoardId === b.id) ||
+        (lk.fromBoardId === b.id && lk.toBoardId === a.id),
+    ) || null
+  );
+}
+
+function leakLive(lk) {
+  return !!(lk && state.nowMin >= lk.min && state.nowMin < lk.restore);
+}
+
+function leakScope(lk) {
+  return { kind: "feeder", id: lk.feederId, boardId: lk.fromBoardId };
+}
+
+function leakMark(mesh, lk, layer) {
+  mesh.userData = { kind: "leak", leakId: lk.id, leakLayer: layer, scope: leakScope(lk) };
+  mesh.renderOrder = layer === "ground" ? 3 : 2;
+  scene.add(mesh);
+  leakMeshes.push(mesh);
+}
+
 function buildLeaks() {
   leakMeshes = [];
   for (const lk of LEAKS) {
     const dx = lk.bx - lk.ax;
     const dz = lk.bz - lk.az;
     const len = Math.hypot(dx, dz) || 1;
+    const yaw = Math.atan2(dx, dz);
+    const mx = (lk.ax + lk.bx) / 2;
+    const mz = (lk.az + lk.bz) / 2;
+    const ground = new THREE.Mesh(
+      new THREE.BoxGeometry(1, 1, 1),
+      new THREE.MeshBasicMaterial({
+        color: COL.leak,
+        transparent: true,
+        opacity: 0.55,
+        depthWrite: false,
+      }),
+    );
+    ground.position.set(mx, Y_FEEDER + 0.06, mz);
+    ground.rotation.y = yaw;
+    ground.scale.set(feederBufWidth("primary") * 1.05, 0.07, len);
+    leakMark(ground, lk, "ground");
     const bar = new THREE.Mesh(
       new THREE.BoxGeometry(1, 1, 1),
       new THREE.MeshBasicMaterial({ color: COL.leak, transparent: true, opacity: 0.88 }),
     );
-    bar.position.set((lk.ax + lk.bx) / 2, LINE_HANG + 0.1, (lk.az + lk.bz) / 2);
-    bar.rotation.y = Math.atan2(dx, dz);
-    bar.scale.set(0.32, 0.24, len);
-    bar.userData = { kind: "leak", leakId: lk.id };
-    scene.add(bar);
-    leakMeshes.push(bar);
+    bar.position.set(mx, LINE_HANG + 0.38, mz);
+    bar.rotation.y = yaw;
+    bar.scale.set(0.22, 0.22, len);
+    leakMark(bar, lk, "span");
     for (const [x, z] of [
       [lk.ax, lk.az],
       [lk.bx, lk.bz],
     ]) {
       const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(0.48, 0.08, 8, 18),
-        new THREE.MeshBasicMaterial({ color: COL.leak }),
+        new THREE.TorusGeometry(0.55, 0.09, 8, 18),
+        new THREE.MeshBasicMaterial({ color: COL.leak, transparent: true, opacity: 0.9 }),
       );
       ring.rotation.x = Math.PI / 2;
       ring.position.set(x, LINE_HANG + 0.48, z);
-      ring.userData = { kind: "leak", leakId: lk.id };
-      scene.add(ring);
-      leakMeshes.push(ring);
+      leakMark(ring, lk, "ring");
     }
     const spr = timeSprite(`LEAK ${lk.leakW} W`, "#f0b0ff", 260);
     spr.scale.set(6.8, 1.45, 1);
     spr.position.set(lk.x, LINE_HANG + 1.6, lk.z);
-    spr.userData = { kind: "leak", leakId: lk.id };
-    scene.add(spr);
-    leakMeshes.push(spr);
+    leakMark(spr, lk, "label");
   }
   updateLeakViz();
 }
 
 function updateLeakViz() {
-  const show = !state.hide.leak;
+  const fid = state.role === "customer" ? null : activeFeederId();
+  const showAll = !state.hide.leak;
   for (const m of leakMeshes) {
     const lk = LEAKS.find((x) => x.id === m.userData.leakId);
-    if (!show || !lk) {
+    if (!lk) {
       m.visible = false;
       continue;
     }
-    m.visible = true;
-    const live = state.nowMin >= lk.min && state.nowMin < lk.restore;
+    const layer = m.userData.leakLayer;
+    m.visible = fid ? lk.feederId === fid : showAll && layer !== "ground";
+    if (!m.visible) continue;
+    const live = leakLive(lk);
     if (m.material && "opacity" in m.material) {
       m.material.transparent = true;
-      m.material.opacity = live ? 0.95 : 0.32;
+      const hi = layer === "ground" ? 0.72 : 0.95;
+      const lo = layer === "ground" ? 0.28 : 0.38;
+      m.material.opacity = live ? hi : lo;
+    }
+    if (layer === "label") {
+      const k = fid ? 1.25 : 1;
+      m.scale.set(6.8 * k, 1.45 * k, 1);
     }
   }
 }
@@ -2623,6 +2675,10 @@ function colorHardware(loads) {
           cap += h?.loadLimitW || 220;
         }
         c = capacityColor(Math.min(1, p / Math.max(1, cap)));
+        const leakHit = LEAKS.find(
+          (lk) => lk.feederId === fid && (lk.fromBoardId === b.id || lk.toBoardId === b.id),
+        );
+        if (leakHit) c.lerp(new THREE.Color(COL.leak), leakLive(leakHit) ? 0.58 : 0.24);
       }
       emsMesh.setColorAt(i, c);
     });
@@ -3864,6 +3920,13 @@ function onFeederGridClick(e) {
     }
     return;
   }
+  const leakBtn = e.target.closest("button.feeder-leak[data-leak]");
+  if (leakBtn) {
+    const bid = leakBtn.getAttribute("data-board");
+    const b = boardById[bid];
+    if (b) setScope({ kind: "feeder", id: b.feederId, boardId: b.id });
+    return;
+  }
   const lab = e.target.closest("button.feeder-row-lab[data-board]");
   if (!lab) return;
   const bid = lab.getAttribute("data-board");
@@ -3893,45 +3956,71 @@ function fillFeederGrid() {
   const d = DTMS.find((x) => x.feederId === fid);
   const boards = boardsOnFeeder(fid);
   const homes = HOUSES.filter((h) => h.feederId === fid);
+  const leaks = LEAKS.filter((lk) => lk.feederId === fid);
   const q = state.houseQ.trim().toLowerCase();
   if (title) title.textContent = f?.label || fid;
   if (sub) {
-    sub.textContent = `${d?.label || "DTM"} · ${boards.length} EMS · ${homes.length} customers · row = MeshEMS, cell = meter`;
+    const n = leaks.length;
+    const leakBit = n ? ` · ${n} leak span${n === 1 ? "" : "s"} between EMS` : "";
+    sub.textContent = `${d?.label || "DTM"} · ${boards.length} EMS · ${homes.length} customers · row = MeshEMS, cell = meter${leakBit}`;
   }
   if (!grid) return;
   const cols = Math.max(HOMES_PER_BOARD, 1, ...boards.map((b) => (b.houseIds || []).length));
   grid.style.setProperty("--feeder-cols", String(cols));
-  const ids = `${fid}|${boards.map((b) => b.id).join(",")}|${cols}`;
+  const ids = `${fid}|${boards.map((b) => b.id).join(",")}|${cols}|${leaks.map((lk) => lk.id).join(",")}`;
   if (grid.dataset.ids !== ids) {
     grid.dataset.ids = ids;
-    grid.innerHTML = boards
-      .map((b) => {
-        const lab = String(b.id || "").replace(/^ems-/, "E");
-        const cells = (b.houseIds || [])
-          .map((hid) => {
-            const h = houseById[hid];
-            return `<button type="button" class="feeder-cell" data-h="${esc(hid)}" title="${esc(h?.name)} · ${esc(h?.serial)}"></button>`;
-          })
-          .join("");
-        const pad = Math.max(0, cols - (b.houseIds || []).length);
-        const empty = Array.from(
-          { length: pad },
-          () => `<span class="feeder-cell" style="visibility:hidden;pointer-events:none"></span>`,
-        ).join("");
-        return `<div class="feeder-row" data-board="${esc(b.id)}" style="--feeder-cols:${cols}">
+    const parts = [];
+    boards.forEach((b, i) => {
+      const lab = String(b.id || "").replace(/^ems-/, "E");
+      const cells = (b.houseIds || [])
+        .map((hid) => {
+          const h = houseById[hid];
+          return `<button type="button" class="feeder-cell" data-h="${esc(hid)}" title="${esc(h?.name)} · ${esc(h?.serial)}"></button>`;
+        })
+        .join("");
+      const pad = Math.max(0, cols - (b.houseIds || []).length);
+      const empty = Array.from(
+        { length: pad },
+        () => `<span class="feeder-cell" style="visibility:hidden;pointer-events:none"></span>`,
+      ).join("");
+      parts.push(`<div class="feeder-row" data-board="${esc(b.id)}" style="--feeder-cols:${cols}">
         <button type="button" class="feeder-row-lab" data-board="${esc(b.id)}" title="${esc(b.label)}">${esc(lab)}</button>
         ${cells}${empty}
-      </div>`;
-      })
-      .join("");
+      </div>`);
+      const lk = leakBetween(b, boards[i + 1]);
+      if (lk) {
+        parts.push(`<button type="button" class="feeder-leak" data-leak="${esc(lk.id)}" data-board="${esc(lk.fromBoardId)}" title="${esc(lk.note || lk.label)}">
+          <span class="feeder-leak-k">ΔP</span>
+          <span class="feeder-leak-txt"></span>
+        </button>`);
+      }
+    });
+    grid.innerHTML = parts.join("");
     if (!grid.dataset.bound) {
       grid.dataset.bound = "1";
       grid.addEventListener("click", onFeederGridClick);
     }
   }
+  const leakEnds = new Set();
+  for (const lk of leaks) {
+    leakEnds.add(lk.fromBoardId);
+    leakEnds.add(lk.toBoardId);
+  }
+  grid.querySelectorAll(".feeder-leak").forEach((el) => {
+    const lk = LEAKS.find((x) => x.id === el.getAttribute("data-leak"));
+    const live = leakLive(lk);
+    el.classList.toggle("is-live", live);
+    el.classList.toggle("is-idle", !live);
+    const txt = el.querySelector(".feeder-leak-txt");
+    if (txt && lk) {
+      txt.textContent = `${lk.leakW} W · ${leakKindLabel(lk.kind)} · ${live ? "LIVE" : "mapped"} · ${lk.label}`;
+    }
+  });
   grid.querySelectorAll(".feeder-row").forEach((row) => {
     const bid = row.getAttribute("data-board");
     row.classList.toggle("is-on", bid === state.scopeBoard);
+    row.classList.toggle("is-leak", leakEnds.has(bid));
     const b = boardById[bid];
     let bp = 0;
     let bcap = 0;
@@ -3942,7 +4031,11 @@ function fillFeederGrid() {
       bcap += h?.loadLimitW || 220;
     }
     const lab = row.querySelector(".feeder-row-lab");
-    if (lab) lab.style.borderColor = `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
+    if (lab) {
+      lab.style.borderColor = leakEnds.has(bid)
+        ? "#e85dff"
+        : `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
+    }
   });
   grid.querySelectorAll("button.feeder-cell[data-h]").forEach((btn) => {
     const id = btn.getAttribute("data-h");
