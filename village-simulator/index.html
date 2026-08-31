@@ -230,8 +230,14 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .feeder-row {
   display: grid; grid-template-columns: 3.4rem repeat(var(--feeder-cols, 10), minmax(0, 1fr));
   gap: 2px; align-items: stretch;
+  padding: 2px; border-radius: 5px;
 }
-.feeder-row.is-on .feeder-row-lab { border-color: var(--blue); color: var(--text); }
+.feeder-row.is-on {
+  outline: 2px solid #5ee0ff; outline-offset: 0;
+  background: rgba(94, 224, 255, 0.12);
+}
+.feeder-row.is-on .feeder-row-lab { border-color: #5ee0ff; color: #e8eef4; background: #163038; }
+.feeder-row.is-dim { opacity: 0.38; }
 .feeder-row-lab {
   font-family: inherit; font-size: 9px; line-height: 1.15; text-align: left;
   padding: 0.15rem 0.22rem; border-radius: 4px; cursor: pointer;
@@ -246,7 +252,12 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 }
 .feeder-cell.out { box-shadow: inset 0 0 0 1px #ba7517; }
 .feeder-cell.match { box-shadow: 0 0 0 1px #e8e6dc; }
-.feeder-cell.focus { outline: 2px solid #e6c84a; outline-offset: 0; z-index: 1; }
+.feeder-row.is-on .feeder-cell { box-shadow: 0 0 0 1px rgba(94, 224, 255, 0.55); }
+.feeder-cell.on-ems { box-shadow: 0 0 0 1px #5ee0ff; }
+.feeder-cell.focus {
+  outline: 2px solid #e6c84a; outline-offset: 1px; z-index: 2;
+  box-shadow: 0 0 0 2px #e6c84a; transform: scale(1.14);
+}
 .feeder-cell:hover { filter: brightness(1.12); }
 .feeder-row.is-leak .feeder-row-lab { color: #f0b0ff; }
 .feeder-leak {
@@ -500,6 +511,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260831leak"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260831sel"></script>
 </body>
 </html>

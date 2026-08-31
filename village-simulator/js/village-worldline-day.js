@@ -450,6 +450,12 @@ let windowMesh;
 let streetLampMesh;
 let groundMesh;
 const hutPose = [];
+const poseDummy = new THREE.Object3D();
+const SEL_FEEDER = new THREE.Color(0x5ee0ff);
+const SEL_EMS = new THREE.Color(0x7af0ff);
+const SEL_METER = new THREE.Color(0xe6c84a);
+let houseHalo;
+let emsHalo;
 const lampWarm = new THREE.Color(0xffe29a);
 const lampDark = new THREE.Color(0x1c1b18);
 const pvSlots = [];
@@ -1420,6 +1426,7 @@ function buildVillage() {
   buildDtms();
   buildEmsBoards();
   buildLeaks();
+  buildSelectHalos();
 
   buildGenPad(LANDMARKS.gen.x, LANDMARKS.gen.z);
   buildMainXfmr(LANDMARKS.xfmr.x, LANDMARKS.xfmr.z);
@@ -2654,6 +2661,73 @@ function assetLineKind(s) {
   return "station";
 }
 
+function houseSelectRank(h) {
+  const fid = state.role === "customer" ? null : activeFeederId();
+  if (!fid || !h) return 0;
+  if (h.feederId !== fid) return 0;
+  if (state.focus && h.id === state.focus) return 4;
+  if (state.scopeBoard && h.boardId === state.scopeBoard) return 3;
+  if (state.scopeBoard || state.focus) return 2;
+  return 1;
+}
+
+function boardSelectRank(b) {
+  const fid = state.role === "customer" ? null : activeFeederId();
+  if (!fid || !b) return 0;
+  if (b.feederId !== fid) return 0;
+  if (state.scopeBoard && b.id === state.scopeBoard) return 3;
+  if (state.scopeBoard || state.focus) return 2;
+  return 1;
+}
+
+function tintSelectRank(c, rank) {
+  if (rank <= 0) c.multiplyScalar(0.16);
+  else if (rank === 2) c.multiplyScalar(0.4);
+  else if (rank === 3) c.lerp(SEL_EMS, 0.3);
+  else if (rank === 4) c.lerp(SEL_METER, 0.55);
+  else c.lerp(SEL_FEEDER, 0.12);
+  return c;
+}
+
+function houseSelectScale(rank) {
+  if (rank === 4) return 1.22;
+  if (rank === 3) return 1.1;
+  if (rank === 0) return 0.9;
+  return 1;
+}
+
+function buildSelectHalos() {
+  houseHalo = new THREE.Mesh(
+    new THREE.TorusGeometry(0.78, 0.07, 8, 28),
+    new THREE.MeshBasicMaterial({ color: SEL_METER, transparent: true, opacity: 0.95 }),
+  );
+  houseHalo.rotation.x = Math.PI / 2;
+  houseHalo.visible = false;
+  houseHalo.renderOrder = 4;
+  scene.add(houseHalo);
+  emsHalo = new THREE.Mesh(
+    new THREE.TorusGeometry(0.92, 0.09, 8, 28),
+    new THREE.MeshBasicMaterial({ color: SEL_EMS, transparent: true, opacity: 0.92 }),
+  );
+  emsHalo.rotation.x = Math.PI / 2;
+  emsHalo.visible = false;
+  emsHalo.renderOrder = 4;
+  scene.add(emsHalo);
+}
+
+function updateSelectHalos() {
+  const h = state.role !== "customer" && state.focus ? houseById[state.focus] : null;
+  if (houseHalo) {
+    houseHalo.visible = !!h;
+    if (h) houseHalo.position.set(h.x, 0.1, h.z);
+  }
+  const b = state.role !== "customer" && state.scopeBoard ? boardById[state.scopeBoard] : null;
+  if (emsHalo) {
+    emsHalo.visible = !!b;
+    if (b) emsHalo.position.set(b.x, LINE_HANG + 0.64, b.z);
+  }
+}
+
 function colorHardware(loads) {
   const asset = state.scheme === "asset";
   const fid = activeFeederId();
@@ -2663,8 +2737,9 @@ function colorHardware(loads) {
   if (fid && last && emsMesh?.instanceColor) {
     BOARDS.forEach((b, i) => {
       let c;
-      if (b.feederId !== fid) {
-        c = new THREE.Color(asset ? ASSET.board : 0xff6a2a).multiplyScalar(0.28);
+      const rank = state.role === "customer" ? (b.feederId === fid ? 1 : 0) : boardSelectRank(b);
+      if (rank <= 0) {
+        c = new THREE.Color(asset ? ASSET.board : 0xff6a2a);
       } else {
         let p = 0;
         let cap = 0;
@@ -2680,11 +2755,29 @@ function colorHardware(loads) {
         );
         if (leakHit) c.lerp(new THREE.Color(COL.leak), leakLive(leakHit) ? 0.58 : 0.24);
       }
+      tintSelectRank(c, rank);
       emsMesh.setColorAt(i, c);
+      const sc = rank === 3 ? 1.45 : rank === 2 ? 0.9 : 1;
+      poseDummy.position.set(b.x, LINE_HANG + 0.38, b.z);
+      poseDummy.rotation.set(0, 0, 0);
+      poseDummy.scale.set(sc, sc, sc);
+      poseDummy.updateMatrix();
+      emsMesh.setMatrixAt(i, poseDummy.matrix);
     });
     emsMesh.instanceColor.needsUpdate = true;
+    emsMesh.instanceMatrix.needsUpdate = true;
   } else {
     tintInstanced(emsMesh, asset ? ASSET.board : 0xff6a2a);
+    if (emsMesh) {
+      BOARDS.forEach((b, i) => {
+        poseDummy.position.set(b.x, LINE_HANG + 0.38, b.z);
+        poseDummy.rotation.set(0, 0, 0);
+        poseDummy.scale.set(1, 1, 1);
+        poseDummy.updateMatrix();
+        emsMesh.setMatrixAt(i, poseDummy.matrix);
+      });
+      emsMesh.instanceMatrix.needsUpdate = true;
+    }
   }
   if (fid && xfmrMesh?.instanceColor) {
     TRANSFORMERS.forEach((t, i) => {
@@ -2831,13 +2924,31 @@ function colorHouses(last) {
       if (on) c = c.clone().lerp(lampWarm, 0.28);
       else c = lampDark.clone();
     }
-    if (fid && h.feederId !== fid) c.multiplyScalar(0.32);
+    const pick = state.role !== "customer" && !!fid;
+    const rank = pick ? houseSelectRank(h) : 1;
+    if (pick) tintSelectRank(c, rank);
     hutMesh.setColorAt(i, c);
     roof.copy(c).multiplyScalar(lamps && !out && !(r?.on) ? 0.45 : 0.78);
     roofMesh.setColorAt(i, roof);
+    const p = hutPose[i];
+    if (p) {
+      const k = pick ? houseSelectScale(rank) : 1;
+      poseDummy.position.set(p.x, (p.bh * k) / 2 + 0.02, p.z);
+      poseDummy.rotation.set(0, p.yaw, 0);
+      poseDummy.scale.set(1.05 * p.s * k, p.bh * k, 0.92 * p.s * k);
+      poseDummy.updateMatrix();
+      hutMesh.setMatrixAt(i, poseDummy.matrix);
+      poseDummy.position.set(p.x, p.bh * k + 0.28, p.z);
+      poseDummy.rotation.set(0, p.yaw + Math.PI / 4, 0);
+      poseDummy.scale.set(p.s * k, k, p.s * k);
+      poseDummy.updateMatrix();
+      roofMesh.setMatrixAt(i, poseDummy.matrix);
+    }
   }
   hutMesh.instanceColor.needsUpdate = true;
   roofMesh.instanceColor.needsUpdate = true;
+  hutMesh.instanceMatrix.needsUpdate = true;
+  roofMesh.instanceMatrix.needsUpdate = true;
   updateLampWindows(src);
 }
 
@@ -2884,13 +2995,20 @@ function colorPowerLines() {
     else if (hit) c = new THREE.Color(COL.outage);
     else if (!loadGrid && usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
     else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
-    if (fid && s.feederId !== fid) c.multiplyScalar(0.18);
+    if (state.role !== "customer" && fid) {
+      if (s.houseId) tintSelectRank(c, houseSelectRank(houseById[s.houseId]));
+      else if (s.feederId !== fid) c.multiplyScalar(0.12);
+      else c.lerp(SEL_FEEDER, state.scopeBoard || state.focus ? 0.2 : 0.08);
+    } else if (fid && s.feederId !== fid) {
+      c.multiplyScalar(0.18);
+    }
     powerLineMesh.setColorAt(i, c);
   });
   if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
   colorFeederBuffers(last, byFeeder, byXfmr);
   colorHouses(last);
   colorHardware({ last, byFeeder, byXfmr });
+  updateSelectHalos();
 }
 
 function colorFeederBuffers(last, byFeeder, byXfmr) {
@@ -2898,6 +3016,10 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
   if (!fid) return;
   const g = feederBufById[fid];
   if (!g) return;
+  const deep = !!(state.scopeBoard || state.focus);
+  for (const child of g.children) {
+    if (child.material && "opacity" in child.material) child.material.opacity = deep ? 0.58 : 0.44;
+  }
   const ribbon = g.children.find((m) => m.userData.segs);
   const caps = g.children.find((m) => m.geometry?.type === "CircleGeometry");
   if (ribbon?.userData.segs && ribbon.instanceColor) {
@@ -2915,6 +3037,8 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
         p = byFeeder[s.feederId]?.p || 0;
       }
       const c = hit ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, p / Math.max(1, cap)));
+      if (s.houseId) tintSelectRank(c, houseSelectRank(houseById[s.houseId]));
+      else c.lerp(SEL_FEEDER, state.scopeBoard || state.focus ? 0.24 : 0.1);
       ribbon.setColorAt(i, c);
     });
     ribbon.instanceColor.needsUpdate = true;
@@ -2924,6 +3048,7 @@ function colorFeederBuffers(last, byFeeder, byXfmr) {
     const trunk = lvSegMeta.find((s) => s.feederId === fid && s.kind === "trunk");
     const t = Math.min(1, (pq?.p || 0) / Math.max(1, trunk?.capW || 8000));
     const c = capacityColor(t);
+    c.lerp(SEL_FEEDER, state.scopeBoard || state.focus ? 0.24 : 0.1);
     for (let i = 0; i < caps.count; i++) caps.setColorAt(i, c);
     caps.instanceColor.needsUpdate = true;
   }
@@ -4021,6 +4146,7 @@ function fillFeederGrid() {
     const bid = row.getAttribute("data-board");
     row.classList.toggle("is-on", bid === state.scopeBoard);
     row.classList.toggle("is-leak", leakEnds.has(bid));
+    row.classList.toggle("is-dim", !!state.scopeBoard && bid !== state.scopeBoard);
     const b = boardById[bid];
     let bp = 0;
     let bcap = 0;
@@ -4032,9 +4158,11 @@ function fillFeederGrid() {
     }
     const lab = row.querySelector(".feeder-row-lab");
     if (lab) {
-      lab.style.borderColor = leakEnds.has(bid)
-        ? "#e85dff"
-        : `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
+      lab.style.borderColor = bid === state.scopeBoard
+        ? "#5ee0ff"
+        : leakEnds.has(bid)
+          ? "#e85dff"
+          : `#${capacityColor(Math.min(1, bp / Math.max(1, bcap))).getHexString()}`;
     }
   });
   grid.querySelectorAll("button.feeder-cell[data-h]").forEach((btn) => {
@@ -4047,6 +4175,7 @@ function fillFeederGrid() {
     const cap = r?.capacity || (on && h?.loadLimitW ? watts / h.loadLimitW : 0);
     btn.classList.toggle("out", !!o);
     btn.classList.toggle("focus", state.focus === id);
+    btn.classList.toggle("on-ems", !!state.scopeBoard && h?.boardId === state.scopeBoard);
     const c = o ? new THREE.Color(COL.outage) : capacityColor(Math.min(1, cap));
     const hex = `#${c.getHexString()}`;
     btn.style.background = hex;
