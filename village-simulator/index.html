@@ -35,9 +35,10 @@ a { color: var(--green); }
   min-height: calc(100dvh - 2.25rem);
 }
 .stage {
-  display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 0.75rem;
+  display: grid; grid-template-columns: minmax(0, 1fr) 332px; gap: 0.75rem;
   align-items: stretch; flex: 1 1 auto; min-height: 0;
 }
+.stage.has-feeder { grid-template-columns: minmax(0, 1fr) minmax(300px, 360px); }
 .wl-stage-col { position: relative; min-width: 0; height: 100%; min-height: 0; }
 #wl-stage { position: relative; height: 100%; min-height: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: #121214; }
 .wl-overlay {
@@ -86,6 +87,7 @@ a { color: var(--green); }
 html[data-role="customer"] .side,
 html[data-role="customer"] .tbl-wrap,
 html[data-role="customer"] #wl-stream-panel,
+html[data-role="customer"] #wl-feeder-view,
 html[data-role="customer"] [data-ops] { display: none !important; }
 html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .circa-mark {
@@ -219,6 +221,40 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 #wl-fs { flex-shrink: 0; }
 #wl-scrub { flex: 1; min-width: 140px; }
 #wl-houses { display: flex; flex-direction: column; gap: 0.3rem; max-height: 38vh; overflow: auto; }
+#wl-feeder-view[hidden], #wl-house-view[hidden] { display: none !important; }
+#wl-feeder-sub { font-size: 11px; color: var(--text-2); margin: 0 0 0.4rem; line-height: 1.35; }
+#wl-feeder-grid {
+  display: flex; flex-direction: column; gap: 3px;
+  max-height: 46vh; overflow: auto; padding: 1px;
+}
+.feeder-row {
+  display: grid; grid-template-columns: 3.4rem repeat(var(--feeder-cols, 10), minmax(0, 1fr));
+  gap: 2px; align-items: stretch;
+}
+.feeder-row.is-on .feeder-row-lab { border-color: var(--blue); color: var(--text); }
+.feeder-row-lab {
+  font-family: inherit; font-size: 9px; line-height: 1.15; text-align: left;
+  padding: 0.15rem 0.22rem; border-radius: 4px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--text-2);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.feeder-row-lab:hover { border-color: var(--blue); color: var(--text); }
+.feeder-cell {
+  aspect-ratio: 1; min-width: 0; min-height: 16px; padding: 0;
+  border-radius: 3px; border: 1px solid #2a2a2e; cursor: pointer;
+  background: #2a2a2e;
+}
+.feeder-cell.on { background: #2bb6a3; border-color: #1e8f80; }
+.feeder-cell.off { background: #8a3a38; border-color: #b42318; }
+.feeder-cell.out { background: #c9a227; border-color: #ba7517; }
+.feeder-cell.match { box-shadow: 0 0 0 1px #e8e6dc; }
+.feeder-cell.focus { outline: 2px solid #3d8bfd; outline-offset: 0; z-index: 1; }
+.feeder-cell:hover { filter: brightness(1.12); }
+.feeder-clear {
+  font-family: inherit; font-size: 11px; padding: 0.2rem 0.5rem; margin-top: 0.4rem;
+  border-radius: 999px; border: 1px solid var(--border); background: var(--bg);
+  color: var(--text-2); cursor: pointer;
+}
 #wl-house-q {
   width: 100%; font-family: inherit; font-size: 12px; padding: 0.35rem 0.5rem; margin-bottom: 0.4rem;
   border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text);
@@ -349,7 +385,7 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
     <button type="button" data-hide="rf" class="off" data-ops>RF net</button>
     <button type="button" id="wl-fs" title="Fullscreen (F)">Fullscreen</button>
   </div>
-  <div class="stage">
+  <div class="stage" id="wl-stage-grid">
     <div class="wl-stage-col">
       <div id="wl-stage" role="img" aria-label="Village Simulator 3D scene, now at ground, past rises into the sky">
         <a class="circa-mark" href="https://circaevum.com/" target="_blank" rel="noopener noreferrer" title="Powered by Circaevum graphics library">
@@ -396,11 +432,18 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
     </div>
     <div class="side">
       <div class="panel panel-play">
-        <h2>At playhead</h2>
+        <h2 id="wl-play-title">At playhead</h2>
         <input id="wl-house-q" type="search" placeholder="search name / serial" autocomplete="off" />
-        <div id="wl-house-clusters" class="house-clusters"></div>
-        <p id="wl-house-count" class="house-count"></p>
-        <div id="wl-houses"></div>
+        <div id="wl-feeder-view" hidden>
+          <p id="wl-feeder-sub"></p>
+          <div id="wl-feeder-grid" role="grid" aria-label="Feeder EMS by customer"></div>
+          <button type="button" class="feeder-clear" id="wl-feeder-clear">Clear feeder</button>
+        </div>
+        <div id="wl-house-view">
+          <div id="wl-house-clusters" class="house-clusters"></div>
+          <p id="wl-house-count" class="house-count"></p>
+          <div id="wl-houses"></div>
+        </div>
       </div>
       <div class="panel panel-stats">
         <h2>Day totals</h2>
@@ -444,6 +487,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260830zfight"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260831feeder"></script>
 </body>
 </html>

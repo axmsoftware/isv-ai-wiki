@@ -141,6 +141,8 @@ const Y_ROAD = 0.08;
 const Y_GRID = 0.16;
 const Y_NOW = 0.28;
 const Y_RF = 0.22;
+/** Ground corridor around selected feeder traces — between polar grid and RF. */
+const Y_FEEDER = 0.19;
 const Y_COMPASS = [0.09, 0.14, 0.2];
 const HOP_DY = 0.16;
 const KNOB_STEP = 5;
@@ -383,6 +385,7 @@ const state = {
   role: "ops",
   you: HOUSES[0]?.id || "h0",
   emsId: null,
+  scopeBoard: null,
 };
 
 const eventMeshes = [];
@@ -394,7 +397,12 @@ let readingMesh;
 let worldlineMesh;
 let knobMesh;
 let powerLineMesh;
+let poleMesh;
 let lvSegMeta = [];
+let feederBufById = {};
+let feederPickMesh;
+let polePick = [];
+let breakerPick = [];
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
@@ -2205,27 +2213,31 @@ function buildPowerLines() {
   });
   powerLineMesh.castShadow = true;
   powerLineMesh.receiveShadow = true;
+  powerLineMesh.userData.pickLines = true;
   scene.add(powerLineMesh);
 
   const poleGeo = new THREE.BoxGeometry(0.14, LINE_HANG, 0.14);
   const poleMat = new THREE.MeshLambertMaterial({ color: 0x3a3a40 });
-  const poleMesh = new THREE.InstancedMesh(poleGeo, poleMat, POLES.length + TRANSFORMERS.length + FEEDERS.length + 1);
+  poleMesh = new THREE.InstancedMesh(poleGeo, poleMat, POLES.length + TRANSFORMERS.length + FEEDERS.length + 1);
+  polePick = [];
   const dummy = new THREE.Object3D();
   let pi = 0;
-  const plant = (x, z) => {
+  const plant = (x, z, scope) => {
     dummy.position.set(x, LINE_HANG / 2, z);
     dummy.rotation.set(0, 0, 0);
     dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     poleMesh.setMatrixAt(pi++, dummy.matrix);
+    polePick.push(scope);
   };
-  plant(LANDMARKS.xfmr.x, LANDMARKS.xfmr.z);
-  for (const p of POLES) plant(p.x, p.z);
-  for (const t of TRANSFORMERS) plant(t.x, t.z);
-  for (const f of FEEDERS) plant(f.x, f.z);
+  plant(LANDMARKS.xfmr.x, LANDMARKS.xfmr.z, STATIONS[0] ? { kind: "station", id: STATIONS[0].id } : { kind: "village" });
+  for (const p of POLES) plant(p.x, p.z, p.feederId ? { kind: "feeder", id: p.feederId } : { kind: "village" });
+  for (const t of TRANSFORMERS) plant(t.x, t.z, { kind: "feeder", id: t.feederId });
+  for (const f of FEEDERS) plant(f.x, f.z, { kind: "feeder", id: f.id });
   poleMesh.count = pi;
   poleMesh.castShadow = true;
   poleMesh.receiveShadow = true;
+  poleMesh.userData.pickPoles = true;
   scene.add(poleMesh);
   buildStreetLamps();
 
@@ -2242,8 +2254,10 @@ function buildPowerLines() {
   });
   xfmrMesh.castShadow = true;
   xfmrMesh.receiveShadow = true;
+  xfmrMesh.userData.pickXfmr = true;
   scene.add(xfmrMesh);
   buildBreakers();
+  buildFeederBuffers();
 
   for (const f of FEEDERS) {
     const spr = timeSprite(f.label, "#c9a227", 320);
@@ -2266,22 +2280,145 @@ function buildBreakers() {
   const dummy = new THREE.Object3D();
   const c = new THREE.Color(ASSET.breaker);
   let i = 0;
-  const plant = (x, z, y = LINE_HANG + 0.22) => {
+  breakerPick = [];
+  const plant = (x, z, y, scope) => {
     dummy.position.set(x, y, z);
     dummy.rotation.set(0, 0, 0);
     dummy.scale.set(1, 1, 1);
     dummy.updateMatrix();
     breakerMesh.setMatrixAt(i, dummy.matrix);
     breakerMesh.setColorAt(i, c);
+    breakerPick.push(scope);
     i += 1;
   };
-  plant(LANDMARKS.xfmr.x + 0.58, LANDMARKS.xfmr.z - 0.24, 0.92);
-  for (const f of FEEDERS) plant(f.x - 0.52, f.z - 0.22);
-  for (const t of TRANSFORMERS) plant(t.x + 0.44, t.z - 0.22);
+  plant(
+    LANDMARKS.xfmr.x + 0.58,
+    LANDMARKS.xfmr.z - 0.24,
+    0.92,
+    STATIONS[0] ? { kind: "station", id: STATIONS[0].id } : { kind: "village" },
+  );
+  for (const f of FEEDERS) plant(f.x - 0.52, f.z - 0.22, LINE_HANG + 0.22, { kind: "feeder", id: f.id });
+  for (const t of TRANSFORMERS) plant(t.x + 0.44, t.z - 0.22, LINE_HANG + 0.22, { kind: "feeder", id: t.feederId });
   breakerMesh.count = i;
   breakerMesh.castShadow = true;
   breakerMesh.visible = false;
+  breakerMesh.userData.pickBreakers = true;
   scene.add(breakerMesh);
+}
+
+function feederBufWidth(kind) {
+  if (kind === "trunk") return 2.55;
+  if (kind === "primary") return 1.95;
+  return 1.2;
+}
+
+function buildFeederBuffers() {
+  feederBufById = {};
+  const bufMat = new THREE.MeshBasicMaterial({
+    color: ASSET.feeder,
+    transparent: true,
+    opacity: 0.32,
+    side: THREE.DoubleSide,
+    depthWrite: false,
+    polygonOffset: true,
+    polygonOffsetFactor: -2,
+    polygonOffsetUnits: -2,
+  });
+  const pickMat = new THREE.MeshBasicMaterial({
+    color: ASSET.feeder,
+    transparent: true,
+    opacity: 0,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const barGeo = new THREE.BoxGeometry(1, 1, 1);
+  const capGeo = new THREE.CircleGeometry(1, 16);
+  const dummy = new THREE.Object3D();
+  const pickSegs = GRID_SEGS.filter((s) => s.feederId);
+  feederPickMesh = new THREE.InstancedMesh(barGeo, pickMat, Math.max(1, pickSegs.length));
+  pickSegs.forEach((s, i) => {
+    const dx = s.bx - s.ax;
+    const dz = s.bz - s.az;
+    const len = Math.hypot(dx, dz) || 0.2;
+    const w = feederBufWidth(s.kind) * 0.72;
+    dummy.position.set((s.ax + s.bx) / 2, Y_FEEDER, (s.az + s.bz) / 2);
+    dummy.rotation.set(0, Math.atan2(dx, dz), 0);
+    dummy.scale.set(w, 0.04, len + w * 0.35);
+    dummy.updateMatrix();
+    feederPickMesh.setMatrixAt(i, dummy.matrix);
+  });
+  feederPickMesh.count = pickSegs.length;
+  feederPickMesh.userData.pickFeeders = true;
+  feederPickMesh.userData.pickSegs = pickSegs;
+  feederPickMesh.frustumCulled = false;
+  scene.add(feederPickMesh);
+
+  for (const f of FEEDERS) {
+    const segs = GRID_SEGS.filter((s) => s.feederId === f.id);
+    const g = new THREE.Group();
+    g.visible = false;
+    g.userData.feederId = f.id;
+    if (segs.length) {
+      const ribbon = new THREE.InstancedMesh(barGeo, bufMat.clone(), segs.length);
+      ribbon.userData.scope = { kind: "feeder", id: f.id };
+      segs.forEach((s, i) => {
+        const dx = s.bx - s.ax;
+        const dz = s.bz - s.az;
+        const len = Math.hypot(dx, dz) || 0.2;
+        const w = feederBufWidth(s.kind);
+        dummy.position.set((s.ax + s.bx) / 2, Y_FEEDER, (s.az + s.bz) / 2);
+        dummy.rotation.set(0, Math.atan2(dx, dz), 0);
+        dummy.scale.set(w, 0.045, len + w * 0.28);
+        dummy.updateMatrix();
+        ribbon.setMatrixAt(i, dummy.matrix);
+      });
+      ribbon.frustumCulled = false;
+      g.add(ribbon);
+      const seen = new Set();
+      const joints = [];
+      const add = (x, z, kind) => {
+        const k = `${x.toFixed(2)},${z.toFixed(2)}`;
+        if (seen.has(k)) return;
+        seen.add(k);
+        joints.push({ x, z, r: feederBufWidth(kind) * 0.52 });
+      };
+      for (const s of segs) {
+        add(s.ax, s.az, s.kind);
+        add(s.bx, s.bz, s.kind);
+      }
+      const caps = new THREE.InstancedMesh(capGeo, bufMat.clone(), Math.max(1, joints.length));
+      caps.userData.scope = { kind: "feeder", id: f.id };
+      joints.forEach((j, i) => {
+        dummy.position.set(j.x, Y_FEEDER + 0.004, j.z);
+        dummy.rotation.set(-Math.PI / 2, 0, 0);
+        dummy.scale.set(j.r, j.r, 1);
+        dummy.updateMatrix();
+        caps.setMatrixAt(i, dummy.matrix);
+      });
+      caps.count = joints.length;
+      caps.frustumCulled = false;
+      g.add(caps);
+    }
+    scene.add(g);
+    feederBufById[f.id] = g;
+  }
+}
+
+function activeFeederId() {
+  const s = state.scope || {};
+  if (s.kind === "feeder") return s.id;
+  if (s.kind === "board") return boardById[s.id]?.feederId || null;
+  if (s.kind === "house") return houseById[s.id]?.feederId || null;
+  return null;
+}
+
+function updateFeederHighlight() {
+  const fid = activeFeederId();
+  for (const [id, g] of Object.entries(feederBufById)) {
+    g.visible = id === fid;
+  }
+  const stage = document.getElementById("wl-stage-grid");
+  if (stage) stage.classList.toggle("has-feeder", !!(fid && state.role !== "customer"));
 }
 
 function buildDtms() {
@@ -2562,12 +2699,13 @@ function colorHouses(last) {
   const roof = new THREE.Color();
   const asset = state.scheme === "asset";
   const lamps = state.light === "lamps";
+  const fid = activeFeederId();
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
     const out = !!(r?.feederOut || outageHit(h, state.nowMin));
     let c;
-    if (out) c = red;
+    if (out) c = red.clone();
     else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
     else c = capacityColor(r?.capacity || 0);
     if (lamps && !out) {
@@ -2575,6 +2713,7 @@ function colorHouses(last) {
       if (on) c = c.clone().lerp(lampWarm, 0.28);
       else c = lampDark.clone();
     }
+    if (fid && h.feederId !== fid) c.multiplyScalar(0.38);
     hutMesh.setColorAt(i, c);
     roof.copy(c).multiplyScalar(lamps && !out && !(r?.on) ? 0.45 : 0.78);
     roofMesh.setColorAt(i, roof);
@@ -2591,6 +2730,8 @@ function colorPowerLines() {
   const civicQ = civic * Math.tan(Math.acos(CIVIC_PF));
   const usePf = state.lineGrad === "pf";
   const asset = state.scheme === "asset";
+  const fid = activeFeederId();
+  const feederTint = new THREE.Color(ASSET.feeder);
   lvSegMeta.forEach((s, i) => {
     const hit = outageCovers(s, state.nowMin);
     let p = 0;
@@ -2625,6 +2766,8 @@ function colorPowerLines() {
     else if (hit) c = new THREE.Color(COL.outage);
     else if (usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
     else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
+    if (fid && s.feederId !== fid) c.multiplyScalar(0.22);
+    else if (fid && s.feederId === fid) c.lerp(feederTint, 0.28);
     powerLineMesh.setColorAt(i, c);
   });
   if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
@@ -2695,22 +2838,114 @@ function applyVisibility() {
     }
   }
   updateLeakViz();
+  updateFeederHighlight();
 }
 
-function setScope(scope) {
+function normalizeScope(scope) {
+  const raw = scope && scope.kind ? { ...scope } : { kind: "village" };
+  if (raw.kind === "house") {
+    const h = houseById[raw.id];
+    if (!h) return { kind: "village" };
+    return { kind: "feeder", id: h.feederId, houseId: h.id, boardId: h.boardId };
+  }
+  if (raw.kind === "board") {
+    const b = boardById[raw.id];
+    if (!b) return { kind: "village" };
+    return { kind: "feeder", id: b.feederId, boardId: b.id };
+  }
+  if (raw.kind === "feeder") {
+    const houseId = raw.houseId || null;
+    const boardId = raw.boardId || (houseId && houseById[houseId]?.boardId) || null;
+    return { kind: "feeder", id: raw.id, houseId, boardId };
+  }
+  return raw;
+}
+
+function setScope(scope, opts = {}) {
   if (state.role === "customer") {
     state.scope = { kind: "house", id: state.you };
     state.focus = state.you;
+    state.scopeBoard = houseById[state.you]?.boardId || null;
     applyVisibility();
+    colorPowerLines();
     fillHouses();
     return;
   }
-  state.scope = scope && scope.kind ? scope : { kind: "village" };
-  state.focus = state.scope.kind === "house" ? state.scope.id : null;
-  if (state.scope.kind === "board") openEms(state.scope.id, true);
-  else if (state.role !== "tech") closeEms();
+  const next = normalizeScope(scope);
+  state.scope = next;
+  if (next.kind === "feeder") {
+    state.focus = next.houseId || null;
+    state.scopeBoard = next.boardId || (state.focus && houseById[state.focus]?.boardId) || null;
+  } else if (next.kind === "house") {
+    state.focus = next.id;
+    state.scopeBoard = houseById[next.id]?.boardId || null;
+  } else {
+    state.focus = null;
+    state.scopeBoard = null;
+  }
+  if (!opts.fromEms) {
+    if (state.role === "tech" && scope?.kind === "board" && state.scopeBoard) {
+      openEms(state.scopeBoard, !!opts.fly);
+    } else if (state.role !== "tech" || next.kind === "village") {
+      closeEms();
+    }
+  }
   applyVisibility();
-  fillHouses();
+  colorPowerLines();
+  fillHouses(true);
+  writeQuery({
+    feeder: next.kind === "feeder" ? next.id : "",
+    board: state.emsId || "",
+  });
+}
+
+function pickList() {
+  const list = [hutMesh, roofMesh];
+  if (emsMesh) list.push(emsMesh);
+  if (xfmrMesh) list.push(xfmrMesh);
+  if (poleMesh) list.push(poleMesh);
+  if (powerLineMesh) list.push(powerLineMesh);
+  if (feederPickMesh) list.push(feederPickMesh);
+  if (breakerMesh && breakerMesh.visible) list.push(breakerMesh);
+  for (const g of Object.values(feederBufById)) {
+    if (g.visible) list.push(...g.children);
+  }
+  for (const o of scene.children) {
+    if (o.userData.houseId || o.userData.scope) list.push(o);
+  }
+  return list.filter(Boolean);
+}
+
+function scopeFromHit(hit) {
+  if (!hit) return { kind: "village" };
+  const o = hit.object;
+  const i = hit.instanceId;
+  if (o.userData.pickHuts && i != null) {
+    const h = HOUSES[i];
+    return h ? { kind: "house", id: h.id } : { kind: "village" };
+  }
+  if (o.userData.houseId) return { kind: "house", id: o.userData.houseId };
+  if (o.userData.pickBoards && i != null) {
+    const b = BOARDS[i];
+    return b ? { kind: "board", id: b.id } : { kind: "village" };
+  }
+  if (o.userData.pickXfmr && i != null) {
+    const t = TRANSFORMERS[i];
+    return t ? { kind: "feeder", id: t.feederId } : { kind: "village" };
+  }
+  if (o.userData.pickPoles && i != null) return polePick[i] || { kind: "village" };
+  if (o.userData.pickBreakers && i != null) return breakerPick[i] || { kind: "village" };
+  if (o.userData.pickLines && i != null) {
+    const s = lvSegMeta[i];
+    if (s?.feederId) return { kind: "feeder", id: s.feederId };
+    return STATIONS[0] ? { kind: "station", id: STATIONS[0].id } : { kind: "village" };
+  }
+  if (o.userData.pickFeeders && i != null) {
+    const s = o.userData.pickSegs?.[i];
+    if (s?.feederId) return { kind: "feeder", id: s.feederId };
+  }
+  if (o.userData.scope) return o.userData.scope;
+  return { kind: "village" };
 }
 
 function onPick(ev) {
@@ -2721,8 +2956,7 @@ function onPick(ev) {
   );
   const ray = new THREE.Raycaster();
   ray.setFromCamera(mouse, camera);
-  const extras = scene.children.filter((o) => o.userData.houseId || o.userData.scope);
-  const hits = ray.intersectObjects([hutMesh, roofMesh, ...(emsMesh ? [emsMesh] : []), ...extras], false);
+  const hits = ray.intersectObjects(pickList(), false);
   const hit = hits[0];
   if (state.role === "customer") {
     const hid =
@@ -2734,17 +2968,7 @@ function onPick(ev) {
     if (hid === state.you) setScope({ kind: "house", id: hid });
     return;
   }
-  if (hit && hit.object.userData.pickHuts && hit.instanceId != null) {
-    setScope({ kind: "house", id: HOUSES[hit.instanceId].id });
-  } else if (hit && hit.object.userData.houseId) {
-    setScope({ kind: "house", id: hit.object.userData.houseId });
-  } else if (hit && hit.object.userData.pickBoards && hit.instanceId != null) {
-    setScope({ kind: "board", id: BOARDS[hit.instanceId].id });
-  } else if (hit && hit.object.userData.scope) {
-    setScope(hit.object.userData.scope);
-  } else {
-    setScope({ kind: "village" });
-  }
+  setScope(scopeFromHit(hit));
 }
 
 function tick(ts) {
@@ -3051,10 +3275,12 @@ function openEms(id, fly) {
   const b = boardById[id] || BOARDS[0];
   if (!b) return;
   state.emsId = b.id;
-  if (state.role !== "customer") state.scope = { kind: "board", id: b.id };
+  if (state.role !== "customer") {
+    setScope({ kind: "feeder", id: b.feederId, boardId: b.id }, { fromEms: true });
+  }
   fillEms();
   if (fly) flyToXZ(b.x, b.z, 11);
-  writeQuery({ board: b.id });
+  writeQuery({ board: b.id, feeder: b.feederId });
 }
 
 function closeEms() {
@@ -3086,8 +3312,10 @@ function applyRole() {
   } else {
     const card = document.getElementById("wl-cust-card");
     if (card) card.hidden = true;
-    if (state.role === "tech" && !state.emsId) openEms(BOARDS[0]?.id, true);
-    else fillEms();
+    if (state.role === "tech") {
+      if (state.emsId) fillEms();
+      else if (state.scope?.kind !== "feeder") openEms(BOARDS[0]?.id, true);
+    } else fillEms();
   }
   applyVisibility();
   fillHouses();
@@ -3113,6 +3341,16 @@ function applyQuery() {
   if (you && houseById[you]) state.you = you;
   const board = q.get("board");
   if (board && boardById[board]) state.emsId = board;
+  const feeder = q.get("feeder");
+  if (feeder && FEEDERS.some((f) => f.id === feeder) && state.role !== "customer") {
+    const b = state.emsId && boardById[state.emsId]?.feederId === feeder ? state.emsId : null;
+    state.scope = { kind: "feeder", id: feeder, boardId: b };
+    state.scopeBoard = b;
+  } else if (state.emsId && boardById[state.emsId] && state.role !== "customer") {
+    const b = boardById[state.emsId];
+    state.scope = { kind: "feeder", id: b.feederId, boardId: b.id };
+    state.scopeBoard = b.id;
+  }
   const homesEl = document.getElementById("wl-homes");
   if (homesEl) {
     const v = sizeSelectValue();
@@ -3182,7 +3420,7 @@ function bindUi() {
   });
   document.getElementById("wl-ems-open")?.addEventListener("click", () => {
     if (state.role === "customer") return;
-    const id = state.emsId || (state.scope?.kind === "board" ? state.scope.id : BOARDS[0]?.id);
+    const id = state.emsId || (state.scope?.kind === "feeder" ? state.scopeBoard : null) || BOARDS[0]?.id;
     openEms(id, true);
   });
   document.getElementById("wl-ems-close")?.addEventListener("click", () => closeEms());
@@ -3217,6 +3455,9 @@ function bindUi() {
   qEl?.addEventListener("input", () => {
     state.houseQ = qEl.value || "";
     fillHouses(true);
+  });
+  document.getElementById("wl-feeder-clear")?.addEventListener("click", () => {
+    setScope({ kind: "village" });
   });
   const chips = document.getElementById("wl-house-clusters");
   if (chips && !chips.dataset.ready) {
@@ -3369,6 +3610,113 @@ function fillLog() {
     .join("");
 }
 
+function boardsOnFeeder(fid) {
+  return BOARDS.filter((b) => b.feederId === fid).sort(
+    (a, b) => (a.boardIdx ?? 0) - (b.boardIdx ?? 0) || String(a.id).localeCompare(String(b.id)),
+  );
+}
+
+function onFeederGridClick(e) {
+  const cell = e.target.closest("button.feeder-cell[data-h]");
+  if (cell) {
+    const id = cell.getAttribute("data-h");
+    const h = houseById[id];
+    if (!h) return;
+    if (state.focus === id) {
+      setScope({ kind: "feeder", id: h.feederId, boardId: h.boardId });
+    } else {
+      setScope({ kind: "feeder", id: h.feederId, houseId: id, boardId: h.boardId });
+      flyToXZ(h.x, h.z, 12);
+    }
+    return;
+  }
+  const lab = e.target.closest("button.feeder-row-lab[data-board]");
+  if (!lab) return;
+  const bid = lab.getAttribute("data-board");
+  const b = boardById[bid];
+  if (!b) return;
+  if (state.role === "tech") openEms(bid, true);
+  else {
+    setScope({ kind: "feeder", id: b.feederId, boardId: b.id });
+    flyToXZ(b.x, b.z, 12);
+  }
+}
+
+function fillFeederGrid() {
+  const view = document.getElementById("wl-feeder-view");
+  const houseView = document.getElementById("wl-house-view");
+  const title = document.getElementById("wl-play-title");
+  const sub = document.getElementById("wl-feeder-sub");
+  const grid = document.getElementById("wl-feeder-grid");
+  const fid = state.role === "customer" ? null : activeFeederId();
+  const show = !!fid && (state.scope?.kind === "feeder" || state.scope?.kind === "board");
+  if (view) view.hidden = !show;
+  if (houseView) houseView.hidden = !!show;
+  if (!show) {
+    if (title) title.textContent = "At playhead";
+    return;
+  }
+  const f = FEEDERS.find((x) => x.id === fid);
+  const d = DTMS.find((x) => x.feederId === fid);
+  const boards = boardsOnFeeder(fid);
+  const homes = HOUSES.filter((h) => h.feederId === fid);
+  const q = state.houseQ.trim().toLowerCase();
+  if (title) title.textContent = f?.label || fid;
+  if (sub) {
+    sub.textContent = `${d?.label || "DTM"} · ${boards.length} EMS · ${homes.length} customers · row = MeshEMS, cell = meter`;
+  }
+  if (!grid) return;
+  const cols = Math.max(HOMES_PER_BOARD, 1, ...boards.map((b) => (b.houseIds || []).length));
+  grid.style.setProperty("--feeder-cols", String(cols));
+  const ids = `${fid}|${boards.map((b) => b.id).join(",")}|${cols}`;
+  if (grid.dataset.ids !== ids) {
+    grid.dataset.ids = ids;
+    grid.innerHTML = boards
+      .map((b) => {
+        const lab = String(b.id || "").replace(/^ems-/, "E");
+        const cells = (b.houseIds || [])
+          .map((hid) => {
+            const h = houseById[hid];
+            return `<button type="button" class="feeder-cell" data-h="${esc(hid)}" title="${esc(h?.name)} · ${esc(h?.serial)}"></button>`;
+          })
+          .join("");
+        const pad = Math.max(0, cols - (b.houseIds || []).length);
+        const empty = Array.from(
+          { length: pad },
+          () => `<span class="feeder-cell" style="visibility:hidden;pointer-events:none"></span>`,
+        ).join("");
+        return `<div class="feeder-row" data-board="${esc(b.id)}" style="--feeder-cols:${cols}">
+        <button type="button" class="feeder-row-lab" data-board="${esc(b.id)}" title="${esc(b.label)}">${esc(lab)}</button>
+        ${cells}${empty}
+      </div>`;
+      })
+      .join("");
+    if (!grid.dataset.bound) {
+      grid.dataset.bound = "1";
+      grid.addEventListener("click", onFeederGridClick);
+    }
+  }
+  grid.querySelectorAll(".feeder-row").forEach((row) => {
+    row.classList.toggle("is-on", row.getAttribute("data-board") === state.scopeBoard);
+  });
+  grid.querySelectorAll("button.feeder-cell[data-h]").forEach((btn) => {
+    const id = btn.getAttribute("data-h");
+    const h = houseById[id];
+    const r = readingAt(id, state.nowMin);
+    const o = h ? houseOutage(h) : null;
+    const on = r ? r.on && !r.feederOut : false;
+    btn.classList.toggle("on", on && !o);
+    btn.classList.toggle("off", !on && !o);
+    btn.classList.toggle("out", !!o);
+    btn.classList.toggle("focus", state.focus === id);
+    const match =
+      !!q &&
+      !!h &&
+      (h.name.toLowerCase().includes(q) || h.serial.toLowerCase().includes(q) || h.id.toLowerCase() === q);
+    btn.classList.toggle("match", match);
+  });
+}
+
 function listedHouses() {
   const q = state.houseQ.trim().toLowerCase();
   let list = HOUSES;
@@ -3391,6 +3739,7 @@ function listedHouses() {
 }
 
 function fillHouses(rebuild) {
+  fillFeederGrid();
   const el = document.getElementById("wl-houses");
   if (!el) return;
   const { total, rows } = listedHouses();
