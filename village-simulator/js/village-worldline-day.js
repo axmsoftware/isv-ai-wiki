@@ -403,6 +403,8 @@ let feederBufById = {};
 let feederPickMesh;
 let polePick = [];
 let breakerPick = [];
+let camFly = null;
+let camFeederId = null;
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
@@ -751,6 +753,7 @@ function boot() {
   applyVizMode();
   applyRole();
   resize();
+  if (state.role !== "customer" && state.scope?.kind === "feeder") flyToFeeder(state.scope.id);
   window.addEventListener("resize", resize);
   new ResizeObserver(resize).observe(stage);
   renderer.domElement.addEventListener("pointerdown", onPick);
@@ -840,7 +843,7 @@ function applyVizMode() {
     scene.fog.near = v2 ? 220 : 380;
     scene.fog.far = v2 ? 780 : 1400;
   }
-  if (camera && controls) {
+  if (camera && controls && state.scope?.kind !== "feeder") {
     const home = camHome(v2);
     camera.position.set(...home.pos);
     controls.target.set(...home.look);
@@ -2595,15 +2598,68 @@ function assetLineKind(s) {
   return "station";
 }
 
-function colorHardware() {
+function colorHardware(loads) {
   const asset = state.scheme === "asset";
-  tintInstanced(emsMesh, asset ? ASSET.board : 0xff6a2a);
-  tintInstanced(xfmrMesh, asset ? ASSET.xfmr : 0xc9a227);
+  const fid = activeFeederId();
+  const last = loads?.last;
+  const byXfmr = loads?.byXfmr || {};
+  const byFeeder = loads?.byFeeder || {};
+  if (fid && last && emsMesh?.instanceColor) {
+    BOARDS.forEach((b, i) => {
+      let c;
+      if (b.feederId !== fid) {
+        c = new THREE.Color(asset ? ASSET.board : 0xff6a2a).multiplyScalar(0.28);
+      } else {
+        let p = 0;
+        let cap = 0;
+        for (const hid of b.houseIds || []) {
+          const h = houseById[hid];
+          const r = last[hid];
+          if (r && r.on && !r.feederOut) p += r.powerW;
+          cap += h?.loadLimitW || 220;
+        }
+        c = capacityColor(Math.min(1, p / Math.max(1, cap)));
+      }
+      emsMesh.setColorAt(i, c);
+    });
+    emsMesh.instanceColor.needsUpdate = true;
+  } else {
+    tintInstanced(emsMesh, asset ? ASSET.board : 0xff6a2a);
+  }
+  if (fid && xfmrMesh?.instanceColor) {
+    TRANSFORMERS.forEach((t, i) => {
+      let c;
+      if (t.feederId !== fid) {
+        c = new THREE.Color(asset ? ASSET.xfmr : 0xc9a227).multiplyScalar(0.28);
+      } else {
+        const pq = byXfmr[t.id];
+        c = capacityColor(Math.min(1, (pq?.p || 0) / Math.max(1, t.capW || 1200)));
+      }
+      xfmrMesh.setColorAt(i, c);
+    });
+    xfmrMesh.instanceColor.needsUpdate = true;
+  } else {
+    tintInstanced(xfmrMesh, asset ? ASSET.xfmr : 0xc9a227);
+  }
   tintInstanced(breakerMesh, ASSET.breaker);
   if (breakerMesh) breakerMesh.visible = asset;
+  const trunk = lvSegMeta.find((s) => s.feederId === fid && s.kind === "trunk");
+  const dtmCap = trunk?.capW || 8000;
+  const dtmLoad = fid && byFeeder[fid] ? byFeeder[fid].p || 0 : 0;
   for (const p of dtmParts) {
-    p.body.material.color.setHex(asset ? 0x145048 : 0x1a3340);
-    p.lid.material.color.setHex(asset ? ASSET.dtm : 0x2bb6a3);
+    const onThis = fid && p.body.userData.scope?.id === fid;
+    if (fid && onThis) {
+      const c = capacityColor(Math.min(1, dtmLoad / Math.max(1, dtmCap)));
+      p.body.material.color.copy(c).multiplyScalar(0.45);
+      p.lid.material.color.copy(c);
+    } else {
+      p.body.material.color.setHex(asset ? 0x145048 : 0x1a3340);
+      p.lid.material.color.setHex(asset ? ASSET.dtm : 0x2bb6a3);
+      if (fid) {
+        p.body.material.color.multiplyScalar(0.35);
+        p.lid.material.color.multiplyScalar(0.35);
+      }
+    }
   }
   for (const m of stationMeshes) {
     m.material.color.setHex(asset ? ASSET.station : m.userData.baseHex);
@@ -2700,12 +2756,14 @@ function colorHouses(last) {
   const asset = state.scheme === "asset";
   const lamps = state.light === "lamps";
   const fid = activeFeederId();
+  const loadGrid = !!fid;
   for (let i = 0; i < HOUSE_N; i++) {
     const h = HOUSES[i];
     const r = src[h.id];
     const out = !!(r?.feederOut || outageHit(h, state.nowMin));
     let c;
     if (out) c = red.clone();
+    else if (loadGrid) c = capacityColor(r?.capacity || 0);
     else if (!asset && state.lineGrad === "pf") c = pfColor(r?.pf ?? 1);
     else c = capacityColor(r?.capacity || 0);
     if (lamps && !out) {
@@ -2713,7 +2771,7 @@ function colorHouses(last) {
       if (on) c = c.clone().lerp(lampWarm, 0.28);
       else c = lampDark.clone();
     }
-    if (fid && h.feederId !== fid) c.multiplyScalar(0.38);
+    if (fid && h.feederId !== fid) c.multiplyScalar(0.32);
     hutMesh.setColorAt(i, c);
     roof.copy(c).multiplyScalar(lamps && !out && !(r?.on) ? 0.45 : 0.78);
     roofMesh.setColorAt(i, roof);
@@ -2731,7 +2789,7 @@ function colorPowerLines() {
   const usePf = state.lineGrad === "pf";
   const asset = state.scheme === "asset";
   const fid = activeFeederId();
-  const feederTint = new THREE.Color(ASSET.feeder);
+  const loadGrid = !!fid;
   lvSegMeta.forEach((s, i) => {
     const hit = outageCovers(s, state.nowMin);
     let p = 0;
@@ -2762,17 +2820,16 @@ function colorPowerLines() {
       cap = XFMR_CAPACITY_W;
     }
     let c;
-    if (asset) c = new THREE.Color(ASSET[assetLineKind(s)]);
+    if (!loadGrid && asset) c = new THREE.Color(ASSET[assetLineKind(s)]);
     else if (hit) c = new THREE.Color(COL.outage);
-    else if (usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
+    else if (!loadGrid && usePf) c = pfColor(p <= 0 ? 1 : p / Math.hypot(p, q));
     else c = capacityColor(Math.min(1, p / Math.max(1, cap)));
-    if (fid && s.feederId !== fid) c.multiplyScalar(0.22);
-    else if (fid && s.feederId === fid) c.lerp(feederTint, 0.28);
+    if (fid && s.feederId !== fid) c.multiplyScalar(0.18);
     powerLineMesh.setColorAt(i, c);
   });
   if (powerLineMesh.instanceColor) powerLineMesh.instanceColor.needsUpdate = true;
   colorHouses(last);
-  colorHardware();
+  colorHardware({ last, byFeeder, byXfmr });
 }
 
 function applyLineLegend() {
@@ -2872,6 +2929,7 @@ function setScope(scope, opts = {}) {
     return;
   }
   const next = normalizeScope(scope);
+  const prevFid = activeFeederId();
   state.scope = next;
   if (next.kind === "feeder") {
     state.focus = next.houseId || null;
@@ -2897,6 +2955,11 @@ function setScope(scope, opts = {}) {
     feeder: next.kind === "feeder" ? next.id : "",
     board: state.emsId || "",
   });
+  if (next.kind === "feeder") {
+    if (next.id !== prevFid) flyToFeeder(next.id);
+  } else if (next.kind === "village" && prevFid) {
+    flyToVillage();
+  }
 }
 
 function pickList() {
@@ -2988,6 +3051,7 @@ function tick(ts) {
       setNow(next);
     }
   }
+  stepCamFly(dt);
   panLook(dt);
   controls.update();
   scaleCompassCards();
@@ -3006,6 +3070,11 @@ function scaleCompassCards() {
 
 function panLook(dt) {
   if (!panKeys.size || !camera || !controls) return;
+  if (camFly) camFly = null;
+  if (controls) {
+    controls.enabled = true;
+    controls.enableDamping = true;
+  }
   camera.getWorldDirection(panFwd);
   panFwd.y = 0;
   if (panFwd.lengthSq() < 1e-6) panFwd.set(0, 0, NORTH.z || -1);
@@ -3093,8 +3162,133 @@ function esc(s) {
     .replace(/"/g, "&quot;");
 }
 
+function easeInOutCubic(t) {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function feederPoints(fid) {
+  const pts = [];
+  pts.push([LANDMARKS.xfmr.x, LANDMARKS.xfmr.z]);
+  const f = FEEDERS.find((x) => x.id === fid);
+  if (f) pts.push([f.x, f.z]);
+  for (const h of HOUSES) if (h.feederId === fid) pts.push([h.x, h.z]);
+  for (const t of TRANSFORMERS) if (t.feederId === fid) pts.push([t.x, t.z]);
+  for (const p of POLES) if (p.feederId === fid) pts.push([p.x, p.z]);
+  for (const b of BOARDS) if (b.feederId === fid) pts.push([b.x, b.z]);
+  return pts;
+}
+
+function feederCamPose(fid) {
+  if (!camera) return null;
+  const homes = HOUSES.filter((h) => h.feederId === fid);
+  if (!homes.length) return null;
+  const pts = feederPoints(fid);
+  const src = LANDMARKS.xfmr;
+  let hx = 0;
+  let hz = 0;
+  for (const h of homes) {
+    hx += h.x;
+    hz += h.z;
+  }
+  hx /= homes.length;
+  hz /= homes.length;
+  let ax = hx - src.x;
+  let az = hz - src.z;
+  const alen = Math.hypot(ax, az) || 1;
+  ax /= alen;
+  az /= alen;
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  for (const [x, z] of pts) {
+    minX = Math.min(minX, x);
+    maxX = Math.max(maxX, x);
+    minZ = Math.min(minZ, z);
+    maxZ = Math.max(maxZ, z);
+  }
+  const lookX = (minX + maxX) / 2;
+  const lookZ = (minZ + maxZ) / 2;
+  let minA = Infinity;
+  let maxA = -Infinity;
+  let minP = Infinity;
+  let maxP = -Infinity;
+  for (const [x, z] of pts) {
+    const a = (x - lookX) * ax + (z - lookZ) * az;
+    const p = (x - lookX) * -az + (z - lookZ) * ax;
+    minA = Math.min(minA, a);
+    maxA = Math.max(maxA, a);
+    minP = Math.min(minP, p);
+    maxP = Math.max(maxP, p);
+  }
+  const alongSpan = Math.max(10, maxA - minA);
+  const perpSpan = Math.max(8, maxP - minP);
+  const pad = 1.38;
+  const vFov = (camera.fov * Math.PI) / 180;
+  const aspect = Math.max(0.55, camera.aspect || 1.35);
+  const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+  const distH = (alongSpan * pad) / 2 / Math.tan(hFov / 2);
+  const distV = (perpSpan * pad) / 2 / Math.tan(vFov / 2);
+  const dist = Math.max(18, distH, distV);
+  const elev = 0.5;
+  const horiz = dist * Math.cos(elev);
+  const height = Math.max(9, dist * Math.sin(elev));
+  const ox = -az;
+  const oz = ax;
+  return {
+    pos: new THREE.Vector3(lookX + ox * horiz, height, lookZ + oz * horiz),
+    look: new THREE.Vector3(lookX, 0.55, lookZ),
+  };
+}
+
+function startCamFly(toPos, toLook, dur = 0.95) {
+  if (!camera || !controls) return;
+  camFly = {
+    t: 0,
+    dur,
+    fromPos: camera.position.clone(),
+    fromLook: controls.target.clone(),
+    toPos: toPos.clone(),
+    toLook: toLook.clone(),
+  };
+  controls.enabled = false;
+  controls.enableDamping = false;
+}
+
+function stepCamFly(dt) {
+  if (!camFly || !camera || !controls) return;
+  camFly.t += dt;
+  const u = easeInOutCubic(Math.min(1, camFly.t / camFly.dur));
+  camera.position.lerpVectors(camFly.fromPos, camFly.toPos, u);
+  controls.target.lerpVectors(camFly.fromLook, camFly.toLook, u);
+  if (camFly.t >= camFly.dur) {
+    camera.position.copy(camFly.toPos);
+    controls.target.copy(camFly.toLook);
+    camFly = null;
+    controls.enabled = true;
+    controls.enableDamping = true;
+  }
+}
+
+function flyToFeeder(fid) {
+  if (!fid || state.role === "customer") return;
+  const pose = feederCamPose(fid);
+  if (!pose) return;
+  camFeederId = fid;
+  startCamFly(pose.pos, pose.look, 0.95);
+}
+
+function flyToVillage() {
+  camFeederId = null;
+  const home = camHome(isV2());
+  startCamFly(new THREE.Vector3(...home.pos), new THREE.Vector3(...home.look), 0.85);
+}
+
 function flyToXZ(x, z, dist = 14) {
   if (!camera || !controls) return;
+  camFly = null;
+  controls.enabled = true;
+  controls.enableDamping = true;
   controls.target.set(x, 0.4, z);
   camera.position.set(x + dist * 0.55, Math.max(5.5, dist * 0.58), z + dist * 0.72);
 }
@@ -3626,7 +3820,6 @@ function onFeederGridClick(e) {
       setScope({ kind: "feeder", id: h.feederId, boardId: h.boardId });
     } else {
       setScope({ kind: "feeder", id: h.feederId, houseId: id, boardId: h.boardId });
-      flyToXZ(h.x, h.z, 12);
     }
     return;
   }
@@ -3635,10 +3828,9 @@ function onFeederGridClick(e) {
   const bid = lab.getAttribute("data-board");
   const b = boardById[bid];
   if (!b) return;
-  if (state.role === "tech") openEms(bid, true);
+  if (state.role === "tech") openEms(bid, false);
   else {
     setScope({ kind: "feeder", id: b.feederId, boardId: b.id });
-    flyToXZ(b.x, b.z, 12);
   }
 }
 
