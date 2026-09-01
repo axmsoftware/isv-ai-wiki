@@ -466,8 +466,10 @@ let polePick = [];
 let breakerPick = [];
 let camFly = null;
 let camFeederId = null;
-const PICK_DRAG_PX = 10;
+const PICK_DRAG_PX = 12;
+const PICK_HOLD_MS = 160;
 let pickPtr = null;
+let lastPickAt = 0;
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
@@ -3392,27 +3394,130 @@ function abortCamFly() {
   }
 }
 
+function distPointSeg2(px, pz, ax, az, bx, bz) {
+  const abx = bx - ax;
+  const abz = bz - az;
+  const apx = px - ax;
+  const apz = pz - az;
+  const ab2 = abx * abx + abz * abz;
+  const t = ab2 < 1e-8 ? 0 : Math.max(0, Math.min(1, (apx * abx + apz * abz) / ab2));
+  const dx = px - (ax + abx * t);
+  const dz = pz - (az + abz * t);
+  return dx * dx + dz * dz;
+}
+
+function nearestScopeAt(x, z, maxD = 2.6) {
+  let best = null;
+  let bestD = maxD * maxD;
+  const consider = (d2, scope) => {
+    if (d2 < bestD) {
+      bestD = d2;
+      best = scope;
+    }
+  };
+  for (const b of BOARDS) consider((b.x - x) ** 2 + (b.z - z) ** 2, { kind: "board", id: b.id });
+  for (const t of TRANSFORMERS) consider((t.x - x) ** 2 + (t.z - z) ** 2, { kind: "feeder", id: t.feederId });
+  for (const f of FEEDERS) consider((f.x - x) ** 2 + (f.z - z) ** 2, { kind: "feeder", id: f.id });
+  for (const h of HOUSES) consider((h.x - x) ** 2 + (h.z - z) ** 2, { kind: "house", id: h.id });
+  for (const p of POLES) {
+    if (p.feederId) consider((p.x - x) ** 2 + (p.z - z) ** 2, { kind: "feeder", id: p.feederId });
+  }
+  for (const s of GRID_SEGS) {
+    if (!s.feederId) continue;
+    consider(distPointSeg2(x, z, s.ax, s.az, s.bx, s.bz), { kind: "feeder", id: s.feederId });
+  }
+  for (const lk of LEAKS) consider((lk.x - x) ** 2 + (lk.z - z) ** 2, leakScope(lk));
+  return best || { kind: "village" };
+}
+
 function bindStagePick() {
   const el = renderer.domElement;
   el.addEventListener("pointerdown", onStagePointerDown, true);
-  el.addEventListener("pointermove", onStagePointerMove, true);
-  el.addEventListener("pointerup", onStagePointerUp, true);
-  el.addEventListener("pointercancel", onStagePointerCancel, true);
+  window.addEventListener("pointermove", onStagePointerMove);
+  window.addEventListener("pointerup", onStagePointerUp);
+  window.addEventListener("pointercancel", onStagePointerCancel);
+  el.addEventListener("click", onStageClick);
 }
 
-function endStagePointer(id) {
-  if (renderer?.domElement && id != null) {
-    try {
-      renderer.domElement.releasePointerCapture(id);
-    } catch {
-      /* already released */
-    }
-  }
-  if (controls) {
-    controls.enabled = true;
-    controls.enableDamping = true;
-  }
+function onStagePointerDown(ev) {
+  abortCamFly();
+  if (ev.pointerType === "mouse" && ev.button !== 0) return;
+  if (pickPtr && ev.pointerId !== pickPtr.id) return;
+  ev.stopImmediatePropagation();
+  pickPtr = {
+    id: ev.pointerId,
+    x: ev.clientX,
+    y: ev.clientY,
+    lx: ev.clientX,
+    ly: ev.clientY,
+    t: performance.now(),
+    panned: false,
+  };
+}
+
+function onStagePointerMove(ev) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  const dx = ev.clientX - pickPtr.x;
+  const dy = ev.clientY - pickPtr.y;
+  const dist2 = dx * dx + dy * dy;
+  const held = performance.now() - pickPtr.t >= PICK_HOLD_MS;
+  if (!pickPtr.panned && held && dist2 >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.panned = true;
+  if (!pickPtr.panned) return;
+  panByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
+  pickPtr.lx = ev.clientX;
+  pickPtr.ly = ev.clientY;
+}
+
+function finishPointer(ev, fromCancel) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  const g = pickPtr;
   pickPtr = null;
+  if (fromCancel || g.panned) return;
+  pickAt(g.x, g.y);
+}
+
+function onStagePointerUp(ev) {
+  finishPointer(ev, false);
+}
+
+function onStagePointerCancel(ev) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  pickPtr = null;
+}
+
+function onStageClick(ev) {
+  if (ev.button != null && ev.button !== 0) return;
+  if (performance.now() - lastPickAt < 200) return;
+  pickAt(ev.clientX, ev.clientY);
+}
+
+function pickAt(clientX, clientY) {
+  if (!renderer || !camera) return;
+  const rect = renderer.domElement.getBoundingClientRect();
+  if (rect.width < 2 || rect.height < 2) return;
+  lastPickAt = performance.now();
+  const mouse = new THREE.Vector2(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((clientY - rect.top) / rect.height) * 2 + 1,
+  );
+  const ray = new THREE.Raycaster();
+  ray.params.Line = { threshold: 0.45 };
+  ray.params.Points = { threshold: 0.45 };
+  ray.setFromCamera(mouse, camera);
+  const hits = ray.intersectObjects(pickList(), true);
+  const hit = preferLeakHit(hits);
+  let scope = hit ? scopeFromHit(hit) : { kind: "village" };
+  if (scope.kind === "village" || scope.kind === "station") {
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+    const pt = new THREE.Vector3();
+    if (ray.ray.intersectPlane(plane, pt)) scope = nearestScopeAt(pt.x, pt.z);
+  }
+  if (state.role === "customer") {
+    const hid = scope.kind === "house" ? scope.id : null;
+    if (hid === state.you) setScope({ kind: "house", id: hid });
+    return;
+  }
+  setScope(scope);
 }
 
 function panByPixels(dxPx, dyPx) {
@@ -3437,80 +3542,6 @@ function panByPixels(dxPx, dyPx) {
   controls.target.x += panRight.x * ox + panUp.x * oy;
   controls.target.y += panRight.y * ox + panUp.y * oy;
   controls.target.z += panRight.z * ox + panUp.z * oy;
-}
-
-function onStagePointerDown(ev) {
-  abortCamFly();
-  if (ev.pointerType === "mouse" && ev.button !== 0) return;
-  if (pickPtr && ev.pointerId !== pickPtr.id) return;
-  ev.stopImmediatePropagation();
-  if (controls) {
-    controls.enabled = false;
-    controls.enableDamping = false;
-  }
-  pickPtr = {
-    id: ev.pointerId,
-    x: ev.clientX,
-    y: ev.clientY,
-    lx: ev.clientX,
-    ly: ev.clientY,
-    dragged: false,
-  };
-  try {
-    renderer.domElement.setPointerCapture(ev.pointerId);
-  } catch {
-    /* ignore */
-  }
-}
-
-function onStagePointerMove(ev) {
-  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
-  const dx = ev.clientX - pickPtr.x;
-  const dy = ev.clientY - pickPtr.y;
-  if (dx * dx + dy * dy >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.dragged = true;
-  if (!pickPtr.dragged) return;
-  panByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
-  pickPtr.lx = ev.clientX;
-  pickPtr.ly = ev.clientY;
-}
-
-function onStagePointerUp(ev) {
-  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
-  const dragged = pickPtr.dragged;
-  const id = pickPtr.id;
-  pickPtr = null;
-  endStagePointer(id);
-  if (dragged) return;
-  if (ev.pointerType === "mouse" && ev.button !== 0) return;
-  onPick(ev);
-}
-
-function onStagePointerCancel(ev) {
-  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
-  endStagePointer(pickPtr.id);
-}
-
-function onPick(ev) {
-  const rect = renderer.domElement.getBoundingClientRect();
-  const mouse = new THREE.Vector2(
-    ((ev.clientX - rect.left) / rect.width) * 2 - 1,
-    -((ev.clientY - rect.top) / rect.height) * 2 + 1,
-  );
-  const ray = new THREE.Raycaster();
-  ray.setFromCamera(mouse, camera);
-  const hits = ray.intersectObjects(pickList(), false);
-  const hit = preferLeakHit(hits);
-  if (state.role === "customer") {
-    const hid =
-      hit && hit.object.userData.pickHuts && hit.instanceId != null
-        ? HOUSES[hit.instanceId].id
-        : hit && hit.object.userData.houseId
-          ? hit.object.userData.houseId
-          : null;
-    if (hid === state.you) setScope({ kind: "house", id: hid });
-    return;
-  }
-  setScope(scopeFromHit(hit));
 }
 
 function tick(ts) {
