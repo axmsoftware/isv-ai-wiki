@@ -112,6 +112,17 @@ html[data-role="customer"] .stage { grid-template-columns: 1fr; }
 .circa-mark-txt span { font-size: 9px; color: #9a9990; font-weight: 400; }
 .circa-mark:hover .circa-mark-txt span { color: #c8c6bc; }
 #wl-stage canvas { display: block; width: 100%; height: 100%; }
+#wl-frame {
+  position: absolute; top: 8px; right: 8px; z-index: 9;
+  width: 36px; height: 36px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid #4a4a4e; border-radius: 10px;
+  background: rgba(18, 18, 20, 0.82); color: #e8e6dc;
+  cursor: pointer; pointer-events: auto;
+}
+#wl-frame:hover { border-color: #7aa0c4; color: #fff; background: rgba(28, 28, 32, 0.94); }
+#wl-frame:focus-visible { outline: 2px solid #5ee0ff; outline-offset: 2px; }
+#wl-frame svg { display: block; }
 .wl-win {
   position: absolute;
   right: 8px;
@@ -416,7 +427,7 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
     <select id="wl-feeder" aria-label="Feeder" data-ops title="Open the EMS × customer feeder grid">
       <option value="">Feeder: village</option>
     </select>
-    <span id="wl-build" title="Local preview stamp — if you do not see this, you are on an old cached page">local 0901-pivot</span>
+    <span id="wl-build" title="Local preview stamp — if you do not see this, you are on an old cached page">local 0901-frame</span>
     <button type="button" id="wl-ems-open" title="Open pole MeshEMS cabinet card" data-ops>EMS cabinet</button>
     <button type="button" data-hide="pay" class="off" data-ops>payments</button>
     <button type="button" id="wl-anomaly" class="on" title="Outage, last-breath, cutoff, PF &lt; 0.80, capacity ≥ 80%, overload trip" data-ops>anomalies</button>
@@ -434,6 +445,13 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   <div class="stage" id="wl-stage-grid">
     <div class="wl-stage-col">
       <div id="wl-stage" role="img" aria-label="Village Simulator 3D scene, now at ground, past rises into the sky">
+        <button type="button" id="wl-frame" title="Center camera on selection" aria-label="Center camera on selection">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+            <circle cx="12" cy="12" r="7.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+            <circle cx="12" cy="12" r="2.15" fill="currentColor"/>
+            <path d="M12 3.1v3.3M12 17.6v3.3M3.1 12h3.3M17.6 12h3.3" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          </svg>
+        </button>
         <a class="circa-mark" href="https://circaevum.com/" target="_blank" rel="noopener noreferrer" title="Powered by Circaevum graphics library">
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <circle cx="8" cy="8" r="2.1" fill="currentColor"/>
@@ -533,6 +551,6 @@ html.embed #wl-theater { min-height: calc(100dvh - 0.7rem); flex: 0 0 auto; }
   }
 }
 </script>
-<script type="module" src="js/village-worldline-day.js?v=20260901pivot"></script>
+<script type="module" src="js/village-worldline-day.js?v=20260901frame"></script>
 </body>
 </html>

@@ -3772,6 +3772,52 @@ function flyToVillage() {
   startCamFly(new THREE.Vector3(...home.pos), new THREE.Vector3(...home.look), 0.85);
 }
 
+function framePoint(x, z, dist = 22) {
+  if (!camera || !controls) return;
+  const toLook = new THREE.Vector3(x, 0.45, z);
+  orbitOffset.copy(camera.position).sub(controls.target);
+  if (orbitOffset.lengthSq() < 0.04) orbitOffset.set(dist * 0.55, Math.max(5.5, dist * 0.58), dist * 0.72);
+  orbitSpherical.setFromVector3(orbitOffset);
+  orbitSpherical.radius = dist;
+  orbitSpherical.phi = Math.max(0.32, Math.min(1.2, orbitSpherical.phi));
+  orbitSpherical.makeSafe();
+  orbitOffset.setFromSpherical(orbitSpherical);
+  startCamFly(toLook.clone().add(orbitOffset), toLook, 0.75);
+}
+
+function frameSelection() {
+  if (state.role === "customer") {
+    const you = houseById[state.you];
+    if (you) framePoint(you.x, you.z, 18);
+    return;
+  }
+  if (state.focus) {
+    const h = houseById[state.focus];
+    if (h) {
+      framePoint(h.x, h.z, 18);
+      return;
+    }
+  }
+  const bid = state.scopeBoard || state.emsId;
+  if (bid && boardById[bid]) {
+    const b = boardById[bid];
+    framePoint(b.x, b.z, 22);
+    return;
+  }
+  const s = state.scope || {};
+  if (s.kind === "station") {
+    const st = STATIONS.find((x) => x.id === s.id) || LANDMARKS.xfmr;
+    framePoint(st.x, st.z, 32);
+    return;
+  }
+  const fid = activeFeederId();
+  if (fid) {
+    flyToFeeder(fid);
+    return;
+  }
+  flyToVillage();
+}
+
 function flyToXZ(x, z, dist = 14) {
   if (!camera || !controls) return;
   camFly = null;
@@ -4056,6 +4102,12 @@ function applyQuery() {
 
 function bindUi() {
   fillFeederSelect();
+  document.getElementById("wl-frame")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    frameSelection();
+  });
+  document.getElementById("wl-frame")?.addEventListener("pointerdown", (e) => e.stopPropagation());
   document.getElementById("wl-play")?.addEventListener("click", () => togglePlay(1));
   document.getElementById("wl-rev")?.addEventListener("click", () => togglePlay(-1));
   document.getElementById("wl-scrub")?.addEventListener("input", (e) => {
