@@ -739,6 +739,8 @@ function boot() {
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.88;
   controls.minPolarAngle = 0.06;
+  controls.mouseButtons.RIGHT = -1;
+  renderer.domElement.addEventListener("contextmenu", (e) => e.preventDefault());
 
   ambientLight = new THREE.AmbientLight(0xe8e4dc, 0.28);
   scene.add(ambientLight);
@@ -3345,6 +3347,7 @@ function scopeFromHit(hit) {
 }
 
 function onPick(ev) {
+  if (ev.pointerType === "mouse" && ev.button !== 0) return;
   const rect = renderer.domElement.getBoundingClientRect();
   const mouse = new THREE.Vector2(
     ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -3501,9 +3504,10 @@ function easeInOutCubic(t) {
 
 function feederPoints(fid) {
   const pts = [];
-  pts.push([LANDMARKS.xfmr.x, LANDMARKS.xfmr.z]);
   const f = FEEDERS.find((x) => x.id === fid);
   if (f) pts.push([f.x, f.z]);
+  const d = DTMS.find((x) => x.feederId === fid);
+  if (d) pts.push([d.x, d.z]);
   for (const h of HOUSES) if (h.feederId === fid) pts.push([h.x, h.z]);
   for (const t of TRANSFORMERS) if (t.feederId === fid) pts.push([t.x, t.z]);
   for (const p of POLES) if (p.feederId === fid) pts.push([p.x, p.z]);
@@ -3513,35 +3517,24 @@ function feederPoints(fid) {
 
 function feederCamPose(fid) {
   if (!camera) return null;
-  const homes = HOUSES.filter((h) => h.feederId === fid);
-  if (!homes.length) return null;
   const pts = feederPoints(fid);
-  const src = LANDMARKS.xfmr;
-  let hx = 0;
-  let hz = 0;
-  for (const h of homes) {
-    hx += h.x;
-    hz += h.z;
+  if (!pts.length) return null;
+  const f = FEEDERS.find((x) => x.id === fid);
+  const d = DTMS.find((x) => x.feederId === fid);
+  const src = d || f || LANDMARKS.xfmr;
+  let lookX = 0;
+  let lookZ = 0;
+  for (const [x, z] of pts) {
+    lookX += x;
+    lookZ += z;
   }
-  hx /= homes.length;
-  hz /= homes.length;
-  let ax = hx - src.x;
-  let az = hz - src.z;
+  lookX /= pts.length;
+  lookZ /= pts.length;
+  let ax = lookX - src.x;
+  let az = lookZ - src.z;
   const alen = Math.hypot(ax, az) || 1;
   ax /= alen;
   az /= alen;
-  let minX = Infinity;
-  let maxX = -Infinity;
-  let minZ = Infinity;
-  let maxZ = -Infinity;
-  for (const [x, z] of pts) {
-    minX = Math.min(minX, x);
-    maxX = Math.max(maxX, x);
-    minZ = Math.min(minZ, z);
-    maxZ = Math.max(maxZ, z);
-  }
-  const lookX = (minX + maxX) / 2;
-  const lookZ = (minZ + maxZ) / 2;
   let minA = Infinity;
   let maxA = -Infinity;
   let minP = Infinity;
@@ -3556,21 +3549,21 @@ function feederCamPose(fid) {
   }
   const alongSpan = Math.max(10, maxA - minA);
   const perpSpan = Math.max(8, maxP - minP);
-  const pad = 1.38;
+  const pad = 1.22;
   const vFov = (camera.fov * Math.PI) / 180;
   const aspect = Math.max(0.55, camera.aspect || 1.35);
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
   const distH = (alongSpan * pad) / 2 / Math.tan(hFov / 2);
   const distV = (perpSpan * pad) / 2 / Math.tan(vFov / 2);
-  const dist = Math.max(18, distH, distV);
-  const elev = 0.5;
+  const dist = Math.min(78, Math.max(16, distH, distV));
+  const elev = 0.38;
   const horiz = dist * Math.cos(elev);
-  const height = Math.max(9, dist * Math.sin(elev));
+  const height = Math.max(7, dist * Math.sin(elev));
   const ox = -az;
   const oz = ax;
   return {
     pos: new THREE.Vector3(lookX + ox * horiz, height, lookZ + oz * horiz),
-    look: new THREE.Vector3(lookX, 0.55, lookZ),
+    look: new THREE.Vector3(lookX, 0.42, lookZ),
   };
 }
 
