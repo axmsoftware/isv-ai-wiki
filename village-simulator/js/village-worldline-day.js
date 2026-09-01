@@ -466,7 +466,7 @@ let polePick = [];
 let breakerPick = [];
 let camFly = null;
 let camFeederId = null;
-const PICK_DRAG_PX = 6;
+const PICK_DRAG_PX = 10;
 let pickPtr = null;
 let dtmBars = [];
 let dtmParts = [];
@@ -493,6 +493,7 @@ let lastTs = 0;
 const panKeys = new Set();
 const panFwd = new THREE.Vector3();
 const panRight = new THREE.Vector3();
+const panUp = new THREE.Vector3();
 const PAN_SPEED = 42;
 const PAN_X = [-95, 95];
 const PAN_Z = [-80, 100];
@@ -746,10 +747,10 @@ function boot() {
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.88;
   controls.minPolarAngle = 0.06;
-  controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+  controls.mouseButtons.LEFT = -1;
   controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
   controls.mouseButtons.RIGHT = -1;
-  controls.touches.ONE = THREE.TOUCH.PAN;
+  controls.touches.ONE = -1;
   renderer.domElement.addEventListener("contextmenu", (e) => e.preventDefault());
 
   ambientLight = new THREE.AmbientLight(0xe8e4dc, 0.28);
@@ -3394,19 +3395,72 @@ function abortCamFly() {
 function bindStagePick() {
   const el = renderer.domElement;
   el.addEventListener("pointerdown", onStagePointerDown, true);
-  window.addEventListener("pointermove", onStagePointerMove);
-  window.addEventListener("pointerup", onStagePointerUp);
-  window.addEventListener("pointercancel", onStagePointerCancel);
+  el.addEventListener("pointermove", onStagePointerMove, true);
+  el.addEventListener("pointerup", onStagePointerUp, true);
+  el.addEventListener("pointercancel", onStagePointerCancel, true);
+}
+
+function endStagePointer(id) {
+  if (renderer?.domElement && id != null) {
+    try {
+      renderer.domElement.releasePointerCapture(id);
+    } catch {
+      /* already released */
+    }
+  }
+  if (controls) {
+    controls.enabled = true;
+    controls.enableDamping = true;
+  }
+  pickPtr = null;
+}
+
+function panByPixels(dxPx, dyPx) {
+  if (!camera || !controls || !renderer) return;
+  if (camFly) camFly = null;
+  const h = Math.max(1, renderer.domElement.clientHeight);
+  const dist = camera.position.distanceTo(controls.target);
+  const vFov = (camera.fov * Math.PI) / 180;
+  const scale = (2 * dist * Math.tan(vFov / 2)) / h;
+  camera.getWorldDirection(panFwd);
+  panRight.crossVectors(panFwd, camera.up);
+  if (panRight.lengthSq() < 1e-10) panRight.set(1, 0, 0);
+  else panRight.normalize();
+  panUp.crossVectors(panRight, panFwd);
+  if (panUp.lengthSq() < 1e-10) panUp.set(0, 1, 0);
+  else panUp.normalize();
+  const ox = -dxPx * scale;
+  const oy = dyPx * scale;
+  camera.position.x += panRight.x * ox + panUp.x * oy;
+  camera.position.y += panRight.y * ox + panUp.y * oy;
+  camera.position.z += panRight.z * ox + panUp.z * oy;
+  controls.target.x += panRight.x * ox + panUp.x * oy;
+  controls.target.y += panRight.y * ox + panUp.y * oy;
+  controls.target.z += panRight.z * ox + panUp.z * oy;
 }
 
 function onStagePointerDown(ev) {
   abortCamFly();
-  if (pickPtr && ev.pointerId !== pickPtr.id) {
-    pickPtr.dragged = true;
-    return;
-  }
   if (ev.pointerType === "mouse" && ev.button !== 0) return;
-  pickPtr = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, dragged: false };
+  if (pickPtr && ev.pointerId !== pickPtr.id) return;
+  ev.stopImmediatePropagation();
+  if (controls) {
+    controls.enabled = false;
+    controls.enableDamping = false;
+  }
+  pickPtr = {
+    id: ev.pointerId,
+    x: ev.clientX,
+    y: ev.clientY,
+    lx: ev.clientX,
+    ly: ev.clientY,
+    dragged: false,
+  };
+  try {
+    renderer.domElement.setPointerCapture(ev.pointerId);
+  } catch {
+    /* ignore */
+  }
 }
 
 function onStagePointerMove(ev) {
@@ -3414,12 +3468,18 @@ function onStagePointerMove(ev) {
   const dx = ev.clientX - pickPtr.x;
   const dy = ev.clientY - pickPtr.y;
   if (dx * dx + dy * dy >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.dragged = true;
+  if (!pickPtr.dragged) return;
+  panByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
+  pickPtr.lx = ev.clientX;
+  pickPtr.ly = ev.clientY;
 }
 
 function onStagePointerUp(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
   const dragged = pickPtr.dragged;
+  const id = pickPtr.id;
   pickPtr = null;
+  endStagePointer(id);
   if (dragged) return;
   if (ev.pointerType === "mouse" && ev.button !== 0) return;
   onPick(ev);
@@ -3427,7 +3487,7 @@ function onStagePointerUp(ev) {
 
 function onStagePointerCancel(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
-  pickPtr = null;
+  endStagePointer(pickPtr.id);
 }
 
 function onPick(ev) {
