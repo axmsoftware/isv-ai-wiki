@@ -467,6 +467,7 @@ let pickPtr = null;
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
+let emsPvMesh;
 let xfmrMesh;
 let breakerMesh;
 let stationMeshes = [];
@@ -1176,6 +1177,13 @@ function placeSun(min) {
     pvMat.color.setHex(on ? PV_ON : PV_COL);
     pvMat.emissive.setHex(on ? 0x1a7cff : 0x000000);
     pvMat.emissiveIntensity = on ? 0.95 : 0;
+  }
+  const emsPvMat = emsPvMesh?.material;
+  if (emsPvMat) {
+    const on = elev > 0.02;
+    emsPvMat.color.setHex(on ? PV_ON : PV_COL);
+    emsPvMat.emissive.setHex(on ? 0x1a7cff : 0x000000);
+    emsPvMat.emissiveIntensity = on ? 0.95 : 0;
   }
 }
 
@@ -2526,24 +2534,53 @@ function buildDtms() {
   }
 }
 
+const EMS_BODY_Y = LINE_HANG + 0.38;
+const EMS_HALF_H = 0.13;
+
+function poseEmsCabinet(i, b, sc) {
+  poseDummy.position.set(b.x, EMS_BODY_Y, b.z);
+  poseDummy.rotation.set(0, 0, 0);
+  poseDummy.scale.set(sc, sc, sc);
+  poseDummy.updateMatrix();
+  emsMesh.setMatrixAt(i, poseDummy.matrix);
+}
+
+function poseEmsPv(i, b, sc) {
+  if (!emsPvMesh) return;
+  poseDummy.position.set(b.x, EMS_BODY_Y + EMS_HALF_H * sc + 0.04 * sc, b.z);
+  poseDummy.rotation.set(SUN_TILT, 0, 0);
+  poseDummy.scale.set(0.55 * sc, sc, 0.4 * sc);
+  poseDummy.updateMatrix();
+  emsPvMesh.setMatrixAt(i, poseDummy.matrix);
+}
+
 function buildEmsBoards() {
   if (!BOARDS.length) return;
   const geo = new THREE.BoxGeometry(0.36, 0.26, 0.14);
   emsMesh = new THREE.InstancedMesh(geo, glowLambert(0.55), BOARDS.length);
   emsMesh.userData.pickBoards = true;
-  const dummy = new THREE.Object3D();
   const boardCol = new THREE.Color(ASSET.board);
+  const pvGeo = new THREE.BoxGeometry(1, 0.045, 0.72);
+  const pvM = new THREE.MeshLambertMaterial({
+    color: PV_COL,
+    emissive: 0x000000,
+    emissiveIntensity: 0,
+  });
+  emsPvMesh = new THREE.InstancedMesh(pvGeo, pvM, BOARDS.length);
+  emsPvMesh.userData.pickBoards = true;
+  emsPvMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  emsPvMesh.castShadow = true;
+  emsPvMesh.receiveShadow = true;
   BOARDS.forEach((b, i) => {
-    dummy.position.set(b.x, LINE_HANG + 0.38, b.z);
-    dummy.rotation.set(0, 0, 0);
-    dummy.scale.set(1, 1, 1);
-    dummy.updateMatrix();
-    emsMesh.setMatrixAt(i, dummy.matrix);
+    poseEmsCabinet(i, b, 1);
     emsMesh.setColorAt(i, boardCol);
+    poseEmsPv(i, b, 1);
   });
   emsMesh.castShadow = true;
   emsMesh.instanceMatrix.needsUpdate = true;
+  emsPvMesh.instanceMatrix.needsUpdate = true;
   scene.add(emsMesh);
+  scene.add(emsPvMesh);
 }
 
 function leakKindLabel(kind) {
@@ -2842,25 +2879,21 @@ function colorHardware(loads) {
       tintSelectRank(c, rank);
       emsMesh.setColorAt(i, c);
       const sc = rank === 3 ? 1.45 : rank === 2 ? 0.9 : 1;
-      poseDummy.position.set(b.x, LINE_HANG + 0.38, b.z);
-      poseDummy.rotation.set(0, 0, 0);
-      poseDummy.scale.set(sc, sc, sc);
-      poseDummy.updateMatrix();
-      emsMesh.setMatrixAt(i, poseDummy.matrix);
+      poseEmsCabinet(i, b, sc);
+      poseEmsPv(i, b, sc);
     });
     emsMesh.instanceColor.needsUpdate = true;
     emsMesh.instanceMatrix.needsUpdate = true;
+    if (emsPvMesh) emsPvMesh.instanceMatrix.needsUpdate = true;
   } else {
     tintInstanced(emsMesh, asset ? ASSET.board : 0xff6a2a);
     if (emsMesh) {
       BOARDS.forEach((b, i) => {
-        poseDummy.position.set(b.x, LINE_HANG + 0.38, b.z);
-        poseDummy.rotation.set(0, 0, 0);
-        poseDummy.scale.set(1, 1, 1);
-        poseDummy.updateMatrix();
-        emsMesh.setMatrixAt(i, poseDummy.matrix);
+        poseEmsCabinet(i, b, 1);
+        poseEmsPv(i, b, 1);
       });
       emsMesh.instanceMatrix.needsUpdate = true;
+      if (emsPvMesh) emsPvMesh.instanceMatrix.needsUpdate = true;
     }
   }
   if (fid && xfmrMesh?.instanceColor) {
@@ -3287,6 +3320,7 @@ function pickList() {
   const leaks = leakMeshes.filter((m) => m.visible && m.userData.leakLayer !== "label");
   const list = [...leaks, hutMesh, roofMesh];
   if (emsMesh) list.push(emsMesh);
+  if (emsPvMesh) list.push(emsPvMesh);
   if (xfmrMesh) list.push(xfmrMesh);
   if (poleMesh) list.push(poleMesh);
   if (powerLineMesh) list.push(powerLineMesh);
