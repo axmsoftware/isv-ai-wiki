@@ -469,7 +469,6 @@ let camFeederId = null;
 const PICK_DRAG_PX = 12;
 const PICK_HOLD_MS = 160;
 let pickPtr = null;
-let lastPickAt = 0;
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
@@ -3321,6 +3320,7 @@ function setScope(scope, opts = {}) {
     feeder: next.kind === "feeder" ? next.id : "",
     board: state.emsId || "",
   });
+  syncFeederSelect();
 }
 
 function pickList() {
@@ -3436,7 +3436,10 @@ function bindStagePick() {
   window.addEventListener("pointermove", onStagePointerMove);
   window.addEventListener("pointerup", onStagePointerUp);
   window.addEventListener("pointercancel", onStagePointerCancel);
-  el.addEventListener("click", onStageClick);
+}
+
+function usefulScope(scope) {
+  return scope?.kind === "feeder" || scope?.kind === "house" || scope?.kind === "board";
 }
 
 function onStagePointerDown(ev) {
@@ -3452,7 +3455,16 @@ function onStagePointerDown(ev) {
     ly: ev.clientY,
     t: performance.now(),
     panned: false,
+    pendingClear: false,
   };
+  const scope = scopeAt(ev.clientX, ev.clientY);
+  if (state.role === "customer") {
+    const hid = scope.kind === "house" ? scope.id : null;
+    if (hid === state.you) setScope({ kind: "house", id: hid });
+    return;
+  }
+  if (usefulScope(scope)) setScope(scope);
+  else pickPtr.pendingClear = true;
 }
 
 function onStagePointerMove(ev) {
@@ -3461,23 +3473,22 @@ function onStagePointerMove(ev) {
   const dy = ev.clientY - pickPtr.y;
   const dist2 = dx * dx + dy * dy;
   const held = performance.now() - pickPtr.t >= PICK_HOLD_MS;
-  if (!pickPtr.panned && held && dist2 >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.panned = true;
+  if (!pickPtr.panned && held && dist2 >= PICK_DRAG_PX * PICK_DRAG_PX) {
+    pickPtr.panned = true;
+    pickPtr.pendingClear = false;
+  }
   if (!pickPtr.panned) return;
   panByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
   pickPtr.lx = ev.clientX;
   pickPtr.ly = ev.clientY;
 }
 
-function finishPointer(ev, fromCancel) {
+function onStagePointerUp(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
   const g = pickPtr;
   pickPtr = null;
-  if (fromCancel || g.panned) return;
-  pickAt(g.x, g.y);
-}
-
-function onStagePointerUp(ev) {
-  finishPointer(ev, false);
+  if (g.panned) return;
+  if (g.pendingClear && state.role !== "customer") setScope({ kind: "village" });
 }
 
 function onStagePointerCancel(ev) {
@@ -3485,17 +3496,10 @@ function onStagePointerCancel(ev) {
   pickPtr = null;
 }
 
-function onStageClick(ev) {
-  if (ev.button != null && ev.button !== 0) return;
-  if (performance.now() - lastPickAt < 200) return;
-  pickAt(ev.clientX, ev.clientY);
-}
-
-function pickAt(clientX, clientY) {
-  if (!renderer || !camera) return;
+function scopeAt(clientX, clientY) {
+  if (!renderer || !camera) return { kind: "village" };
   const rect = renderer.domElement.getBoundingClientRect();
-  if (rect.width < 2 || rect.height < 2) return;
-  lastPickAt = performance.now();
+  if (rect.width < 2 || rect.height < 2) return { kind: "village" };
   const mouse = new THREE.Vector2(
     ((clientX - rect.left) / rect.width) * 2 - 1,
     -((clientY - rect.top) / rect.height) * 2 + 1,
@@ -3512,12 +3516,7 @@ function pickAt(clientX, clientY) {
     const pt = new THREE.Vector3();
     if (ray.ray.intersectPlane(plane, pt)) scope = nearestScopeAt(pt.x, pt.z);
   }
-  if (state.role === "customer") {
-    const hid = scope.kind === "house" ? scope.id : null;
-    if (hid === state.you) setScope({ kind: "house", id: hid });
-    return;
-  }
-  setScope(scope);
+  return scope;
 }
 
 function panByPixels(dxPx, dyPx) {
@@ -4067,6 +4066,7 @@ function applyQuery() {
 }
 
 function bindUi() {
+  fillFeederSelect();
   document.getElementById("wl-play")?.addEventListener("click", () => togglePlay(1));
   document.getElementById("wl-rev")?.addEventListener("click", () => togglePlay(-1));
   document.getElementById("wl-scrub")?.addEventListener("input", (e) => {
@@ -4345,7 +4345,29 @@ function onFeederGridClick(e) {
   }
 }
 
+function fillFeederSelect() {
+  const el = document.getElementById("wl-feeder");
+  if (!el || el.dataset.ready) return;
+  el.dataset.ready = "1";
+  el.innerHTML =
+    `<option value="">Feeder: village</option>` +
+    FEEDERS.map((f) => `<option value="${esc(f.id)}">${esc(f.label)}</option>`).join("");
+  el.addEventListener("change", () => {
+    const id = el.value;
+    if (!id) setScope({ kind: "village" });
+    else setScope({ kind: "feeder", id });
+  });
+}
+
+function syncFeederSelect() {
+  const el = document.getElementById("wl-feeder");
+  if (!el) return;
+  const fid = state.role === "customer" ? "" : activeFeederId() || "";
+  if (el.value !== fid) el.value = fid;
+}
+
 function fillFeederGrid() {
+  syncFeederSelect();
   const view = document.getElementById("wl-feeder-view");
   const houseView = document.getElementById("wl-house-view");
   const title = document.getElementById("wl-play-title");
