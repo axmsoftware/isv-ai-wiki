@@ -466,6 +466,7 @@ let polePick = [];
 let breakerPick = [];
 let camFly = null;
 let camFeederId = null;
+let camMag = 0;
 const PICK_DRAG_PX = 8;
 let pickPtr = null;
 let dtmBars = [];
@@ -3321,6 +3322,7 @@ function setScope(scope, opts = {}) {
     board: state.emsId || "",
   });
   syncFeederSelect();
+  if (opts.cam) progressCamera(next, opts);
 }
 
 function pickList() {
@@ -3459,10 +3461,10 @@ function applyPick(clientX, clientY) {
   const scope = scopeAt(clientX, clientY);
   if (state.role === "customer") {
     const hid = scope.kind === "house" ? scope.id : null;
-    if (hid === state.you) setScope({ kind: "house", id: hid });
+    if (hid === state.you) setScope({ kind: "house", id: hid }, { cam: true, from: "map" });
     return;
   }
-  setScope(scope);
+  setScope(scope, { cam: true, from: "map" });
 }
 
 function onStagePointerDown(ev) {
@@ -3763,13 +3765,91 @@ function flyToFeeder(fid) {
   const pose = feederCamPose(fid);
   if (!pose) return;
   camFeederId = fid;
+  camMag = 1;
   startCamFly(pose.pos, pose.look, 0.95);
 }
 
 function flyToVillage() {
   camFeederId = null;
+  camMag = 0;
   const home = camHome(isV2());
   startCamFly(new THREE.Vector3(...home.pos), new THREE.Vector3(...home.look), 0.85);
+}
+
+function pickCamTarget(scope) {
+  const n = normalizeScope(scope);
+  if (!n || n.kind === "village" || n.kind === "station") {
+    return { mag: 0, fid: null, bid: null, hid: null };
+  }
+  if (n.kind === "house") {
+    const h = houseById[n.id];
+    if (!h) return { mag: 0, fid: null, bid: null, hid: null };
+    return { mag: 2, fid: h.feederId, bid: h.boardId, hid: h.id };
+  }
+  if (n.kind === "board") {
+    const b = boardById[n.id];
+    if (!b) return { mag: 0, fid: null, bid: null, hid: null };
+    return { mag: 2, fid: b.feederId, bid: b.id, hid: null };
+  }
+  if (n.kind === "feeder") {
+    if (n.houseId) {
+      const h = houseById[n.houseId];
+      return { mag: 2, fid: n.id, bid: n.boardId || h?.boardId || null, hid: n.houseId };
+    }
+    if (n.boardId) return { mag: 2, fid: n.id, bid: n.boardId, hid: null };
+    return { mag: 1, fid: n.id, bid: null, hid: null };
+  }
+  return { mag: 0, fid: null, bid: null, hid: null };
+}
+
+function applyCamMag(mag, target) {
+  if (mag <= 0 || !target?.fid) {
+    if (camMag === 0) return;
+    flyToVillage();
+    return;
+  }
+  if (mag === 1) {
+    flyToFeeder(target.fid);
+    return;
+  }
+  if (target.hid) {
+    const h = houseById[target.hid];
+    if (h) {
+      camFeederId = target.fid;
+      camMag = 2;
+      framePoint(h.x, h.z, 18);
+      return;
+    }
+  }
+  if (target.bid) {
+    const b = boardById[target.bid];
+    if (b) {
+      camFeederId = target.fid;
+      camMag = 2;
+      framePoint(b.x, b.z, 24);
+      return;
+    }
+  }
+  flyToFeeder(target.fid);
+}
+
+function progressCamera(next, opts = {}) {
+  if (state.role === "customer") return;
+  const target = pickCamTarget(next);
+  const from = opts.from || "map";
+  let mag;
+  if (from === "clear" || target.mag === 0) {
+    mag = 0;
+  } else if (from === "grid-home" && target.hid) {
+    mag = 2;
+  } else if (camFeederId && target.fid && camFeederId !== target.fid) {
+    mag = 1;
+  } else if (target.mag > camMag) {
+    mag = Math.min(camMag + 1, target.mag);
+  } else {
+    mag = target.mag;
+  }
+  applyCamMag(mag, target);
 }
 
 function framePoint(x, z, dist = 22) {
@@ -3788,12 +3868,18 @@ function framePoint(x, z, dist = 22) {
 function frameSelection() {
   if (state.role === "customer") {
     const you = houseById[state.you];
-    if (you) framePoint(you.x, you.z, 18);
+    if (you) {
+      camFeederId = you.feederId;
+      camMag = 2;
+      framePoint(you.x, you.z, 18);
+    }
     return;
   }
   if (state.focus) {
     const h = houseById[state.focus];
     if (h) {
+      camFeederId = h.feederId;
+      camMag = 2;
       framePoint(h.x, h.z, 18);
       return;
     }
@@ -3801,13 +3887,14 @@ function frameSelection() {
   const bid = state.scopeBoard || state.emsId;
   if (bid && boardById[bid]) {
     const b = boardById[bid];
-    framePoint(b.x, b.z, 22);
+    camFeederId = b.feederId;
+    camMag = 2;
+    framePoint(b.x, b.z, 24);
     return;
   }
   const s = state.scope || {};
   if (s.kind === "station") {
-    const st = STATIONS.find((x) => x.id === s.id) || LANDMARKS.xfmr;
-    framePoint(st.x, st.z, 32);
+    flyToVillage();
     return;
   }
   const fid = activeFeederId();
@@ -3999,15 +4086,19 @@ function fillEms() {
   `;
 }
 
-function openEms(id, fly) {
+function openEms(id, fly, camOpts) {
   const b = boardById[id] || BOARDS[0];
   if (!b) return;
   state.emsId = b.id;
   if (state.role !== "customer") {
-    setScope({ kind: "feeder", id: b.feederId, boardId: b.id }, { fromEms: true });
+    setScope({ kind: "feeder", id: b.feederId, boardId: b.id }, {
+      fromEms: true,
+      cam: !!camOpts?.cam,
+      from: camOpts?.from || "grid-ems",
+    });
   }
   fillEms();
-  if (fly) flyToXZ(b.x, b.z, 11);
+  if (fly && !camOpts?.cam) flyToXZ(b.x, b.z, 11);
   writeQuery({ board: b.id, feeder: b.feederId });
 }
 
@@ -4022,7 +4113,7 @@ function stepEms(dir) {
   if (!BOARDS.length) return;
   const i = Math.max(0, BOARDS.findIndex((b) => b.id === state.emsId));
   const next = BOARDS[(i + dir + BOARDS.length) % BOARDS.length];
-  openEms(next.id, false);
+  openEms(next.id, false, { cam: true, from: "grid-ems" });
 }
 
 function applyRole() {
@@ -4162,7 +4253,7 @@ function bindUi() {
   document.getElementById("wl-ems-open")?.addEventListener("click", () => {
     if (state.role === "customer") return;
     const id = state.emsId || (state.scope?.kind === "feeder" ? state.scopeBoard : null) || BOARDS[0]?.id;
-    openEms(id, false);
+    openEms(id, false, { cam: true, from: "grid-ems" });
   });
   document.getElementById("wl-ems-close")?.addEventListener("click", () => closeEms());
   document.getElementById("wl-ems-prev")?.addEventListener("click", () => stepEms(-1));
@@ -4196,7 +4287,7 @@ function bindUi() {
     fillHouses(true);
   });
   document.getElementById("wl-feeder-clear")?.addEventListener("click", () => {
-    setScope({ kind: "village" });
+    setScope({ kind: "village" }, { cam: true, from: "clear" });
   });
   const chips = document.getElementById("wl-house-clusters");
   if (chips && !chips.dataset.ready) {
@@ -4361,10 +4452,10 @@ function onFeederGridClick(e) {
     const id = cell.getAttribute("data-h");
     const h = houseById[id];
     if (!h) return;
-    if (state.focus === id) {
-      setScope({ kind: "feeder", id: h.feederId, boardId: h.boardId });
+    if (state.focus === id && camMag >= 2) {
+      setScope({ kind: "feeder", id: h.feederId, boardId: h.boardId }, { cam: true, from: "grid-ems" });
     } else {
-      setScope({ kind: "feeder", id: h.feederId, houseId: id, boardId: h.boardId });
+      setScope({ kind: "feeder", id: h.feederId, houseId: id, boardId: h.boardId }, { cam: true, from: "grid-home" });
     }
     return;
   }
@@ -4372,7 +4463,7 @@ function onFeederGridClick(e) {
   if (leakBtn) {
     const bid = leakBtn.getAttribute("data-board");
     const b = boardById[bid];
-    if (b) setScope({ kind: "feeder", id: b.feederId, boardId: b.id });
+    if (b) setScope({ kind: "feeder", id: b.feederId, boardId: b.id }, { cam: true, from: "grid-ems" });
     return;
   }
   const lab = e.target.closest("button.feeder-row-lab[data-board]");
@@ -4380,9 +4471,9 @@ function onFeederGridClick(e) {
   const bid = lab.getAttribute("data-board");
   const b = boardById[bid];
   if (!b) return;
-  if (state.role === "tech") openEms(bid, false);
+  if (state.role === "tech") openEms(bid, false, { cam: true, from: "grid-ems" });
   else {
-    setScope({ kind: "feeder", id: b.feederId, boardId: b.id });
+    setScope({ kind: "feeder", id: b.feederId, boardId: b.id }, { cam: true, from: "grid-ems" });
   }
 }
 
@@ -4395,8 +4486,8 @@ function fillFeederSelect() {
     FEEDERS.map((f) => `<option value="${esc(f.id)}">${esc(f.label)}</option>`).join("");
   el.addEventListener("change", () => {
     const id = el.value;
-    if (!id) setScope({ kind: "village" });
-    else setScope({ kind: "feeder", id });
+    if (!id) setScope({ kind: "village" }, { cam: true, from: "clear" });
+    else setScope({ kind: "feeder", id }, { cam: true, from: "map" });
   });
 }
 
@@ -4576,7 +4667,10 @@ function fillHouses(rebuild) {
         const btn = e.target.closest("button[data-h]");
         if (!btn) return;
         const id = btn.getAttribute("data-h");
-        setScope(state.focus === id ? { kind: "village" } : { kind: "house", id });
+        setScope(state.focus === id ? { kind: "village" } : { kind: "house", id }, {
+          cam: true,
+          from: state.focus === id ? "clear" : "map",
+        });
       });
     }
   }
