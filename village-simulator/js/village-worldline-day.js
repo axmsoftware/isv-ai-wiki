@@ -462,6 +462,8 @@ let polePick = [];
 let breakerPick = [];
 let camFly = null;
 let camFeederId = null;
+const PICK_DRAG_PX = 6;
+let pickPtr = null;
 let dtmBars = [];
 let dtmParts = [];
 let emsMesh;
@@ -739,7 +741,10 @@ function boot() {
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.88;
   controls.minPolarAngle = 0.06;
+  controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
+  controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
   controls.mouseButtons.RIGHT = -1;
+  controls.touches.ONE = THREE.TOUCH.PAN;
   renderer.domElement.addEventListener("contextmenu", (e) => e.preventDefault());
 
   ambientLight = new THREE.AmbientLight(0xe8e4dc, 0.28);
@@ -818,10 +823,9 @@ function boot() {
   applyVizMode();
   applyRole();
   resize();
-  if (state.role !== "customer" && state.scope?.kind === "feeder") flyToFeeder(state.scope.id);
   window.addEventListener("resize", resize);
   new ResizeObserver(resize).observe(stage);
-  renderer.domElement.addEventListener("pointerdown", onPick);
+  bindStagePick();
   renderer.setAnimationLoop(tick);
 }
 
@@ -3252,7 +3256,6 @@ function setScope(scope, opts = {}) {
     return;
   }
   const next = normalizeScope(scope);
-  const prevFid = activeFeederId();
   state.scope = next;
   if (next.kind === "feeder") {
     state.focus = next.houseId || null;
@@ -3278,11 +3281,6 @@ function setScope(scope, opts = {}) {
     feeder: next.kind === "feeder" ? next.id : "",
     board: state.emsId || "",
   });
-  if (next.kind === "feeder") {
-    if (next.id !== prevFid) flyToFeeder(next.id);
-  } else if (next.kind === "village" && prevFid) {
-    flyToVillage();
-  }
 }
 
 function pickList() {
@@ -3346,8 +3344,55 @@ function scopeFromHit(hit) {
   return { kind: "village" };
 }
 
-function onPick(ev) {
+function abortCamFly() {
+  if (!camFly) return;
+  camFly = null;
+  if (controls) {
+    controls.enabled = true;
+    controls.enableDamping = true;
+  }
+}
+
+function bindStagePick() {
+  const el = renderer.domElement;
+  el.addEventListener("pointerdown", onStagePointerDown, true);
+  window.addEventListener("pointermove", onStagePointerMove);
+  window.addEventListener("pointerup", onStagePointerUp);
+  window.addEventListener("pointercancel", onStagePointerCancel);
+}
+
+function onStagePointerDown(ev) {
+  abortCamFly();
+  if (pickPtr && ev.pointerId !== pickPtr.id) {
+    pickPtr.dragged = true;
+    return;
+  }
   if (ev.pointerType === "mouse" && ev.button !== 0) return;
+  pickPtr = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, dragged: false };
+}
+
+function onStagePointerMove(ev) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  const dx = ev.clientX - pickPtr.x;
+  const dy = ev.clientY - pickPtr.y;
+  if (dx * dx + dy * dy >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.dragged = true;
+}
+
+function onStagePointerUp(ev) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  const dragged = pickPtr.dragged;
+  pickPtr = null;
+  if (dragged) return;
+  if (ev.pointerType === "mouse" && ev.button !== 0) return;
+  onPick(ev);
+}
+
+function onStagePointerCancel(ev) {
+  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
+  pickPtr = null;
+}
+
+function onPick(ev) {
   const rect = renderer.domElement.getBoundingClientRect();
   const mouse = new THREE.Vector2(
     ((ev.clientX - rect.left) / rect.width) * 2 - 1,
@@ -3814,7 +3859,7 @@ function stepEms(dir) {
   if (!BOARDS.length) return;
   const i = Math.max(0, BOARDS.findIndex((b) => b.id === state.emsId));
   const next = BOARDS[(i + dir + BOARDS.length) % BOARDS.length];
-  openEms(next.id, true);
+  openEms(next.id, false);
 }
 
 function applyRole() {
@@ -3826,15 +3871,13 @@ function applyRole() {
     state.focus = state.you;
     state.scope = { kind: "house", id: state.you };
     closeEms();
-    const h = houseById[state.you];
-    if (h) flyToXZ(h.x, h.z, 13);
     fillCustomer();
   } else {
     const card = document.getElementById("wl-cust-card");
     if (card) card.hidden = true;
     if (state.role === "tech") {
       if (state.emsId) fillEms();
-      else if (state.scope?.kind !== "feeder") openEms(BOARDS[0]?.id, true);
+      else if (state.scope?.kind !== "feeder") openEms(BOARDS[0]?.id, false);
     } else fillEms();
   }
   applyVisibility();
@@ -3949,7 +3992,7 @@ function bindUi() {
   document.getElementById("wl-ems-open")?.addEventListener("click", () => {
     if (state.role === "customer") return;
     const id = state.emsId || (state.scope?.kind === "feeder" ? state.scopeBoard : null) || BOARDS[0]?.id;
-    openEms(id, true);
+    openEms(id, false);
   });
   document.getElementById("wl-ems-close")?.addEventListener("click", () => closeEms());
   document.getElementById("wl-ems-prev")?.addEventListener("click", () => stepEms(-1));
@@ -3960,8 +4003,6 @@ function bindUi() {
     state.you = id;
     state.focus = id;
     state.scope = { kind: "house", id };
-    const h = houseById[id];
-    if (h) flyToXZ(h.x, h.z, 13);
     fillCustomer();
     writeQuery({ you: id, role: "customer" });
   });
