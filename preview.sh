@@ -1,7 +1,8 @@
 #!/bin/sh
 cd "$(dirname "$0")"
-echo "ISV wiki preview → http://localhost:8765/index.html"
-echo "Meeting notes  → http://localhost:8765/index.html#notes/metering-2026-05-28"
-echo "Technical reports → http://localhost:8765/index.html#tech-reports"
+PORT="${1:-18765}"
+echo "Simulator  → http://127.0.0.1:${PORT}/village-simulator/index.html"
+echo "Wiki shell → http://127.0.0.1:${PORT}/index.html#village-metering/village-simulator"
+echo "Do not use #village-metering alone — that is the wordy overview, not the sim."
 echo "Press Ctrl+C to stop."
-python3 -m http.server 8765
+exec python3 preview_server.py "$PORT"
