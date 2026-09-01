@@ -138,6 +138,10 @@ function lastBreathY(min, hopI = 0, hops = 1) {
   return stackHopWorldY(min, hopI, 1.45, hops);
 }
 const LINE_HANG = 1.15;
+
+function houseSize(i) {
+  return 0.58 + (i % 5) * 0.05;
+}
 /** Keep static ground decals off one another. Worldlines may still cross. */
 const Y_ROAD = 0.08;
 const Y_GRID = 0.16;
@@ -1303,9 +1307,9 @@ function buildPvAndStorage() {
 
   HOUSES.forEach((h, i) => {
     if (!roofSet.has(h.id)) return;
-    const s = 0.82 + (i % 5) * 0.11;
-    const bh = 0.62 + s * 0.28;
-    plant(h.x, bh + 0.58, h.z, 0.95 * s, 0.85 * s);
+    const s = houseSize(i);
+    const bh = 0.55 + s * 0.24;
+    plant(h.x, bh + 0.5, h.z, 0.92 * s, 0.82 * s);
   });
 
   const pitchX = PV_FARM.pitchX || 1.55;
@@ -1521,22 +1525,22 @@ function buildVillage() {
   buildCloudMark(LANDMARKS.cloud.x, LANDMARKS.cloud.z);
 
   const hutGeo = new THREE.BoxGeometry(1, 1, 1);
-  const roofGeo = new THREE.ConeGeometry(0.82, 0.48, 4);
+  const roofGeo = new THREE.ConeGeometry(0.58, 0.42, 4);
   hutMesh = new THREE.InstancedMesh(hutGeo, glowLambert(0.48), HOUSE_N);
   roofMesh = new THREE.InstancedMesh(roofGeo, glowLambert(0.38), HOUSE_N);
   hutPose.length = 0;
   const dummy = new THREE.Object3D();
   const hutCol = new THREE.Color();
   HOUSES.forEach((h, i) => {
-    const s = 0.82 + (i % 5) * 0.11;
+    const s = houseSize(i);
     const yaw = ((i * 17) % 11) * 0.28 - 1.1;
-    const bh = 0.62 + s * 0.28;
+    const bh = 0.55 + s * 0.24;
     dummy.position.set(h.x, bh / 2 + 0.02, h.z);
     dummy.rotation.set(0, yaw, 0);
-    dummy.scale.set(1.05 * s, bh, 0.92 * s);
+    dummy.scale.set(1.02 * s, bh, 0.9 * s);
     dummy.updateMatrix();
     hutMesh.setMatrixAt(i, dummy.matrix);
-    dummy.position.set(h.x, bh + 0.28, h.z);
+    dummy.position.set(h.x, bh + 0.24, h.z);
     dummy.rotation.set(0, yaw + Math.PI / 4, 0);
     dummy.scale.set(s, 1, s);
     dummy.updateMatrix();
@@ -2827,7 +2831,7 @@ function houseSelectScale(rank) {
 
 function buildSelectHalos() {
   houseHalo = new THREE.Mesh(
-    new THREE.TorusGeometry(0.78, 0.07, 8, 28),
+    new THREE.TorusGeometry(0.52, 0.055, 8, 28),
     new THREE.MeshBasicMaterial({ color: SEL_METER, transparent: true, opacity: 0.95 }),
   );
   houseHalo.rotation.x = Math.PI / 2;
@@ -3049,10 +3053,10 @@ function colorHouses(last) {
       const k = pick ? houseSelectScale(rank) : 1;
       poseDummy.position.set(p.x, (p.bh * k) / 2 + 0.02, p.z);
       poseDummy.rotation.set(0, p.yaw, 0);
-      poseDummy.scale.set(1.05 * p.s * k, p.bh * k, 0.92 * p.s * k);
+      poseDummy.scale.set(1.02 * p.s * k, p.bh * k, 0.9 * p.s * k);
       poseDummy.updateMatrix();
       hutMesh.setMatrixAt(i, poseDummy.matrix);
-      poseDummy.position.set(p.x, p.bh * k + 0.28, p.z);
+      poseDummy.position.set(p.x, p.bh * k + 0.24, p.z);
       poseDummy.rotation.set(0, p.yaw + Math.PI / 4, 0);
       poseDummy.scale.set(p.s * k, k, p.s * k);
       poseDummy.updateMatrix();
