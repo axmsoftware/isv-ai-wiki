@@ -466,8 +466,7 @@ let polePick = [];
 let breakerPick = [];
 let camFly = null;
 let camFeederId = null;
-const PICK_DRAG_PX = 12;
-const PICK_HOLD_MS = 160;
+const PICK_DRAG_PX = 8;
 let pickPtr = null;
 let dtmBars = [];
 let dtmParts = [];
@@ -494,7 +493,6 @@ let lastTs = 0;
 const panKeys = new Set();
 const panFwd = new THREE.Vector3();
 const panRight = new THREE.Vector3();
-const panUp = new THREE.Vector3();
 const PAN_SPEED = 42;
 const PAN_X = [-95, 95];
 const PAN_Z = [-80, 100];
@@ -748,10 +746,10 @@ function boot() {
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.88;
   controls.minPolarAngle = 0.06;
-  controls.mouseButtons.LEFT = -1;
+  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
   controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
   controls.mouseButtons.RIGHT = -1;
-  controls.touches.ONE = -1;
+  controls.touches.ONE = THREE.TOUCH.ROTATE;
   renderer.domElement.addEventListener("contextmenu", (e) => e.preventDefault());
 
   ambientLight = new THREE.AmbientLight(0xe8e4dc, 0.28);
@@ -3434,66 +3432,40 @@ function bindStagePick() {
   const el = renderer.domElement;
   el.addEventListener("pointerdown", onStagePointerDown, true);
   window.addEventListener("pointermove", onStagePointerMove);
+  el.addEventListener("pointerup", onStagePointerUp);
   window.addEventListener("pointerup", onStagePointerUp);
-  window.addEventListener("pointercancel", onStagePointerCancel);
 }
 
-function usefulScope(scope) {
-  return scope?.kind === "feeder" || scope?.kind === "house" || scope?.kind === "board";
+function applyPick(clientX, clientY) {
+  const scope = scopeAt(clientX, clientY);
+  if (state.role === "customer") {
+    const hid = scope.kind === "house" ? scope.id : null;
+    if (hid === state.you) setScope({ kind: "house", id: hid });
+    return;
+  }
+  setScope(scope);
 }
 
 function onStagePointerDown(ev) {
   abortCamFly();
   if (ev.pointerType === "mouse" && ev.button !== 0) return;
   if (pickPtr && ev.pointerId !== pickPtr.id) return;
-  ev.stopImmediatePropagation();
-  pickPtr = {
-    id: ev.pointerId,
-    x: ev.clientX,
-    y: ev.clientY,
-    lx: ev.clientX,
-    ly: ev.clientY,
-    t: performance.now(),
-    panned: false,
-    pendingClear: false,
-  };
-  const scope = scopeAt(ev.clientX, ev.clientY);
-  if (state.role === "customer") {
-    const hid = scope.kind === "house" ? scope.id : null;
-    if (hid === state.you) setScope({ kind: "house", id: hid });
-    return;
-  }
-  if (usefulScope(scope)) setScope(scope);
-  else pickPtr.pendingClear = true;
+  pickPtr = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, dragged: false };
 }
 
 function onStagePointerMove(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
   const dx = ev.clientX - pickPtr.x;
   const dy = ev.clientY - pickPtr.y;
-  const dist2 = dx * dx + dy * dy;
-  const held = performance.now() - pickPtr.t >= PICK_HOLD_MS;
-  if (!pickPtr.panned && held && dist2 >= PICK_DRAG_PX * PICK_DRAG_PX) {
-    pickPtr.panned = true;
-    pickPtr.pendingClear = false;
-  }
-  if (!pickPtr.panned) return;
-  panByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
-  pickPtr.lx = ev.clientX;
-  pickPtr.ly = ev.clientY;
+  if (dx * dx + dy * dy >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.dragged = true;
 }
 
 function onStagePointerUp(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
   const g = pickPtr;
   pickPtr = null;
-  if (g.panned) return;
-  if (g.pendingClear && state.role !== "customer") setScope({ kind: "village" });
-}
-
-function onStagePointerCancel(ev) {
-  if (!pickPtr || ev.pointerId !== pickPtr.id) return;
-  pickPtr = null;
+  if (g.dragged) return;
+  applyPick(g.x, g.y);
 }
 
 function scopeAt(clientX, clientY) {
@@ -3517,30 +3489,6 @@ function scopeAt(clientX, clientY) {
     if (ray.ray.intersectPlane(plane, pt)) scope = nearestScopeAt(pt.x, pt.z);
   }
   return scope;
-}
-
-function panByPixels(dxPx, dyPx) {
-  if (!camera || !controls || !renderer) return;
-  if (camFly) camFly = null;
-  const h = Math.max(1, renderer.domElement.clientHeight);
-  const dist = camera.position.distanceTo(controls.target);
-  const vFov = (camera.fov * Math.PI) / 180;
-  const scale = (2 * dist * Math.tan(vFov / 2)) / h;
-  camera.getWorldDirection(panFwd);
-  panRight.crossVectors(panFwd, camera.up);
-  if (panRight.lengthSq() < 1e-10) panRight.set(1, 0, 0);
-  else panRight.normalize();
-  panUp.crossVectors(panRight, panFwd);
-  if (panUp.lengthSq() < 1e-10) panUp.set(0, 1, 0);
-  else panUp.normalize();
-  const ox = -dxPx * scale;
-  const oy = dyPx * scale;
-  camera.position.x += panRight.x * ox + panUp.x * oy;
-  camera.position.y += panRight.y * ox + panUp.y * oy;
-  camera.position.z += panRight.z * ox + panUp.z * oy;
-  controls.target.x += panRight.x * ox + panUp.x * oy;
-  controls.target.y += panRight.y * ox + panUp.y * oy;
-  controls.target.z += panRight.z * ox + panUp.z * oy;
 }
 
 function tick(ts) {
