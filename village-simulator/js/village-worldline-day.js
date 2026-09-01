@@ -493,6 +493,8 @@ let lastTs = 0;
 const panKeys = new Set();
 const panFwd = new THREE.Vector3();
 const panRight = new THREE.Vector3();
+const orbitOffset = new THREE.Vector3();
+const orbitSpherical = new THREE.Spherical();
 const PAN_SPEED = 42;
 const PAN_X = [-95, 95];
 const PAN_Z = [-80, 100];
@@ -746,10 +748,10 @@ function boot() {
   controls.enableDamping = true;
   controls.maxPolarAngle = Math.PI * 0.88;
   controls.minPolarAngle = 0.06;
-  controls.mouseButtons.LEFT = THREE.MOUSE.ROTATE;
+  controls.mouseButtons.LEFT = -1;
   controls.mouseButtons.MIDDLE = THREE.MOUSE.DOLLY;
   controls.mouseButtons.RIGHT = -1;
-  controls.touches.ONE = THREE.TOUCH.ROTATE;
+  controls.touches.ONE = -1;
   renderer.domElement.addEventListener("contextmenu", (e) => e.preventDefault());
 
   ambientLight = new THREE.AmbientLight(0xe8e4dc, 0.28);
@@ -3436,6 +3438,23 @@ function bindStagePick() {
   window.addEventListener("pointerup", onStagePointerUp);
 }
 
+function orbitByPixels(dxPx, dyPx) {
+  if (!camera || !controls || !renderer) return;
+  if (camFly) camFly = null;
+  const h = Math.max(1, renderer.domElement.clientHeight);
+  orbitOffset.copy(camera.position).sub(controls.target);
+  orbitSpherical.setFromVector3(orbitOffset);
+  orbitSpherical.theta -= (2 * Math.PI * dxPx) / h;
+  orbitSpherical.phi -= (2 * Math.PI * dyPx) / h;
+  const minP = controls.minPolarAngle ?? 0.06;
+  const maxP = controls.maxPolarAngle ?? Math.PI * 0.88;
+  orbitSpherical.phi = Math.max(minP, Math.min(maxP, orbitSpherical.phi));
+  orbitSpherical.makeSafe();
+  orbitOffset.setFromSpherical(orbitSpherical);
+  camera.position.copy(controls.target).add(orbitOffset);
+  camera.lookAt(controls.target);
+}
+
 function applyPick(clientX, clientY) {
   const scope = scopeAt(clientX, clientY);
   if (state.role === "customer") {
@@ -3450,7 +3469,20 @@ function onStagePointerDown(ev) {
   abortCamFly();
   if (ev.pointerType === "mouse" && ev.button !== 0) return;
   if (pickPtr && ev.pointerId !== pickPtr.id) return;
-  pickPtr = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, dragged: false };
+  ev.stopImmediatePropagation();
+  pickPtr = {
+    id: ev.pointerId,
+    x: ev.clientX,
+    y: ev.clientY,
+    lx: ev.clientX,
+    ly: ev.clientY,
+    dragged: false,
+  };
+  try {
+    renderer.domElement.setPointerCapture(ev.pointerId);
+  } catch {
+    /* ignore */
+  }
 }
 
 function onStagePointerMove(ev) {
@@ -3458,12 +3490,21 @@ function onStagePointerMove(ev) {
   const dx = ev.clientX - pickPtr.x;
   const dy = ev.clientY - pickPtr.y;
   if (dx * dx + dy * dy >= PICK_DRAG_PX * PICK_DRAG_PX) pickPtr.dragged = true;
+  if (!pickPtr.dragged) return;
+  orbitByPixels(ev.clientX - pickPtr.lx, ev.clientY - pickPtr.ly);
+  pickPtr.lx = ev.clientX;
+  pickPtr.ly = ev.clientY;
 }
 
 function onStagePointerUp(ev) {
   if (!pickPtr || ev.pointerId !== pickPtr.id) return;
   const g = pickPtr;
   pickPtr = null;
+  try {
+    renderer.domElement.releasePointerCapture(g.id);
+  } catch {
+    /* ignore */
+  }
   if (g.dragged) return;
   applyPick(g.x, g.y);
 }
