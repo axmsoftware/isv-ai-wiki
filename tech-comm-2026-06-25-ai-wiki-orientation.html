@@ -84,14 +84,14 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <ul>
     <li><strong>EPRI &amp; IEEE 1547</strong> — <strong>EPRI wrote it; IEEE implemented it.</strong> <a href="index.html#standards">IEEE 1547</a> covers DER interconnection (ride-through, export limits, grid tie-in). EPRI’s ongoing open-source grid work: <a href="https://github.com/epri-dev" target="_blank" rel="noopener">github.com/epri-dev</a>. Relevant when village feeders connect behind-the-meter solar/storage or evolve toward utility interconnection — parallel track to village prepaid metering, not a replacement for it.</li>
     <li><strong>STS key management</strong> — <strong>STS provides key mgmt</strong> for prepaid token vending (STSA key hierarchy). Separate from DLMS and OEM key stacks discussed in the <a href="tech-comm-2026-05-28-metering-topology.html">May topology note</a>. Northbound VMRS / MQTT profiles intentionally exclude STSA key operations — token path stays on SMS/USSD/CIU; meter reads stay on gateway normalization.</li>
-    <li><strong>EnAccess · OpenAMI on site</strong> — <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">enaccess.org/openami</a> · running <strong>OpenAMI</strong> on live deployments — field validation of the open stack (MPM + geo asset model + gateway path) beyond conference decks. See <a href="index.html#village-metering/overview">Village Metering</a> and <a href="power-africa-openami-presentation-2025.html">Power Africa OpenAMI (Sep 2025)</a>.</li>
+    <li><strong>EnAccess Foundation · OpenAMI on site</strong> — <a href="https://enaccess.org/openami/" target="_blank" rel="noopener">enaccess.org/openami</a> · running <strong>OpenAMI</strong> on live deployments — field validation of the open stack (MPM + geo asset model + gateway path) beyond conference decks. See <a href="index.html#village-metering/overview">Village Metering</a> and <a href="power-africa-openami-presentation-2025.html">Power Africa OpenAMI (Sep 2025)</a>.</li>
     <li><strong>OSEAS · Global Off-Grid Solar Forum</strong> — EnAccess <a href="https://www.oseas.org/" target="_blank" rel="noopener">OSEAS</a> (Open Source Energy Access Symposium) runs <strong>in parallel</strong> to the <a href="https://www.offgridsolarforum.org/" target="_blank" rel="noopener">Global Off-Grid Solar Forum</a> — same week / venue ecosystem (Kigali, Oct 2026; see <a href="oseas-2026.html">OSEAS wiki page</a>). Worth coordinating ISV / Tech Comm attendance across both. ISV will contribute a hackathon code challenge at OSEAS.</li>
     <li><strong>AMDA outreach — decided not to pursue</strong> — Africa Minigrid Developers Association (<a href="https://www.africamda.org/our-team/" target="_blank" rel="noopener">africamda.org/our-team</a>) was on the table for Power Africa workshop invites, OBIS codes, and open-stack alignment (<a href="https://github.com/overview-solutions/isv-ai-wiki/issues/14" target="_blank" rel="noopener">#14</a> · <a href="assets/documents/amda-pitch-one-page.pdf" target="_blank" rel="noopener">pitch PDF</a>). <strong>Decision:</strong> do not engage AMDA on additional items — a separate group is already busy developing a solution for <strong>SteamaCo</strong> and <strong>SparkMeter</strong> interoperability; avoid duplicating that effort.</li>
     <li><strong>OpenAMI community (Discord)</strong> — project chat is on the <strong>OSEA</strong> server: <a href="https://discord.osea-community.org/" target="_blank" rel="noopener">discord.osea-community.org</a>. Tech Comm needs to <strong>get more active</strong> there — see <a href="index.html#village-metering/openami">wiki OpenAMI page</a>.</li>
     <li><strong>OpenAMI definition (working)</strong> — <strong>OpenAMI is driving actionable energy telemetry</strong> (reads and events operators can act on) and <strong>leakage visibility at every part of the system</strong> (feeder, branch, customer). See <a href="index.html#village-metering/openami">OpenAMI page</a> and table below.</li>
     <li><strong>OpenADR</strong> — pushes <em>prices</em> / DR events to devices (VTN/VEN). <strong>Phase&nbsp;3</strong> on the <a href="index.html#village-metering/roadmap">roadmap</a> — useful when a utility/aggregator counterpart exists; not year-one village prepaid focus.</li>
     <li><strong>MeshEMS / pole power rails</strong> — voltage budget and PCB notes from Glenn; see section below. Workshop kits need explicit 5&nbsp;V paths for temp reference and SSRs.</li>
-    <li><strong>MeshEMS board distribution</strong> — recipient list started: <strong>Redwan Hussain</strong> (<a href="tel:+16463616130">+1&nbsp;646-361-6130</a>); <strong>Sean White</strong> — OpenEMS meters with Arila Barnes; NABCEP installer training. See <a href="#meshems-distribution">distribution table</a> · <a href="index.html#village-metering/meshems">MeshEMS hub</a> (upstream/downstream · technological autonomy).</li>
+    <li><strong>MeshEMS board distribution</strong> — recipient list started: <strong>Redwan Hussain</strong> (<a href="tel:+16463616130">+1&nbsp;646-361-6130</a>); <strong>Sean White</strong> — Energy IoT Open Source and  NABCEP installer training. See <a href="#meshems-distribution">distribution table</a> · <a href="index.html#village-metering/meshems">MeshEMS hub</a> (upstream/downstream · technological autonomy).</li>
     <li><strong>Jude · EMS board scale-up</strong> — hoping to deploy <strong>10× EMS boards</strong> in the field. Design constraint for now: <strong>do not include PII in meters</strong> (no customer-identifying data on the meter read path today). Follow up with Jude on deployment plan and what telemetry stays anonymous vs operator-backend only.</li>
   </ul>
 
@@ -100,7 +100,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <table class="stack-table">
     <thead><tr><th>Component</th><th>Role</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><strong>OpenEMS</strong> (Energy IoT)</td><td>EMS / edge orchestration</td><td>More <strong>urban</strong> — grid present (e.g. Aaron’s grid in Uganda). Stack can <strong>stop at the DCU</strong> when that is enough.</td></tr>
+      <tr><td><strong>OpenEMS</strong></td><td>EMS / edge orchestration</td><td>More <strong>urban</strong> — grid present (e.g. Aaron’s grid in Uganda). Stack can <strong>stop at the DCU</strong> when that is enough.</td></tr>
       <tr><td><strong>MeshEMS</strong></td><td>NAN mesh</td><td>Lets DCUs form a mesh when pole-to-pole RF backhaul is needed.</td></tr>
       <tr><td><strong>OpenAMI / MQTT</strong></td><td>Actionable telemetry · interop</td><td>Northbound contract — normalize southbound OEM/DLMS at gateway to registers operators can bill, vend, and disconnect on; ISV <a href="index.html#village-metering/overview">Village Metering</a> thread.</td></tr>
       <tr><td><strong>EnAccess MPM</strong></td><td>Operator backend</td><td>MicroPowerManager as HES/billing layer — <strong>instead of</strong> OpenEMS backend in village deployments.</td></tr>
@@ -114,7 +114,7 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <table class="power-table">
     <thead><tr><th>Load</th><th>Rail</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><strong>MeshEMS board</strong></td><td><strong>5&nbsp;V</strong></td><td>Temperature reference needs a 5&nbsp;V supply. PCB schematic on <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">NESL nesl-meshems</a> README.</td></tr>
+      <tr><td><strong>MeshEMS gateway</strong></td><td><strong>5&nbsp;V</strong></td><td>Temperature reference needs a 5&nbsp;V supply. PCB865B-NESL-EMS-Controller schematic on <a href="https://github.com/nesl-admin/STREET-EMS/blob/main/PCB865B-NESL-EMS-Controller-Schematic-Aug2026.pdf" target="_blank" rel="noopener"></td></tr>
       <tr><td><strong>18650 battery holders</strong></td><td>3.3&nbsp;V or 6.6&nbsp;V → <strong>5&nbsp;V</strong></td><td>Need a <strong>buck or boost</strong> converter depending on pack wiring (single cell ~3.3&nbsp;V nominal vs two-series ~6.6&nbsp;V).</td></tr>
       <tr><td><strong>SSRs</strong></td><td><strong>5&nbsp;V</strong></td><td>Solid-state relays on the pole stack also require 5&nbsp;V drive.</td></tr>
       <tr><td><strong>ESP32 dev kit</strong> (MeshEMS / Street Pole)</td><td>5&nbsp;V → <strong>3.3&nbsp;V</strong></td><td>Typical dev boards accept <strong>5&nbsp;V</strong> on USB/VIN and step down to <strong>3.3&nbsp;V</strong> onboard for the MCU — no separate 3.3&nbsp;V feed needed for the kit if a 5&nbsp;V rail is available (check board spec).</td></tr>
@@ -128,21 +128,27 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   </div>
   <p>Action for workshop BOM: specify buck/boost modules for 5&nbsp;V where cell or stack voltage does not natively match; ESP32 dev kits can derive 3.3&nbsp;V from 5&nbsp;V onboard — keep CircuitSetup 3.3&nbsp;V stack power separate from SSR / temp-reference 5&nbsp;V budget.</p>
 
-  <h2 id="meshems-distribution">MeshEMS board distribution</h2>
-  <p class="body-text">Recipients and field partners for MeshEMS / Street Pole EMS boards — shipping, deployment, and installer training. Schematic: <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">NESL nesl-meshems</a>.</p>
+  <h2 id="meshems-distribution">MeshEMS gateway and board distribution</h2>
+  <p class="body-text">Recipients and field partners for PCB865B-NESL-EMS-Controller used by meshEMS/Street EMS — shipping, deployment, and installer training. Board Schematic: <a href="https://github.com/nesl-admin/STREET-EMS/blob/main/PCB865B-NESL-EMS-Controller-Schematic-Aug2026.pdf" target="_blank" rel="noopener">by NESL</a>.</p>
   <table class="power-table">
     <thead><tr><th>Name</th><th>Contact</th><th>Role / notes</th><th>Status</th></tr></thead>
     <tbody>
       <tr>
+        <td><strong>Energy IoT Open Source</strong></td>
+        <td><a href="https://www.eiot.energy">website</a></td>
+        <td>10 Boards to support Mini-Grid on Wheels and Solar Traning Center projects</td>
+        <td><span class="todo">On list</span></td>
+      </tr>
+      <tr>
         <td><strong>Redwan Hussain</strong></td>
         <td><a href="tel:+16463616130">+1&nbsp;646-361-6130</a></td>
-        <td>—</td>
+        <td>Energy IoT Open Source Volunteer, Open Energy Hackathon 2.0 participant</td>
         <td><span class="todo">On list</span></td>
       </tr>
       <tr>
         <td><strong>Sean White</strong></td>
         <td>—</td>
-        <td>Working with <strong>Arila Barnes</strong> (Energy IoT) on <strong>OpenEMS meters</strong>. Teaches <a href="https://www.nabcep.org/" target="_blank" rel="noopener">NABCEP</a> certified installer coursework — technician training for power / solar systems.</td>
+        <td>Early adoptor of <strong>Energy IoT Open Source</strong> Open microgrid solutions. Teaches <a href="https://www.nabcep.org/" target="_blank" rel="noopener">NABCEP</a> certified installer coursework — technician training for power / solar systems.</td>
         <td><span class="todo">On list</span></td>
       </tr>
     </tbody>

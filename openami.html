@@ -63,9 +63,9 @@ if (new URLSearchParams(location.search).get('embed') === '1') {
   <table class="stack-table">
     <thead><tr><th>Component</th><th>Role</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td><strong>OpenEMS</strong> (Energy IoT)</td><td>EMS / edge orchestration</td><td>More urban — grid present; stack can stop at the DCU. Often Phase&nbsp;2–3 depending on site.</td></tr>
-      <tr><td><strong>MeshEMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#village-metering/meshems">MeshEMS board page</a> · <a href="https://github.com/nesl-admin/nesl-meshems" target="_blank" rel="noopener">nesl-meshems</a> · Phase&nbsp;2</td></tr>
-      <tr><td><strong>Street Pole EMS</strong></td><td>Pole gateway</td><td><a href="https://github.com/energy-iot/ems-dev/" target="_blank" rel="noopener">ems-dev</a> firmware · Phase&nbsp;2</td></tr>
+      <tr><td><strong>OpenEMS</strong></td><td>EMS / Edge to cloud orchestration</td><td>More urban — grid present; stack can stop at the DCU. Often Phase&nbsp;2–3 depending on site.</td></tr>
+      <tr><td><strong>Street EMS</strong> (NESL)</td><td>NAN mesh</td><td>DCU mesh backhaul · <a href="index.html#village-metering/meshems">MeshEMS page</a> · <a href="https://github.com/nesl-admin/STREET-EMS" target="_blank" rel="noopener">Street EMS board</a> · Phase&nbsp;2</td></tr>
+      <tr><td><strong>MeshEMS</strong>(Energy IoT Open Source)</td><td>Street Pole gateway</td><td><a href="https://github.com/energy-iot/meshems-openami-metering" target="_blank" rel="noopener">meshEMS </a>OpenAMI firmware · Phase&nbsp;2</td></tr>
       <tr><td><strong>OpenAMI / MQTT</strong></td><td>Actionable telemetry</td><td>Northbound contract — normalize OEM/DLMS to registers operators can bill, vend, and disconnect on; <strong>leakage visible at every layer</strong> · Phase&nbsp;2 (Phase&nbsp;1 feeds it)</td></tr>
       <tr><td><strong>EnAccess MPM</strong></td><td>Operator backend</td><td>Village backend option · Phase&nbsp;1–2</td></tr>
       <tr><td><strong>EarthSpark ThunderCloud</strong></td><td>Operator backend (open)</td><td>ThunderCloud / GroundBolt — <a href="index.html#village-metering/roadmap">Phase&nbsp;1 roadmap</a> · <a href="https://github.com/EarthSpark/thundercloud" target="_blank" rel="noopener">github.com/EarthSpark/thundercloud</a> (dev preview)</td></tr>
